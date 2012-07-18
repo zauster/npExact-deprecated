@@ -13,7 +13,7 @@ npMeanSingle(data_vector, mu, mu1, low, up, times = 20000, alpha = 0.05)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{data_vector}{
-%%     ~~Describe \code{data_vector} here~~
+The data vector to be tested.
 }
   \item{mu}{
 %%     ~~Describe \code{mu} here~~

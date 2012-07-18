@@ -12,40 +12,70 @@ npMeanPaired(var1, var2, low = 0, up = 1, d, alpha = 0.05, alternative = "greate
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{var1}{
-%%     ~~Describe \code{var1} here~~
+  \item{var1, var2}{
+    the numerical vectors which contain the variables to be tested.
 }
-  \item{var2}{
-%%     ~~Describe \code{var2} here~~
-}
-  \item{low}{
-%%     ~~Describe \code{low} here~~
-}
-  \item{up}{
-%%     ~~Describe \code{up} here~~
+  \item{low, up}{
+    the logical bounds of the variables
 }
   \item{d}{
-%%     ~~Describe \code{d} here~~
+    the hypothesised mean difference, which will be used to minimize the
+    type II error.
 }
   \item{alpha}{
-%%     ~~Describe \code{alpha} here~~
+    the type I error
 }
   \item{alternative}{
-%%     ~~Describe \code{alternative} here~~
+    a character string describing the alternative hypothesis.
 }
   \item{iter}{
-%%     ~~Describe \code{iter} here~~
+Number of iterations.
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+  A list with class '"nphtest"' containing the following components:
+
+  \item{method}{
+    a character string indicating the name and type of the test that was
+    performed.
+  }
+  \item{data.name}{
+    a character string giving the name(s) of the data.
+  }
+  \item{alternative}{
+    a character string describing the alternative hypothesis.
+  }
+  \item{estimate}{
+    the estimated mean or difference in means depending on
+    whether it was a one-sample test or a two-sample test.
+  }
+  \item{probrej}{
+    the probability with which the null hypothesis can be rejected.
+  }
+  \item{bounds}{
+    the lower and upper bounds of the variables.
+  }
+  \item{null.value}{
+    the specified hypothesized value of the correlation between the variables.
+  }
+  \item{alpha}{
+    the type I error
+  }
+  \item{theta}{
+    the parameter that minimizes the type II error.
+  }
+  \item{pseudoalpha}{
+    theta * alpha, this is the alpha that is used during the iterations.
+  }
+  \item{rejection}{
+    Logical. Given alpha, the type I error, and theta, can a rejection be achieved?
+  }
+  \item{iterations}{
+    the number of iterations that were performed.
+  }
 }
 \references{
 %% ~put references to the literature/web site here ~
