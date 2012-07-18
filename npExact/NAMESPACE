@@ -1,0 +1,9 @@
+## exportPattern("^[[:alpha:]]+")
+
+export("npCorr",
+       "npMeanPaired",
+       "npMeanSingle",
+       "npMeanUnpaired",
+       "npVar")
+
+S3method("print", "nphtest")

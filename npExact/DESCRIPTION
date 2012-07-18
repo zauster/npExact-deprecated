@@ -1,0 +1,15 @@
+Package: npExact
+Type: Package
+Title: Nonparametric (or distribution-free) hypothesis tests
+Version: 0.1
+Date: 2012-07-17
+Authors@R: c(person(given = "Karl", family = "Schlag", role = "aut",
+           email = "karl.schlag@univie.ac.at"), 
+           person(given = "Oliver", family = "Reiter", role = "cre",
+           email = "oliver.reiter@snapdragon.cc"))
+Description: This package contains several new hypothesis tests, which 
+           do not make assumptions on the underlying distributions.
+Depends: R (>= 2.10.0), stats
+License: GPL-2
+Author: Karl Schlag [aut] <karl.schlag@univie.ac.at>
+Maintainer: Oliver Reiter <oliver.reiter@snapdragon.cc>
