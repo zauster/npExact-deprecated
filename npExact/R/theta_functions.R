@@ -48,9 +48,9 @@ possible.theta <- function(n, p, alpha) ## Calculates possible values of theta, 
 }
 
 
-min_value <- function(n, p, p1, alpha) ## Calculates minimum value, for given difference d uses
-## possible.theta, g2
-
+min_value <- function(n, p, p1, alpha)
+  ## Calculates minimum value, for given difference d uses
+  ## possible.theta, g2
 {
     theta <- possible.theta(n, p, alpha)
     f <- function(x) g2(p1, n, p, alpha * x[2])

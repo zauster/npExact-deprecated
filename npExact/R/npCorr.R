@@ -38,7 +38,7 @@
 ## pseudoalpha = alpha * theta; #size of the randomized test
 
 npCorr <- function(x1, x2, a1 = 0, b1 = 1, a2 = 0, b2 = 1,
-                       iter = 1000, theta = 0.2, alpha = 0.1,
+                       iterations = 1000, theta = 0.2, alpha = 0.1,
                        pseudoalpha = theta * alpha,
                        alternative = "greater",
                        conditional = FALSE)
@@ -49,6 +49,11 @@ npCorr <- function(x1, x2, a1 = 0, b1 = 1, a2 = 0, b2 = 1,
     ## Apply the Fisher Tocher one-sided test.
     ## Repeat and record the probability of rejection rj.
     ## Reject null if rj is greater than theta.
+    DNAME <- paste(deparse(substitute(x1)), "and",
+                   deparse(substitute(x2)))
+
+    x1 <- as.vector(x1)
+    x2 <- as.vector(x2)
 
     ## Warnings
     if(min(x1) < a1 | max(x1) > b1 | (min(x2) < a2 | max(x2) > b2) &
@@ -58,14 +63,14 @@ npCorr <- function(x1, x2, a1 = 0, b1 = 1, a2 = 0, b2 = 1,
     if(length(x1) != length(x2))
       stop("Unequal length of input vectors!")
 
-    if(iter < 500)
+    if(iterations < 500)
       warning("Low number of iterations. Results may be inaccurate.")
 
     if(alternative == "two.sided")
       stop("Currently not supported. Please test for greater and less at alpha/2.")
 
-    DNAME <- paste(deparse(substitute(x1)), "and",
-                   deparse(substitute(x2)))
+    if(alpha >= 1 | alpha <= 0)
+      stop("Please supply a sensible value for alpha.")
 
     n <- length(x1)
     rj <- 0
@@ -85,7 +90,7 @@ npCorr <- function(x1, x2, a1 = 0, b1 = 1, a2 = 0, b2 = 1,
         x2 <- 1 - x2
       }
 
-    for(t in 1:iter)
+    for(t in 1:iterations)
       {
         bin.x1 <- as.numeric(runif(n) < x1) ## create a random
         ## transformation of x1 in [0, 1] to {0, 1}
@@ -126,17 +131,17 @@ npCorr <- function(x1, x2, a1 = 0, b1 = 1, a2 = 0, b2 = 1,
                 h <- h + h1
                 if(h <= pseudoalpha)
                   {
-                    rj <- rj + 1/iter
+                    rj <- rj + 1/iterations
                   }
                 else
                   {
-                    rj <- rj + (pseudoalpha - h1)/(iter * (h - h1))
+                    rj <- rj + (pseudoalpha - h1)/(iterations * (h - h1))
                   }
               }
           }
         else
           {
-            rj <- rj + pseudoalpha/iter
+            rj <- rj + pseudoalpha/iterations
           }
       }
 
@@ -147,8 +152,9 @@ npCorr <- function(x1, x2, a1 = 0, b1 = 1, a2 = 0, b2 = 1,
     names(sample.est) <- "covariance"
     null.value <- 0
     names(null.value) <- "covariance"
-    rejection <- ifelse(rj > theta, TRUE, FALSE)
-    bounds <- paste("[", a1, ", ", b1, "] and [", a2, ", ", b2, "]",
+    rejection <- ifelse(rj >= theta, TRUE, FALSE)
+    bounds <- paste("[", a1, ", ", b1,
+                    "] and [", a2, ", ", b2, "]",
                     sep = "")
 
     structure(list(method = method,
@@ -159,11 +165,9 @@ npCorr <- function(x1, x2, a1 = 0, b1 = 1, a2 = 0, b2 = 1,
                    rejection = rejection,
                    alpha = alpha,
                    theta = theta,
-                   iterations = iter,
+                   iterations = iterations,
                    pseudoalpha = pseudoalpha,
                    bounds = bounds,
-                   ## bounds = list(c(a1, b1),
-                   ##   c(round(a2, digits = 3), round(b2, digits = 3))),
                    null.value = null.value),
               class = "nphtest")
   }

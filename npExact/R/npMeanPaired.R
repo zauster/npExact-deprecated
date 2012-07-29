@@ -51,55 +51,64 @@
 ## y1 <- sample(c(1,2), size = 100, replace = TRUE)
 ## y2 <- sample(c(1,2,3,4), size = 100, replace = TRUE)
 ## npMeanPaired(y1, y2, low = 0, up = 5, d=1.27, alpha = 0.05)
-## npMeanPaired(runif(20), runif(20), low = 0, up = 1, d = 0.1,
-##              alternative = "greater", iter = 2000)
+## npMeanPaired(runif(20), runif(20), low = 0, up = 1, d = 0.4,
+##              alternative = "greater", iterations = 2000)
 
 
-npMeanPaired <- function(var1, var2, low = 0, up = 1,
+npMeanPaired <- function(x1, x2, low = 0, up = 1,
                          d, alpha = 0.05,
-                         alternative = "greater", iter = 30000)
+                         alternative = "greater",
+                         iterations = 3000)
   {
-    DNAME <- paste(deparse(substitute(var1)), "and",
-                   deparse(substitute(var2)))
+    DNAME <- paste(deparse(substitute(x1)), "and",
+                   deparse(substitute(x2)))
 
-    var1 <- as.vector(var1)
-    var2 <- as.vector(var2)
+    x1 <- as.vector(x1)
+    x2 <- as.vector(x2)
 
-    if(min(var1) < low)
-      stop("Your variable includes values below the specified lower bound (low). This contradicts the theoretical requirements of this test.\n")
-    if(max(var2) > up)
-      stop("Your variable includes values above the specified upper bound (up). This contradicts the theoretical requirements of this test.\n")
+    ## Warnings
+    if(min(x1, x2) < low | max(x1, x2) > up)
+      stop("Some values are out of bounds!")
 
-    n <- length(var1)
-    mean1 <- mean(var1)
-    mean2 <- mean(var2)
+    if(length(x1) != length(x2))
+      stop("Unequal length of input vectors!")
 
+    if(iterations < 500)
+      warning("Low number of iterations. Results may be inaccurate.")
+
+    if(alternative == "two.sided")
+      stop("Currently not supported. Please test for greater and less at alpha/2.")
+
+    if(alpha >= 1 | alpha <= 0)
+      stop("Please supply a sensible value for alpha.")
+
+    n <- length(x1)
 
 #### Normalize vectors to [0,1]
-    var1 <- (var1 - low)/(up - low)
-    var2 <- (var2 - low)/(up - low)
-    d <- d/(up - low)
+    x1 <- (x1 - low)/(up - low)
+    x2 <- (x2 - low)/(up - low)
 
+    ## d <- d/(up - low)
     ## it <- as.numeric(min_value(n=n, p=1/2, p1=1/2+d/2, alpha=alpha))
     ## print(it)
     ## theta <- it[1]
     theta <- 0.4
     pseudoalpha <- alpha * theta
 
-    res <- replicate(iter, doMatching(randTransformation(var1, n),
-                                      randTransformation(var2, n),
+    res <- replicate(iterations,
+                     McNemarTestRandom(runif(n) < x1,
+                                      runif(n) < x2,
                                       pseudoalpha))
     rej <- mean(res)
 
-    method <- "Nonparametric Paired Mean Test"
-    sample.est <- c(mean(var1), mean(var2))
+    sample.est <- c(mean(x1), mean(x2))
     names(sample.est) <- c("mean", "mean")
     null.value <- 0
     names(null.value) <- "mean difference"
     rejection <- ifelse(rej > theta, TRUE, FALSE)
     bounds <- paste("[", low, ", ", up, "]", sep = "")
 
-    structure(list(method = method,
+    structure(list(method = "Nonparametric Mean Test for Matched Pairs",
                    data.name = DNAME,
                    alternative = alternative,
                    estimate = sample.est,
@@ -107,7 +116,7 @@ npMeanPaired <- function(var1, var2, low = 0, up = 1,
                    rejection = rejection,
                    alpha = alpha,
                    theta = theta,
-                   iterations = iter,
+                   iterations = iterations,
                    pseudoalpha = pseudoalpha,
                    bounds = bounds,
                    null.value = null.value),
@@ -115,18 +124,19 @@ npMeanPaired <- function(var1, var2, low = 0, up = 1,
   }
 
 
-McNemarTestRandom <- function(n10, n01, alpha)
+McNemarTestRandom <- function(x1, x2, alpha)
   {
     #### performs the randomized McNemar test
     #### n10, n01 ... counts of (1,0) and (0,1) respectively
     #### returns either 1 (rejection), p (prob of rejection) or 0 (no
     #### rejection)
 
+    n10 <- sum(x1 > x2)
+    n01 <- sum(x1 < x2)
+
     k <- n01:(n10 + n01)
 
-    prob <- sum((gamma(n10 + n01 + 1)/(gamma(k + 1) * gamma(n10 + n01 - k +
-                                                            1)))/(2^(n10 + n01)))
-    #### print(prob)
+    prob <- sum((gamma(n10 + n01 + 1)/(gamma(k + 1) * gamma(n10 + n01 - k + 1)))/(2^(n10 + n01)))
 
     res <- 0
     if(prob <= alpha)
@@ -142,28 +152,4 @@ McNemarTestRandom <- function(n10, n01, alpha)
           }
       }
     return(res)
-  }
-
-doMatching <- function(var1, var2, alpha)
-  {
-    #### takes two vectors and does the matching and testing
-
-    n10 <- sum(var1 > var2)
-    n01 <- sum(var1 < var2)
-
-    McNemarTestRandom(n10, n01, alpha)
-
-  }
-
-randTransformation <- function(x, n)
-  {
-    #### this function is used to generate the random transformations of
-    #### the data vector (which is in [0,1] -> {0,1})
-
-    #### rand <- runif(n)
-    #### res <- (rand < x)
-    #### return(as.numeric(res))
-    #### or as a one-liner:
-    return(as.numeric(runif(n) < x))
-
   }
