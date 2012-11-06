@@ -58,7 +58,7 @@
 npMeanPaired <- function(x1, x2, low = 0, up = 1,
                          d, alpha = 0.05,
                          alternative = "greater",
-                         iterations = 3000)
+                         iterations = 5000)
   {
     DNAME <- paste(deparse(substitute(x1)), "and",
                    deparse(substitute(x2)))
@@ -84,24 +84,33 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1,
 
     n <- length(x1)
 
+    sample.est <- c(mean(x1), mean(x2))
+
 #### Normalize vectors to [0,1]
     x1 <- (x1 - low)/(up - low)
     x2 <- (x2 - low)/(up - low)
 
-    ## d <- d/(up - low)
-    ## it <- as.numeric(min_value(n=n, p=1/2, p1=1/2+d/2, alpha=alpha))
+    if(alternative == "less")
+      {
+        x1 <- 1 - x1
+        x2 <- 1 - x2
+      }
+
+    ## Calculate the optimal theta, given a estimated difference of
+    ## d = ...
+    d <- d/(up - low)
+    it <- as.numeric(min_value(n=n, p=1/2, p1=1/2+d/2, alpha=alpha))
     ## print(it)
-    ## theta <- it[1]
-    theta <- 0.4
+    theta <- it[1]
+    ## theta <- 0.4
     pseudoalpha <- alpha * theta
 
     res <- replicate(iterations,
                      McNemarTestRandom(runif(n) < x1,
-                                      runif(n) < x2,
-                                      pseudoalpha))
+                                       runif(n) < x2,
+                                       pseudoalpha))
     rej <- mean(res)
 
-    sample.est <- c(mean(x1), mean(x2))
     names(sample.est) <- c("mean", "mean")
     null.value <- 0
     names(null.value) <- "mean difference"

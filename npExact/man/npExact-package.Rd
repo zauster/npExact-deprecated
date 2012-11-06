@@ -29,10 +29,9 @@ Maintainer: Oliver Reiter
   New and Old Results not only for Experimental Game Theory
 }
 \keyword{nonparametric}
-% \seealso{
-% ~~ Optional links to other man pages, e.g. ~~
-% ~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
-% }
+\seealso{
+http://homepage.univie.ac.at/karl.schlag/
+}
 \examples{
 npCorr(runif(20), runif(20))
 }

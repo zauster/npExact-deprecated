@@ -61,7 +61,7 @@
 
 npMeanUnpaired <- function(x1, x2,
                            low = 0, up = 1, d,
-                           iterations = 501,
+                           iterations = 5000,
                            alpha = 0.05, plotif = F,
                            helppoints = 100,
                            alternative = "less")

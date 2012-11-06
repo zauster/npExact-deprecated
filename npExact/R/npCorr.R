@@ -38,7 +38,7 @@
 ## pseudoalpha = alpha * theta; #size of the randomized test
 
 npCorr <- function(x1, x2, a1 = 0, b1 = 1, a2 = 0, b2 = 1,
-                       iterations = 1000, theta = 0.2, alpha = 0.1,
+                       iterations = 5000, theta = 0.2, alpha = 0.1,
                        pseudoalpha = theta * alpha,
                        alternative = "greater",
                        conditional = FALSE)
@@ -171,3 +171,141 @@ npCorr <- function(x1, x2, a1 = 0, b1 = 1, a2 = 0, b2 = 1,
                    null.value = null.value),
               class = "nphtest")
   }
+
+w <- function(x)
+  {
+    as.numeric(x > 0)
+  }
+
+gfun <- function(a, r, m, n)
+  {
+    dhyper(a, m, n, r)
+  }
+
+hfun <- function(b, r, n1, n2)
+  {
+    k <- max(0, r - n2):b
+    ## res <- (choose(n1, k) * choose(n2, r - k))/choose(n1 + n2, r)
+    ## print(sum(res))
+
+    ## res <- phyper(b, n1, n2, r)
+    res <- sum(dhyper(k, n1, n2, r))
+    res
+  }
+
+qfun <- function(n1, n2, s1, s2, alpha)
+  {
+    term1 <- (alpha - hfun(s1, s1 + s2, n1, n2)) > 0
+    term2 <- (alpha - hfun(s1 - 1, s1 + s2, n1, n2)) > 0
+    term3 <- (alpha - hfun(s1 - 1, s1 + s2, n1, n2))/gfun(s1, s1 + s2,
+                                                          n1, n2)
+    res <- term1 + term2*(1 - term1)*term3
+    res
+  }
+
+phi1fun <- function(n1, n2, y1, y2, alpha)
+  {
+    res <- 0
+    ## res1 <- 0
+    for(s1 in 0:n1)
+      {
+        for(s2 in 0:n2)
+          {
+  ##           res1 <- res1 + choose(n1, s1) * y1^s1 * (1 - y1)^(n1 - s1) *
+  ## choose(n2, s2) * y2^s2 * (1 - y2)^(n2 - s2) * qfun(n1, n2, s1, s2,
+  ## alpha)
+            res <- res + dbinom(s1, n1, y1) * dbinom(s2, n2, y2) *
+  qfun(n1, n2, s1, s2, alpha)
+          }
+      }
+    res
+  }
+
+phi2fun <- function(n, p, q0, q1, alpha)
+  {
+    res <- 0
+    for(j in 0:n)
+      {
+  ##       res <- res + choose(n, j) * p^j * (1 - p)^(n - j) * phi1fun(n
+  ## - j, j, q0, q1, alpha)
+        res <- res + dbinom(j, n, p) * phi1fun(n - j, j, q0, q1,
+  alpha)
+
+      }
+    res
+  }
+
+typeIIerror <- function(x, n, theta, alpha, c) ## x = (p, q0)
+  {
+    p <- x[1]
+    q0 <- x[2]
+    z <- min(q0, 1 - c/(p*(1 - p)))
+    print(paste("p = ", p, ", q0 = ", q0))
+    print(paste("z = ", z))
+    print(paste("theta = ", theta))
+    res <- (1 - phi2fun(n, p, z,
+                        z + c/(p*(1 - p)),
+                        theta*alpha))/(1 - theta)
+    res
+  }
+
+
+
+
+
+## npCorrOptimalTheta <- function(n, alpha, c = 0.12)
+##   {
+##     pbounds <- c((1 - sqrt(1 - 4*c))/2,
+##                  1 - (1 - sqrt(1 - 4*c))/2)
+
+##     control <- list()
+##     control$fnscale <- -1
+
+
+
+
+##     f2 <- function(theta, alpha, c = c)
+##       {
+##         res <- optim(c((pbounds[1] + pbounds[2])/2, 0.5),
+##                      f1, c = c,
+##                      theta = theta, alpha = alpha,
+##                      control = control,
+##                      lower = c(pbounds[1], 0),
+##                      upper = c(pbounds[2], 1),
+##                      method = "L-BFGS-B")
+##         ## print(res)
+##         res$value
+##       }
+##     optim(0.4, f2, alpha = alpha, c = c,
+##           lower = 0.01, upper = 0.99,
+##           method = "L-BFGS-B")
+##           ## method = "Brent")
+
+##   }
+
+## TODO
+## check first function: optimization of p and q0
+## -> seems not to work very good
+## res <- matrix(0, nrow = 20, ncol = 20)
+## index <- seq(0, 1, length.out = 20)
+## for(i in 1:20)
+##   {
+##     for(j in 1:20)
+##       {
+##         res[i, j] <- f1(x = c(index[i], index[j]), 0.4, 0.05, c = 0.12)
+##       }
+##   }
+## other optimization package?
+## multidimensional optimization seems to be the problem.
+
+## c <- 0.12
+##     pbounds <- c((1 - sqrt(1 - 4*c))/2,
+##                  1 - (1 - sqrt(1 - 4*c))/2)
+## n <- 20
+## j <- 1
+## res <- NULL
+## for(theta in seq(0, 1, length.out = 10)[-10])
+##   {
+##     res[j] <- f2(theta, 0.1, 0.12)
+##     j <- j + 1
+##   }

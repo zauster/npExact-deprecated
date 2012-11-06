@@ -8,7 +8,8 @@ This test uses the exact Fisher-Tocher test to test whether the
 correlation between two variables is greater or smaller than 0.
 }
 \usage{
-npCorr(x1, x2, a1 = 0, b1 = 1, a2 = 0, b2 = 1, iter = 1000, theta = 0.2,
+npCorr(x1, x2, a1 = 0, b1 = 1, a2 = 0, b2 = 1, iterations = 5000,
+       theta = 0.2,
        alpha = 0.1, pseudoalpha = theta * alpha,
        alternative = "greater", conditional = FALSE)
 }
@@ -20,7 +21,7 @@ Two numerical vectors which contain the variables to be tested.
 The logical bounds of the two variables, whereas \code{a1} and \code{a2}
 refer to the lower bounds and \code{b1} and \code{b2} to the upper bounds.
 }
-  \item{iter}{
+  \item{iterations}{
 Number of iterations.
 }
   \item{theta}{
@@ -52,7 +53,7 @@ be used?
   then the null hypothesis is rejected.
 }
 \value{
-  A list with class '"nphtest"' containing the following components:
+  A list with class "nphtest" containing the following components:
 
   \item{method}{
     a character string indicating the name and type of the test that was
@@ -103,15 +104,19 @@ be used?
 \author{
 Karl Schlag and Oliver Reiter
 }
-% \note{
-% }
+\note{
+This function is still being tested.
+}
 
-% %% ~Make other sections like Warning with \section{Warning }{....} ~
-% \seealso{
-% }
+\seealso{
+  http://homepage.univie.ac.at/karl.schlag/
+}
 
 \examples{
-npCorr(runif(20), runif(20))
+x1 <- runif(20)
+x2 <- runif(20)
+npCorr(x1, x2) ## should NOT reject
+npCorr(sort(x1), sort(x2)) ## should reject
 }
 % Add one or more standard keywords, see file 'KExWORDS' in the
 % R documentation directory.

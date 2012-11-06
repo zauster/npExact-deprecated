@@ -1,133 +1,105 @@
-######################################################################
-##  Program Name      nplowerconf_exact                              #
-##  Purpose           exact test for mean of single sample           #
-##                    based on Schlag 2008                           #
-##                    test of EY<=mu based on single sample          #
-##                                                                   #
-##  Input variables                                                  #
-##         required:  x                                              #
-##                    mu     test value for EY<=mu                   #
-##                    mu1    test optimized to minimize typeII error #
-##                           when EY>=mu1 (so mu1>mu)                #
-##                    low    exogenously known lower                 #
-##                           bound for any outcome that can          #
-##                           be generated in either sample           #
-##                    up     exogenously known upper                 #
-##                           bound for any outcome that can          #
-##                           be generated in either sample           #
-##  optional (default value):
-##                    times (20000) number of Monte Carlo iterations #
-##                    alpha (.05) significance level of test         #
-##
-##  Return Values                                                    #
-##                    N      number of observations                  #
-##                    low    lower bound for data values             #
-##                    up     upper bound for data values             #
-##                    theta  cutoff level theta                      #
-##                    alpha  significance level alpha                #
-##                    mu     mean to be tested                       #
-##                    avg    average of values in x                  #
-##                    rj1    probability of rejection                #
-##                                                                   #
-##  Author            Peter Saffert                                  #
-##  Date              19.11.2009                                     #
-##  Version           1.0                                            #
-##                                                                   #
-## For documentation see                                             #
-##          (Schlag, Karl H. 2008, A New Method for Constructing Exact
-##          Tests without Making any Assumptions, Department of      #
-##          Economics and Business Working Paper 1109, Universitat   #
-##          Pompeu Fabra)                                            #
-##                                                                   #
-######################################################################
 
-########## Exact test for H0: E(x) <= mu based on Schlag (2008)
+## npMeanSingle
+## a function to test the mean of a variable
 
-npMeanSingle <- function(x, mu, mu1,
-                         low = 0, up = 1,
-                         iterations = 20000, alpha = 0.05,
+## x ... the data vector
+## mu ... the value to be tested, the supposed true value of the mean
+## lower, upper ... logical bounds of x, thus x in [lower, upper]
+## iterations ... number of iterations
+## alpha ... the level of the test
+## alternative ... a character string specifying the alternative
+## hypothesis, must be one of 'two.sided', 'greater' or 'less'.
+
+## example
+## npMeanSingle(runif(20), mu = 0.3)
+
+npMeanSingle <- function(x, mu,
+                         lower = 0, upper = 1,
+                         iterations = 500, alpha = 0.05,
                          alternative = "greater")
 {
-  require(stats)
   DNAME <- deparse(substitute(x))
   sample.est <- mean(x)
-
   x <- as.vector(x)
 
-  if (min(x) < low | max(x) > up)
+  ## warnings
+  if (min(x) < lower | max(x) > upper)
     stop("Some values are out of bounds!")
 
   if(iterations < 500)
     warning("Low number of iterations. Results may be inaccurate.")
 
-  if(alternative == "two.sided")
-    stop("Currently not supported. Please test for greater and less at alpha/2.")
-
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
 
-  N <- length(x)
+  if(mu <= lower | mu >= upper )
+    stop("Please supply a sensible value for mu")
+
+  if(alternative != "greater" & alternative != "less" & alternative !=
+  "two.sided")
+    stop("Please specify the alternative you want to test. Possible value are: 'greater' (default), 'less' or 'two.sided'")
 
   ## standardize variables
-  y <- (x - low)/(up - low)
-  p <- (mu - low)/(up - low)
-  p1 <- (mu1 - low)/(up - low)
-  y <- as.matrix(y)
+  x <- (x - lower)/(upper - lower)
+  p <- (mu - lower)/(upper - lower)
 
-  it <- as.numeric(min_value(n = N, p = p, p1 = p1, alpha = alpha))
-  theta <- it[1]
-  pseudoalpha <- alpha * theta
+  n <- length(x)
+  xp <- x - p
 
-  Pm <- matrix(p, N, 1)  ## N x 1 matrix with all elements = p
-  Am <- y - Pm  ##
-  rj <- 0  ## rejection probability under size pseudoalpha
-
-  for (t in 1:iterations)
+  if(alternative == "two.sided")
     {
-      ## iteration over t
-      q <- runif(N)  ## vector of length N1 with draws from uniform distribution [0,1]
-      s1 <- 0
-      s2 <- 0
-      help2 <- Am > (q * (1 - p))
-      s2 <- sum(help2)  ## counts how often values of Am > q*(1-p)
-      help1 <- y < (q * p)
-      s1 <- sum(help1)  ## counts how often values of y < q*p
+      theta.par <- optim(c(0.4, p/4),
+                         optimizeTheta, alpha = alpha,
+                         mu0 = p, N = n)$par
+      theta <- theta.par[1]
+      ## mu1 <- mu + theta.par[2] ## not needed right now
+      pseudoalpha <- (alpha/2) * theta
 
-      ## binomial test {alternative: R command binom.test}
-      h1 <- 0
-      ## for(k in s2:(s1+s2)){ h1 <- h1 + (p^k) *
-      ## ((1-p)^(s1+s2-k)) * choose(s1+s2,k) ##alternative use
-      ## dbinom or pbinom command which are computational more
-      ## efficient than a for loop } ##end for k in s2:s1+s2
-      h1 <- sum(dbinom(s2:(s1 + s2), (s1 + s2), p))
+      rj.greater <- mean(replicate(iterations,
+                                   transBinomTest(x, p, xp, n,
+                                                  pseudoalpha)))
 
-      if (h1 <= pseudoalpha)
+      x <- 1 - x
+      p <- 1 - p
+      xp <- x - p
+      theta.par <- optim(c(0.4, p/4),
+                         optimizeTheta, alpha = alpha,
+                         mu0 = p, N = n)$par
+      theta <- theta.par[1]
+      ## mu1 <- mu + theta.par[2] ## not needed right now
+
+      rj.less <- mean(replicate(iterations,
+                                transBinomTest(x, p, xp, n,
+                                               pseudoalpha)))
+
+      rj <- rj.greater + rj.less
+    }
+  else
+    {
+      if(alternative == "less")
         {
-          rj <- rj + (1/iterations)
-        }
-      else
-        {
-          h2 <- (p^s2) * ((1 - p)^s1) * choose(s1 + s2, s2)
-          if (h1 <= (pseudoalpha + h2))
-            {
-              rj <- rj + (((pseudoalpha - h1 + h2)/h2)/iterations)
-            }
+          x <- 1 - x
+          p <- 1 - p
         }
 
-    }  ##end for t in 1:iterations
+      theta.par <- optim(c(0.4, p/4),
+                         optimizeTheta, alpha = alpha,
+                         mu0 = p, N = n)$par
+      theta <- theta.par[1]
+      ## mu1 <- mu + theta.par[2] ## not needed right now
+      pseudoalpha <- alpha * theta
 
-  ## rouding might not be neccessary in R -> just limit the
-  ## output
-
+      rj <- mean(replicate(iterations,
+                           transBinomTest(x, p, xp, n,
+                                          pseudoalpha)))
+    }
 
   method <- "Nonparametric Single Mean Test"
   names(sample.est) <- "mean"
   null.value <- mu
   names(null.value) <- "mean"
   rejection <- ifelse(rj >= theta, TRUE, FALSE)
-  bounds <- paste("[", low, ", ", up, "]", sep = "")
-
-  alternative <- "greater"
+  bounds <- paste("[", lower, ", ", upper, "]", sep = "")
 
   structure(list(method = method,
                    data.name = DNAME,
@@ -137,12 +109,109 @@ npMeanSingle <- function(x, mu, mu1,
                    rejection = rejection,
                    alpha = alpha,
                    theta = theta,
+                   mu.alternative = mu + theta.par[2],
                    iterations = iterations,
                    pseudoalpha = pseudoalpha,
                    bounds = bounds,
                    null.value = null.value),
               class = "nphtest")
-}  ##end function npMeanSingle
+}
 
-## example
-## npMeanSingle(runif(20), mu = 0.5, mu1 = 0.6)
+
+## transBinomTest
+## executes a binomial test on the (randomly) transformed data
+
+## x ... data vector
+## p ... transformed mu
+## xp ... simply x - p
+## n ... length of x
+## pseudoalpha ... theta times alpha, the (new) level of the test
+
+transBinomTest <- function(x, p, xp, n, pseudoalpha)
+  {
+    q <- runif(n)
+    zeros <- sum(x < (q * p))  ## counts how often values of x < q*p
+    ones <- sum(xp > (q * (1 - p))) ## counts how often xp > q*(1-p)
+    res.binomtest <- 1 - pbinom(ones - 1, ones + zeros, p)
+    res <- 0
+    ## or
+    if (res.binomtest <= pseudoalpha)
+      {
+        res <- 1
+      }
+    else
+      {
+        h2 <- (p^ones) * ((1 - p)^zeros) * choose(zeros + ones, ones)
+        if (res.binomtest <= (pseudoalpha + h2))
+          {
+            res <- ((pseudoalpha - res.binomtest + h2)/h2)
+          }
+      }
+    res
+  }
+
+## w
+## helper function, to ease the reading of the code
+
+w <- function(x)
+  {
+    as.numeric(x >= 0)
+  }
+
+## g1fun
+## helper function, to calculate the type II error in
+## npMeanSingleTypeIIerror
+
+g1fun <- function(k, N, z, alpha)
+  {
+    summationterm1 <- alpha - (1 - pbinom(k - 1, N, z))
+    summationterm2 <- alpha - (1 - pbinom(k, N, z))
+    term3 <- summationterm2/dbinom(k, N, z)
+    res <- w(summationterm1) + (1 - w(summationterm1)) *
+  (w(summationterm2)) * term3
+    res
+  }
+
+## g2fun
+## helper function, to calculate the type II error in
+## npMeanSingleTypeIIerror
+
+g2fun <- function(alpha, mu, N, z)
+  {
+    k <- 0:(N - 1)
+    term2 <- w(alpha - z^N) + (1 - w(alpha - z^N))*(alpha/z^N)
+    res <- sum(dbinom(k, N, mu) * g1fun(k, N, z, alpha)) + mu^N*term2
+    res
+  }
+
+## npMeanSingleTypeIIError
+## calculates the type II error for the npMeanSingle function
+
+## alpha ... level of the test
+## theta ... parameter for the random testing
+## mu.alternative ... value where the type II error is evaluated
+## mu0 ... hypothesized "true" value of the mean (transformed)
+## N ... length of x
+
+npMeanSingleTypeIIError <- function(alpha, theta,
+                                    mu.alternative, mu0, N)
+  {
+    res <- (1 - g2fun(alpha * theta,
+                      mu.alternative, N, mu0))/(1 - theta)
+    res
+  }
+
+## optimizeTheta
+## finds the value of theta and d (difference of mu.alternative and
+## mu0), such that the type II error is 0.5 at this value
+
+## par ... the two parameters to be optimized
+## alpha ... level of the test
+## mu0 ... hypothesized "true" value of the mean
+## N ... length of x
+optimizeTheta <- function(par, alpha, mu0, N)
+  {
+    res <- (npMeanSingleTypeIIError(alpha, par[1],
+                                    mu0 + par[2], mu0, N) - 0.5)^2
+    res
+  }

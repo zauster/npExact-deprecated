@@ -5,44 +5,84 @@
 A test on the location of a single variable.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+\code{npMeanSingle} provides an exact test for the mean of a single
+sample based on Schlag (2008).
 }
 \usage{
-npMeanSingle(data_vector, mu, mu1, low, up, times = 20000, alpha = 0.05)
+npMeanSingle(x, mu, lower = 0, upper = 1,
+             iterations = 5000, alpha = 0.05,
+             alternative = "greater")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{data_vector}{
+  \item{x}{
 The data vector to be tested.
 }
   \item{mu}{
-%%     ~~Describe \code{mu} here~~
+Test value for EY <= mu
 }
-  \item{mu1}{
-%%     ~~Describe \code{mu1} here~~
+  \item{lower}{
+exogenously known lower bound for any outcome that can be generated in
+either sample
 }
-  \item{low}{
-%%     ~~Describe \code{low} here~~
+  \item{upper}{
+exogenously known upper bound for any outcome that can be generated in
+either sample
 }
-  \item{up}{
-%%     ~~Describe \code{up} here~~
-}
-  \item{times}{
-%%     ~~Describe \code{times} here~~
+  \item{iterations}{
+number of iterations
 }
   \item{alpha}{
-%%     ~~Describe \code{alpha} here~~
+type I error
+}
+\item{alternative}{
+the alternative hypothesis (currently unsupported)
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+Details missing currently ...
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+A list with class "nphtest" containing the following components:
+
+  \item{method}{
+    a character string indicating the name and type of the test that was
+    performed.
+  }
+  \item{data.name}{
+    a character string giving the name(s) of the data.
+  }
+  \item{alternative}{
+    a character string describing the alternative hypothesis.
+  }
+  \item{estimate}{
+    the estimated mean or difference in means depending on
+    whether it was a one-sample test or a two-sample test.
+  }
+  \item{probrej}{
+    the probability with which the null hypothesis can be rejected.
+  }
+  \item{bounds}{
+    the lower and upper bounds of the variables.
+  }
+  \item{null.value}{
+    the specified hypothesized value of the correlation between the variables.
+  }
+  \item{alpha}{
+    the type I error
+  }
+  \item{theta}{
+    the parameter that minimizes the type II error.
+  }
+  \item{pseudoalpha}{
+    theta * alpha, this is the alpha that is used during the iterations.
+  }
+  \item{rejection}{
+    Logical. Given alpha, the type I error, and theta, can a rejection be achieved?
+  }
+  \item{iterations}{
+    the number of iterations that were performed.
+  }
 }
 
 \references{
@@ -64,7 +104,8 @@ Karl Schlag and Peter Saffert
 % %% ~~objects to See Also as \code{\link{help}}, ~~~
 % }
 \examples{
-npMeanSingle(runif(20), mu = 0.5, mu1 = 0.6)
+x <- runif(30)
+npMeanSingle(x, mu = 0.5)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

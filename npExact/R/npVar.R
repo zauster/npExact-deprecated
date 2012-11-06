@@ -13,13 +13,13 @@
 ## This is a program that implements a nonrandomized one-sided test for
 ## the variance of a single sample of independent observations.
 
-## Null hypothesis: H0: VarY >= w, if type="upper",
+## Null hypothesis: H0: VarY >= w, if type="greater",
 ##                      finetuning test for H1: VarY <= w1
 ## Null hypothesis: H0: VarY <= w, if type="lower",
 ##                      finetuning test for H1: VarY >= w1
 
 ## This test can be used to derive (1 - alpha) UPPER CONFIDENCE BOUNDS,
-## type="upper": Find largest w such that not rejects the null
+## type="greater": Find largest w such that not rejects the null
 
 ## This test can be used to derive (1 - alpha) LOWER CONFIDENCE BOUNDS,
 ## type="lower": Find smallest w such that not rejects the null.
@@ -30,9 +30,9 @@
 ## example
 ## npVar(runif(50), low = 0, up = 1, w = 0.1, w1 = 0.01)
 
-npVar <- function(x, low, up, w, w1,
-                  type="upper",
-                  alpha=0.025, iterations=500)
+npVar <- function(x, low = 0, up = 1, w, w1,
+                  alternative = "greater",
+                  alpha = 0.025, iterations = 5000)
 {
   DNAME <- deparse(substitute(x))
 
@@ -42,11 +42,11 @@ npVar <- function(x, low, up, w, w1,
   if (w > (up - low)/4)
     stop("Parameter w is too large.")
 
-  if (w1 >= w & type == "upper")
-    stop("A w1 < w is needed when type is upper.")
+  if (w1 >= w & alternative == "greater")
+    stop("A w1 < w is needed when alternative is greater.")
 
-  if (w1 <= w & type == "lower")
-    stop("A w1 > w is needed when type is lower.")
+  if (w1 <= w & alternative == "lower")
+    stop("A w1 > w is needed when alternative is lower.")
 
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
@@ -61,7 +61,7 @@ npVar <- function(x, low, up, w, w1,
   p <- 2 * w0  ## threshold for mean comparison below
   p1 <- 2 * w1 / (up - low)^2  ## threshold for finetuning and computing typeII error
 
-  ## if (type=="upper")
+  ## if (alternative=="greater")
   ##   {
   ##     it <- as.numeric(min_value(n=m, p=1-p, p1=1-p1, alpha=alpha))
   ##     if (it[2]>=0.99)
@@ -102,8 +102,8 @@ npVar <- function(x, low, up, w, w1,
       ## Evaluation of randomized binomial test, see if the number of s2
       ## relative to (s1+s2) is significantly below p
 
-      k <- switch(type,
-                  upper = 0:s2,
+      k <- switch(alternative,
+                  greater = 0:s2,
                   lower = s2:(s1+s2))
       h1 <- sum((p^k)*((1-p)^(s1 + s2 - k))*choose((s1 + s2), k))
       if(h1 <= pseudoalpha) ## reject with probability 1
@@ -127,7 +127,7 @@ npVar <- function(x, low, up, w, w1,
   names(null.value) <- "variance"
   bounds <- paste("[", low, ", ", up, "]", sep = "")
   rejection <- ifelse(rj >= theta, TRUE, FALSE)
-  alternative <- ifelse(type == "upper", "less", "greater")
+  alternative <- ifelse(alternative == "greater", "less", "greater")
 
   structure(list(method = "Nonparametric Variance Test",
                  data.name = DNAME,

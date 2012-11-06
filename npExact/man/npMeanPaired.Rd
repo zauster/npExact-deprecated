@@ -9,12 +9,12 @@
   the data. The null hypothesis to be tested is H_0: E(x_1) >= E(x_2).
 }
 \usage{
-npMeanPaired(var1, var2, low = 0, up = 1, d, alpha = 0.05,
-             alternative = "greater", iter = 30000)
+npMeanPaired(x1, x2, low = 0, up = 1, d, alpha = 0.05,
+             alternative = "greater", iterations = 5000)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{var1, var2}{
+  \item{x1, x2}{
     the numerical vectors which contain the variables to be tested.
   }
   \item{low, up}{
@@ -30,7 +30,7 @@ npMeanPaired(var1, var2, low = 0, up = 1, d, alpha = 0.05,
   \item{alternative}{
     a character string describing the alternative hypothesis.
   }
-  \item{iter}{
+  \item{iterations}{
     Number of iterations.
   }
 }
@@ -44,7 +44,7 @@ npMeanPaired(var1, var2, low = 0, up = 1, d, alpha = 0.05,
   hypothesis is rejected.
 }
 \value{
-  A list with class '"nphtest"' containing the following components:
+  A list with class "nphtest" containing the following components:
 
   \item{method}{
     a character string indicating the name and type of the test that was
