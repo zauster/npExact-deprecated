@@ -48,7 +48,7 @@ npMeanSingle <- function(x, mu,
 
   if(alternative == "two.sided")
     {
-      theta.par <- optim(c(0.4, p/4),
+      theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
                          optimizeTheta, alpha = alpha,
                          mu0 = p, N = n)$par
       theta <- theta.par[1]
@@ -62,7 +62,7 @@ npMeanSingle <- function(x, mu,
       x <- 1 - x
       p <- 1 - p
       xp <- x - p
-      theta.par <- optim(c(0.4, p/4),
+      theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
                          optimizeTheta, alpha = alpha,
                          mu0 = p, N = n)$par
       theta <- theta.par[1]
@@ -82,7 +82,7 @@ npMeanSingle <- function(x, mu,
           p <- 1 - p
         }
 
-      theta.par <- optim(c(0.4, p/4),
+      theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
                          optimizeTheta, alpha = alpha,
                          mu0 = p, N = n)$par
       theta <- theta.par[1]
@@ -93,6 +93,7 @@ npMeanSingle <- function(x, mu,
                            transBinomTest(x, p, xp, n,
                                           pseudoalpha)))
     }
+  ## print(p + theta.par[2])
 
   method <- "Nonparametric Single Mean Test"
   names(sample.est) <- "mean"
@@ -132,9 +133,11 @@ transBinomTest <- function(x, p, xp, n, pseudoalpha)
     q <- runif(n)
     zeros <- sum(x < (q * p))  ## counts how often values of x < q*p
     ones <- sum(xp > (q * (1 - p))) ## counts how often xp > q*(1-p)
+
+    ## Code below tests H0: p_true < p and returns p-value
     res.binomtest <- 1 - pbinom(ones - 1, ones + zeros, p)
+
     res <- 0
-    ## or
     if (res.binomtest <= pseudoalpha)
       {
         res <- 1
@@ -149,6 +152,8 @@ transBinomTest <- function(x, p, xp, n, pseudoalpha)
       }
     res
   }
+
+#### Functions to calculate the typeII error ####
 
 ## w
 ## helper function, to ease the reading of the code
@@ -205,7 +210,8 @@ npMeanSingleTypeIIError <- function(alpha, theta,
 ## finds the value of theta and d (difference of mu.alternative and
 ## mu0), such that the type II error is 0.5 at this value
 
-## par ... the two parameters to be optimized
+## par ... the two parameters to be optimized, theta and the
+## difference of the 'true' mean to the hypothesized mean
 ## alpha ... level of the test
 ## mu0 ... hypothesized "true" value of the mean
 ## N ... length of x
@@ -215,3 +221,7 @@ optimizeTheta <- function(par, alpha, mu0, N)
                                     mu0 + par[2], mu0, N) - 0.5)^2
     res
   }
+
+## Fehler:
+## If mu0 near 0 or 1 -> optimization procedure becomes unstable!
+## optim(c(0.4, .05), optimizeTheta, alpha = .05, mu0 = .9, N = 20)
