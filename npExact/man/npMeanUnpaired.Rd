@@ -9,16 +9,19 @@ A test on the mean of two variables, where the observations do not have
 to be paired.
 }
 \usage{
-npMeanUnpaired(x1, x2, low = 0, up = 1, d,
-               iterations = 5000, alpha = 0.05, plotif = F,
-               helppoints = 100, alternative = "less")
+npMeanUnpaired(x1, x2,
+               lower = 0, upper = 1, d = 0.3,
+               iterations = 5000,
+               alpha = 0.05, plotif = F,
+               helppoints = 100,
+               alternative = "less")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x1, x2}{
 the two variables to be tested.
 }
-  \item{low, up}{
+  \item{lower, upper}{
 the logical bounds of the variables.
 }
   \item{d}{
@@ -89,9 +92,7 @@ A list with class "nphtest" containing the following components:
 \references{
 Karl Schlag (2008).
   Exact tests for correlation and for the slope in simple linear
-  regressions without making assumptions
-  
-  http://www.econ.upf.edu/en/research/onepaper.php?id=1097
+  regressions without making assumptions. Available at \url{http://www.econ.upf.edu/en/research/onepaper.php?id=1097}.
 }
 \author{
 Karl Schlag and Christian Pechhacker
@@ -102,13 +103,15 @@ Karl Schlag and Christian Pechhacker
 
 % %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-% \seealso{
-% %% ~~objects to See Also as \code{\link{help}}, ~~~
-% }
+
+\seealso{
+  \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
+}
+
 \examples{
 npMeanUnpaired(runif(20), runif(20), d = 0.4)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+% \keyword{ ~kwd1 }
+% \keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

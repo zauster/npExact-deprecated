@@ -9,21 +9,23 @@ This is a program that implements a nonrandomized one-sided test for
 the variance of a single sample of independent observations.
 }
 \usage{
-npVar(x, low = 0, up = 1, w, w1, alternative = "greater", alpha = 0.025,
-      iterations = 5000)
+npVar(x, lower = 0, upper = 1, variance,
+                  alt.variance,
+                  alternative = "greater",
+                  alpha = 0.05, iterations = 5000)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{
 the data vector to be tested.
 }
-  \item{low, up}{
+  \item{lower, upper}{
 the logical bounds of the variable
 }
-  \item{w}{
+  \item{variance}{
 the value of the variance to be tested as H0: VarY >= w
 }
-  \item{w1}{
+  \item{alt.variance}{
 finetuning the type II error for H1: VarY <= w1
 }
   \item{alternative}{
@@ -84,9 +86,7 @@ A list with class "nphtest" containing the following components:
 \references{
 Karl Schlag (2008).
   Exact tests for correlation and for the slope in simple linear
-  regressions without making assumptions
-  
-  
+  regressions without making assumptions. Available at \url{http://www.econ.upf.edu/en/research/onepaper.php?id=1097}.  
 }
 \author{
 Karl Schlag and Oliver Reiter
@@ -98,12 +98,12 @@ Karl Schlag and Oliver Reiter
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-  http://www.econ.upf.edu/en/research/onepaper.php?id=1097
+  \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
 \examples{
-npVar(runif(20), w = 0.1, w1 = 0.01)
+npVar(runif(50), lower = 0, upper = 1, var = 0.1, alt.var = 0.15)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+% \keyword{ ~kwd1 }
+% \keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

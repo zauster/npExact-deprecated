@@ -1,0 +1,127 @@
+\name{npStochin}
+\alias{npStochin}
+%- Also NEED an '\alias' for EACH other topic documented here.
+\title{
+  A test for stochastic inequality.
+}
+\description{
+  This test performs the exact McNemar test on a bootstrapped sample of
+  the data. The corresponding null hypothesis for this test is H_0: P(x2
+  > x1) <= P(x2 < x1), or equivalently: P(x2 > x1) - P(x2 < x1) <= d.
+}
+\usage{
+npStochin(x1, x2, d = 0, d1 = 0.3,
+          alternative = "greater",
+          iterations = 5000, alpha = 0.05)
+}
+\arguments{
+  \item{x1, x2}{
+    the numerical vectors which contain the variables to be tested.
+  }
+  \item{d}{
+    the difference in probabilities of the null hypothesis: P(x2 > x1) -
+    P(x2 < x1) <= d. Default is 0. 
+  }
+  \item{d1}{
+    the hypothesized true value of the difference in probabilities
+  }
+  \item{alternative}{
+    a character string describing the alternative hypothesis. Default is
+    "greater". If "less" is given, x1 and x2 are switched for each other.
+  }
+  \item{iterations}{
+    Number of iterations.
+  }
+  \item{alpha}{
+    the type I error
+  }
+}
+\details{
+  The function draws two random samples (with the length of the shorter
+  vector) of the data vectors and sees them as matched pairs. These
+  matched pairs are then compared and the occurrences of x1_i > x2_i and
+  x1_i < x2_i are counted. The exact binomial test then tests whether
+  the success probability of x1_i > x2_i is greater than 0.5 (in the
+  default case). These steps are then repeated \code{iterations} times
+  and rejection at level \code{alpha x theta} is recorded (for
+  \code{theta}, see below). If the rejection probability (the fraction
+  of rejections in all iterations) is above the threshold \code{theta},
+  the null hypothesis is rejected.
+
+  \code{theta} (and a \code{d} in the set of the alternative hypothesis)
+  is found in an optimization procedure. \code{theta} and the
+  alternative \code{d} are chosen as to bring the type II error to
+  0.5. Please see the cited paper below for further information.
+}
+\value{
+  A list with class "nphtest" containing the following components:
+
+  \item{method}{
+    a character string indicating the name and type of the test that was
+    performed.
+  }
+  \item{data.name}{
+    a character string giving the name(s) of the data.
+  }
+  \item{alternative}{
+    a character string describing the alternative hypothesis.
+  }
+  \item{estimate}{
+    the estimated mean or difference in means depending on
+    whether it was a one-sample test or a two-sample test.
+  }
+  \item{probrej}{
+    the probability with which the null hypothesis can be rejected.
+  }
+  \item{bounds}{
+    the lower and upper bounds of the variables.
+  }
+  \item{null.value}{
+    the specified hypothesized value of the correlation between the variables.
+  }
+  \item{alpha}{
+    the type I error
+  }
+  \item{theta}{
+    the parameter that minimizes the type II error.
+  }
+  \item{pseudoalpha}{
+    theta * alpha, this is the alpha that is used during the iterations.
+  }
+  \item{rejection}{
+    Logical. Given alpha, the type I error, and theta, can a rejection be achieved?
+  }
+  \item{iterations}{
+    the number of iterations that were performed.
+  }
+}
+\references{
+  Schlag, Karl H. 2008, A New Method for Constructing Exact Tests without
+  Making any Assumptions, Department of Economics and Business Working
+  Paper 1109, Universitat Pompeu Fabra. Available at
+  \url{http://www.econ.upf.edu/en/research/onepaper.php?id=1109}. 
+  
+}
+\author{
+  Karl Schlag and Peter Saffert
+}
+% \note{
+% %%  ~~further notes~~
+% }
+
+% %% ~Make other sections like Warning with \section{Warning }{....} ~
+\seealso{
+  \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
+}
+% \seealso{
+% %% ~~objects to See Also as \code{\link{help}}, ~~~
+% }
+\examples{
+npStochin(runif(20), runif(20),
+          alternative = "greater",
+          iterations = 2000)
+}
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory.
+% \keyword{ ~kwd1 }
+% \keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

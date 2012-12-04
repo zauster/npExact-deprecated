@@ -28,25 +28,27 @@
 ## variance of orginal process and then applies the A test.
 
 ## example
-## npVar(runif(50), low = 0, up = 1, w = 0.1, w1 = 0.01)
+## npVar(runif(50), low = 0, up = 1, var = 0.1, alt.var = 0.15)
 
-npVar <- function(x, low = 0, up = 1, w, w1,
+npVar <- function(x, lower = 0, upper = 1, variance,
+                  alt.variance,
                   alternative = "greater",
-                  alpha = 0.025, iterations = 5000)
+                  alpha = 0.05, iterations = 5000)
 {
   DNAME <- deparse(substitute(x))
+    sample.est <- var(x)
 
-  if (min(x) < low | max(x) > up)
+  if (min(x) < lower | max(x) > upper)
     stop("Some values are out of bounds!")
 
-  if (w > (up - low)/4)
-    stop("Parameter w is too large.")
+  if (variance > (upper - lower)/4)
+    stop("Hypothesized 'variance' is too large.")
 
-  if (w1 >= w & alternative == "greater")
-    stop("A w1 < w is needed when alternative is greater.")
+  ## if (alt.variance >= variance & alternative == "less")
+  ##   stop("A 'alt.variance' < 'variance' is needed when alternative is 'less'.")
 
-  if (w1 <= w & alternative == "lower")
-    stop("A w1 > w is needed when alternative is lower.")
+  ## if (alt.variance <= variance & alternative == "greater")
+  ##   stop("A 'alt.variance' > 'variance' is needed when alternative is 'greater'.")
 
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
@@ -56,84 +58,61 @@ npVar <- function(x, low = 0, up = 1, w, w1,
 
   ## Computation of sample mean and variance for output
   m <- floor(length(x) / 2)
-  x <- (x - low)/(up - low)  ## Normalization so that x in [0,1]
-  w0 <- w / (up - low)^2  ## normalized threshold
-  p <- 2 * w0  ## threshold for mean comparison below
-  p1 <- 2 * w1 / (up - low)^2  ## threshold for finetuning and computing typeII error
+  x <- (x - lower)/(upper - lower)  ## Normalization so that x in [0,1]
+  p <- 2 * variance / (upper - lower)^2  ## normalized threshold
+  ## p1 <- 2 * alt.variance / (upper - lower)^2  ## threshold for finetuning and computing typeII error
 
   ## if (alternative=="greater")
   ##   {
   ##     it <- as.numeric(min_value(n=m, p=1-p, p1=1-p1, alpha=alpha))
   ##     if (it[2]>=0.99)
-  ##       stop("decrease w1 so that typeII is below 1")
+  ##       stop("decrease alt.variance so that typeII is below 1")
   ##   }
   ## else
   ##   {
   ##     it <- as.numeric(min_value(n=m, p=p, p1=p1, alpha=alpha))
   ##     if (it[2]>=0.99)
-  ##       stop("increase w1 so that typeII is below 1")
+  ##       stop("increase alt.variance so that typeII is below 1")
   ##   }
 
   ## theta <- it[1]
   theta <- 0.4 ## just as long the code above doesn't work
-  pseudoalpha <- alpha * theta ## size adjusted downward for deterministic test
+  pseudoalpha <- alpha * theta ## size adjusted downward for
+  ## deterministic test
 
-  ## Monte Carlo simulations
-  rj <- 0 ## Probability of rejection under size pseudoalpha (PMP test)
-
-  for(t in 1:iterations)
+  if(alternative == "two.sided")
     {
-      c1 <- sample(x)
-
-      ## transformation into sample in [0,1] that has mean equal to 1/2 +
-      ## Var(X)
-
-      y <- (c1[c(1:m)*2] - c1[(c(1:m)*2 - 1)])^2
-
-      ## Random transformation of [0,1] data into {0,p,1} data,
-      ## later only use {0,1}
-      q <- runif(m)
-
-      ## number of 0 values in transformed data
-      s2 <- sum(y - p > (q*(1 - p)))
-      ## number of 1 values in transformed data
-      s1 <- sum(y < q*p)
-
-      ## Evaluation of randomized binomial test, see if the number of s2
-      ## relative to (s1+s2) is significantly below p
-
-      k <- switch(alternative,
-                  greater = 0:s2,
-                  lower = s2:(s1+s2))
-      h1 <- sum((p^k)*((1-p)^(s1 + s2 - k))*choose((s1 + s2), k))
-      if(h1 <= pseudoalpha) ## reject with probability 1
-        {
-          rj <- rj + 1/iterations
-        }
-      else
-        {
-          h <- (p^s2)*((1 - p)^s1) * choose(s1 + s2, s2)
-          if (h1 <= pseudoalpha + h) ##(reject with positive probability)
-            {
-              rj = rj + ((pseudoalpha - h1 + h) / h) /iterations
-            }
-        }
-
+      pseudoalpha <- pseudoalpha/2
+      rej.greater <- mean(replicate(iterations,
+                                    sampleBinomTestnpVar(x, m, p,
+                                                         alternative = "greater",
+                                                         alpha = pseudoalpha)))
+      rej.less <- mean(replicate(iterations,
+                                 sampleBinomTestnpVar(x, m, p,
+                                                      alternative = "less",
+                                                      alpha = pseudoalpha)))
+      rej <- rej.greater + rej.less
+    }
+  else
+    {
+      rej <- mean(replicate(iterations,
+                            sampleBinomTestnpVar(x, m, p,
+                                                 alternative = alternative,
+                                                 alpha = pseudoalpha)))
     }
 
-  sample.est <- var(x)
   names(sample.est) <- "variance"
-  null.value <- w1
+  null.value <- variance
   names(null.value) <- "variance"
-  bounds <- paste("[", low, ", ", up, "]", sep = "")
-  rejection <- ifelse(rj >= theta, TRUE, FALSE)
-  alternative <- ifelse(alternative == "greater", "less", "greater")
+  bounds <- paste("[", lower, ", ", upper, "]", sep = "")
+  rejection <- ifelse(rej >= theta, TRUE, FALSE)
+  ## alternative <- ifelse(alternative == "greater", "less", "greater")
 
   structure(list(method = "Nonparametric Variance Test",
                  data.name = DNAME,
                  alternative = alternative,
                  estimate = sample.est,
-                 probrej = rj,
+                 probrej = rej,
                  rejection = rejection,
                  alpha = alpha,
                  theta = theta,
@@ -143,3 +122,53 @@ npVar <- function(x, low = 0, up = 1, w, w1,
                  null.value = null.value),
             class = "nphtest")
 }
+
+
+sampleBinomTestnpVar <- function(x, m, p, alternative, alpha)
+  {
+    x <- sample(x)
+
+    ## transformation into sample in [0,1] that has mean equal to 1/2 +
+    ## Var(X)
+    ## subtract the odd from the even indexed values, to the power 2
+    x.folded <- (x[c(1:m)*2] - x[(c(1:m)*2 - 1)])^2
+
+    ## Random transformation of [0,1] data into {0,p,1} data,
+    ## later only use {0,1}
+    q <- runif(m)
+
+    ## number of 0 values in transformed data
+    zeros <- sum(x.folded - p > (q*(1 - p)))
+    ## number of 1 values in transformed data
+    ones <- sum(x.folded < q*p)
+
+    ## Evaluation of randomized binomial test, see if the number of zeros
+    ## relative to (ones+zeros) is significantly below p
+
+    k <- switch(alternative,
+                less = 0:zeros,
+                greater = zeros:(ones+zeros))
+
+    ## prob <- sum((p^k)*((1-p)^(ones + zeros - k))*choose((ones +
+    ## zeros), k)) ## inefficient
+    prob <- sum(dbinom(k, ones + zeros, p))
+    ## prob <- pbinom(zeros, ones + zeros, p,
+    ##                lower.tail = ifelse(alternative == "greater",
+    ##                  TRUE, FALSE)) ## not exact
+
+    res <- 0
+    if(prob <= alpha) ## reject with probability 1
+      {
+        res <- 1
+      }
+    else
+      {
+        ## h <- (p^zeros)*((1 - p)^ones) * choose(ones + zeros, zeros)
+        h <- dbinom(zeros, zeros + ones, p) ## more efficient
+        if (prob <= alpha + h) ##(reject with positive probability)
+          {
+            res <- ((alpha - prob + h) / h)
+          }
+      }
+    return(res)
+  }

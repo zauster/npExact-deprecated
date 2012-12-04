@@ -15,7 +15,7 @@
 
 npMeanSingle <- function(x, mu,
                          lower = 0, upper = 1,
-                         iterations = 500, alpha = 0.05,
+                         iterations = 5000, alpha = 0.05,
                          alternative = "greater")
 {
   DNAME <- deparse(substitute(x))
@@ -33,7 +33,10 @@ npMeanSingle <- function(x, mu,
     stop("Please supply a sensible value for alpha.")
 
   if(mu <= lower | mu >= upper )
-    stop("Please supply a sensible value for mu")
+    stop("Please supply a sensible value for mu.")
+
+  if(lower >= upper)
+    stop("Please supply sensible values for the bounds.")
 
   if(alternative != "greater" & alternative != "less" & alternative !=
   "two.sided")
@@ -78,14 +81,16 @@ npMeanSingle <- function(x, mu,
     {
       if(alternative == "less")
         {
+          ## print("less")
           x <- 1 - x
           p <- 1 - p
+          xp <- x - p
         }
 
       theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
                          optimizeTheta, alpha = alpha,
                          mu0 = p, N = n)$par
-      theta <- theta.par[1]
+      theta <- ifelse(theta.par[1] < 0.1, 0.1, theta.par[1])
       ## mu1 <- mu + theta.par[2] ## not needed right now
       pseudoalpha <- alpha * theta
 
@@ -100,7 +105,8 @@ npMeanSingle <- function(x, mu,
   null.value <- mu
   names(null.value) <- "mean"
   rejection <- ifelse(rj >= theta, TRUE, FALSE)
-  bounds <- paste("[", lower, ", ", upper, "]", sep = "")
+  bounds <- paste("[", round(lower, digits = 3), ", ",
+                  round(upper, digits = 3), "]", sep = "")
 
   structure(list(method = method,
                    data.name = DNAME,
@@ -203,7 +209,7 @@ npMeanSingleTypeIIError <- function(alpha, theta,
   {
     res <- (1 - g2fun(alpha * theta,
                       mu.alternative, N, mu0))/(1 - theta)
-    res
+    ifelse(res >= 1, 1, res)
   }
 
 ## optimizeTheta
@@ -217,11 +223,44 @@ npMeanSingleTypeIIError <- function(alpha, theta,
 ## N ... length of x
 optimizeTheta <- function(par, alpha, mu0, N)
   {
+    ## for debugging purposes:
+    ## print(paste("theta: ", par[1], " mu.alt: ", mu0 + par[2]))
+    ## par[1] <- ifelse(par[1] < 0, par[1] <- 0.8,
+    ##                  ifelse(par[1] > 1, par[1] <- 0.9, par[1] <- par[1]))
+    ## par[2] <- ifelse(par[2] < 0, par[2] <- 0.1,
+    ##                  ifelse(par[2] > 1, par[2] <- 0.9, par[2] <- par[2]))
+    ## print(paste("theta: ", par[1], " mu.alt: ", mu0 + par[2]))
+
+
+    ## real function content:
     res <- (npMeanSingleTypeIIError(alpha, par[1],
                                     mu0 + par[2], mu0, N) - 0.5)^2
     res
   }
 
-## Fehler:
-## If mu0 near 0 or 1 -> optimization procedure becomes unstable!
-## optim(c(0.4, .05), optimizeTheta, alpha = .05, mu0 = .9, N = 20)
+## Problems:
+## If mu0 near 1 -> optimization procedure becomes unstable!
+## optim(c(0.4, .05), optimizeTheta, alpha = .05, mu0 = .4, N = 20)
+
+## If mu0 near 1, mu.alt -> 1 and theta -> 0 (even -> negative)!
+
+## alpha <- 1:5/25
+## theta <- 5:20/25
+## mu0 <- 1:19/40
+## mu.alt <- mu0 + .05
+
+## for(i in alpha)
+##   {
+##     for(j in theta)
+##       {
+##         for(k in 1:19)
+##           {
+##             print(paste("TII:", round(npMeanSingleTypeIIError(i, j,
+##                                                         mu.alt[k], mu0[k],
+##                                                         50),
+##                                       digits = 3),
+##                         " alpha: ", i, " theta: ", j,
+##                         " mualt: ", mu.alt[k], " mu0: ", mu0[k]))
+##           }
+##       }
+##   }

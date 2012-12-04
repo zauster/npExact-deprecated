@@ -60,7 +60,7 @@ npStochin <- function(x1, x2, d = 0, d1 = 0.3,
     warning("Low number of iterations. Results may be inaccurate.")
 
   if(alternative == "two.sided")
-    stop("Currently not supported. Please test for greater and less at alpha/2.")
+    stop("Not sensible in this case.")
 
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
@@ -68,6 +68,12 @@ npStochin <- function(x1, x2, d = 0, d1 = 0.3,
   if (min(d + 1, d1 - d,1 - d1) <= 0)
     stop("we need that -1 < d < d1 < 1")
 
+  if(alternative == "less")
+    {
+      x1.new <- x2
+      x2 <- x1
+      x1 <- x1.new
+    }
 
   ## define local variables
   N1 <- length(x1)
@@ -82,8 +88,11 @@ npStochin <- function(x1, x2, d = 0, d1 = 0.3,
       count.x1 <- count.x1 + sum(x1[i] > x2)
     }
   count.x2 <- N1 * N2 - count.x1
-  sample.est <- (count.x2 - count.x1)/(N1 * N2)
-  names(sample.est) <- "stochastic inequality"
+  sample.est <- abs(count.x2 - count.x1)/(N1 * N2)
+  names(sample.est) <- paste("stochastic inequality:",
+                             ifelse(alternative == "greater",
+                                    "P(x2 > x1)",
+                                    "P(x2 < x1)"))
 
   ## it <- as.numeric(min_value(n=mi, p=p, p1=(1+d1)/2, alpha=alpha))
   ## if (it[2]>=0.99) stop("increase d1 so that typeII is below 1")
@@ -93,17 +102,19 @@ npStochin <- function(x1, x2, d = 0, d1 = 0.3,
 
   rej <- mean(replicate(iterations,
                         sampleBinomTest(x1, x2, min.length,
-                                        p, pseudoalpha)))
+                                        p, d, pseudoalpha)))
 
-  ## null.value <- d
-  names(d) <- "difference in 'greater-than'-Probabilities"
-  rejection <- ifelse(rj > theta, TRUE, FALSE)
+## H0: P(x2 > x1) <= P(x2 < x1), or: P(x2 > x1) - P(x2 < x1) <= d
+## H1: P(x2 > x1) > P(x2 < x1), or: P(x2 > x1) - P(x2 < x1) > d
+  ## names(d) <- "difference in 'greater-than'-Probabilities"
+  names(d) <- "relation P(x2 > x1) - P(x2 < x1)"
+  rejection <- ifelse(rej > theta, TRUE, FALSE)
 
   structure(list(method = "Nonparametric Test for Stochastic Inequality",
                  data.name = DNAME,
                  alternative = alternative,
                  estimate = sample.est,
-                 probrej = rj,
+                 probrej = rej,
                  rejection = rejection,
                  alpha = alpha,
                  theta = theta,
@@ -121,7 +132,7 @@ npStochin <- function(x1, x2, d = 0, d1 = 0.3,
 ## x1, x2 ... data vectors
 ## n ... the minimum length of the data vectors
 
-sampleBinomTest <- function(x1, x2, n, p, pseudoalpha)
+sampleBinomTest <- function(x1, x2, n, p, d, pseudoalpha)
   {
     c1 <- sample(x1, n)
     c2 <- sample(x2, n)
@@ -152,21 +163,21 @@ sampleBinomTest <- function(x1, x2, n, p, pseudoalpha)
               }
           }
       }
-    h1 <- sum(dbinom(s2:(s1+s2), (s1+s2), p)) ## or
-    ## h1 <- 1 - pbinom(s2 - 1, s1 + s2, p) ## less exact than above?
+    prob <- sum(dbinom(s2:(s1+s2), (s1+s2), p)) ## or
+    ## prob <- 1 - pbinom(s2 - 1, s1 + s2, p) ## less exact than above?
 
-    rej <- 0
-    if(h1 <= pseudoalpha)
+    res <- 0
+    if(prob <= pseudoalpha)
       {
-        rej <- 1
+        res <- 1
       }
     else
       {
         h2 <- (p^s2)*((1-p)^s1)*choose(s1+s2,s2)
-        if(h1 <= (pseudoalpha + h2))
+        if(prob <= (pseudoalpha + h2))
           {
-            rej <- ((pseudoalpha - h1 + h2)/h2)
+            res <- ((pseudoalpha - prob + h2)/h2)
           }
       }
-    rej
+    return(res)
   }

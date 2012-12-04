@@ -88,7 +88,8 @@ npMeanPaired(x1, x2, low = 0, up = 1, d, alpha = 0.05,
 \references{
   Schlag, Karl H. 2008, A New Method for Constructing Exact Tests without
   Making any Assumptions, Department of Economics and Business Working
-  Paper 1109, Universitat Pompeu Fabra
+  Paper 1109, Universitat Pompeu Fabra. Available at
+  \url{http://www.econ.upf.edu/en/research/onepaper.php?id=1109}. 
 }
 \author{
   Karl Schlag and Christian Pechhacker
@@ -99,9 +100,9 @@ npMeanPaired(x1, x2, low = 0, up = 1, d, alpha = 0.05,
 
 % %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-% \seealso{
-% %% ~~objects to See Also as \code{\link{help}}, ~~~
-% }
+\seealso{
+  \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
+}
 \examples{
 npMeanPaired(runif(20), runif(20), low = 0, up = 1, d = 0.4,
              alternative = "greater", iterations = 2000)

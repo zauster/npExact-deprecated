@@ -2,7 +2,7 @@
 \alias{npMeanSingle}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-A test on the location of a single variable.
+A test on the mean of a single variable.
 }
 \description{
 \code{npMeanSingle} provides an exact test for the mean of a single
@@ -19,29 +19,41 @@ npMeanSingle(x, mu, lower = 0, upper = 1,
 The data vector to be tested.
 }
   \item{mu}{
-Test value for EY <= mu
+test value for EY <= mu
 }
-  \item{lower}{
-exogenously known lower bound for any outcome that can be generated in
-either sample
-}
-  \item{upper}{
-exogenously known upper bound for any outcome that can be generated in
+  \item{lower, upper}{
+exogenously known bounds for any outcome that can be generated in
 either sample
 }
   \item{iterations}{
 number of iterations
 }
   \item{alpha}{
-type I error
+type I error, level of the test
 }
 \item{alternative}{
 the alternative hypothesis (currently unsupported)
 }
 }
 \details{
-Details missing currently ...
+This test performs a test on the mean of a variable, of which only
+exogenous bounds must be known, but not the distribution of the
+variable.
+
+With the known bounds, the data is transformed to lie in [0, 1]. Then,
+0 and 1 are randomly assigned to each value, according to its
+probability (which is its value after the transformation into [0,
+1]). The exact binomial test then calculates the rejection probability
+of this new data. These steps are repeated very often. If the fraction
+of rejection is greater than "theta", one can reject the null
+hypothesis.
+
+\code{theta} (and a \code{mu} in the set of the alternative hypothesis)
+is found in an optimization procedure. \code{theta} and the
+alternative \code{mu} are chosen as to bring the type II error to
+0.5. Please see the cited paper below for further information.
 }
+
 \value{
 A list with class "nphtest" containing the following components:
 
@@ -88,11 +100,12 @@ A list with class "nphtest" containing the following components:
 \references{
   Schlag, Karl H. 2008, A New Method for Constructing Exact Tests
 without Making any Assumptions, Department of Economics and Business
-Working Paper 1109, Universitat Pompeu Fabra
+Working Paper 1109, Universitat Pompeu Fabra. Available at
+  \url{http://www.econ.upf.edu/en/research/onepaper.php?id=1109}. 
 }
 
 \author{
-Karl Schlag and Peter Saffert
+Karl Schlag, Peter Saffert and Oliver Reiter
 }
 % \note{
 % %%  ~~further notes~~
@@ -100,9 +113,9 @@ Karl Schlag and Peter Saffert
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-% \seealso{
-% %% ~~objects to See Also as \code{\link{help}}, ~~~
-% }
+\seealso{
+  \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
+}
 \examples{
 x <- runif(30)
 npMeanSingle(x, mu = 0.5)

@@ -26,12 +26,14 @@ Maintainer: Oliver Reiter
 \references{
   Karl Schlag (2012).
   Exact Hypothesis Testing without Assumptions -
-  New and Old Results not only for Experimental Game Theory
+  New and Old Results not only for Experimental Game Theory. Available
+  at \url{http://homepage.univie.ac.at/karl.schlag/research/statistics/exacthypothesistesting8.pdf}
 }
-\keyword{nonparametric}
+\keyword{nonparametric, distribution-free}
+
 \seealso{
-http://homepage.univie.ac.at/karl.schlag/
+  \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
-\examples{
-npCorr(runif(20), runif(20))
-}
+% \examples{
+% npCorr(runif(20), runif(20))
+% }

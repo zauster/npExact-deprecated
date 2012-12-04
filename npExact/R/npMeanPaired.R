@@ -76,8 +76,8 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1,
     if(iterations < 500)
       warning("Low number of iterations. Results may be inaccurate.")
 
-    if(alternative == "two.sided")
-      stop("Currently not supported. Please test for greater and less at alpha/2.")
+    ## if(alternative == "two.sided")
+    ##   stop("Currently not supported. Please test for greater and less at alpha/2.")
 
     if(alpha >= 1 | alpha <= 0)
       stop("Please supply a sensible value for alpha.")
@@ -90,26 +90,43 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1,
     x1 <- (x1 - low)/(up - low)
     x2 <- (x2 - low)/(up - low)
 
-    if(alternative == "less")
-      {
-        x1 <- 1 - x1
-        x2 <- 1 - x2
-      }
 
     ## Calculate the optimal theta, given a estimated difference of
     ## d = ...
-    d <- d/(up - low)
-    it <- as.numeric(min_value(n=n, p=1/2, p1=1/2+d/2, alpha=alpha))
-    ## print(it)
-    theta <- it[1]
-    ## theta <- 0.4
-    pseudoalpha <- alpha * theta
+    ## d <- d/(up - low)
+    ## it <- as.numeric(min_value(n=n, p=1/2, p1=1/2+d/2, alpha=alpha))
+    ## ## print(it)
+    ## theta <- it[1]
+    theta <- 0.4
 
-    res <- replicate(iterations,
-                     McNemarTestRandom(runif(n) < x1,
-                                       runif(n) < x2,
-                                       pseudoalpha))
-    rej <- mean(res)
+    if(alternative == "two.sided")
+      {
+        pseudoalpha <- (alpha/2) * theta
+        rej.upper <- mean(replicate(iterations,
+                                    McNemarTestRandom(runif(n) < x1,
+                                                      runif(n) < x2,
+                                                      pseudoalpha)))
+        x1 <- 1 - x1
+        x2 <- 1 - x2
+        rej.lower <- mean(replicate(iterations,
+                                    McNemarTestRandom(runif(n) < x1,
+                                                      runif(n) < x2,
+                                                      pseudoalpha)))
+        rej <- rej.upper + rej.lower
+      }
+    else
+      {
+        if(alternative == "less")
+          {
+            x1 <- 1 - x1
+            x2 <- 1 - x2
+          }
+        pseudoalpha <- alpha * theta
+        rej <- mean(replicate(iterations,
+                              McNemarTestRandom(runif(n) < x1,
+                                                runif(n) < x2,
+                                                pseudoalpha)))
+      }
 
     names(sample.est) <- c("mean", "mean")
     null.value <- 0
@@ -130,22 +147,23 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1,
                    bounds = bounds,
                    null.value = null.value),
               class = "nphtest")
-  }
+  } ## end of npMeanPaired
 
 
 McNemarTestRandom <- function(x1, x2, alpha)
   {
-    #### performs the randomized McNemar test
-    #### n10, n01 ... counts of (1,0) and (0,1) respectively
-    #### returns either 1 (rejection), p (prob of rejection) or 0 (no
-    #### rejection)
+    ## performs the randomized McNemar test
+    ## x1, x2 are binary-valued vectors of equal length
+    ## n10, n01 ... counts of (1,0) and (0,1) respectively
+
+    ## returns either 1 (rejection), p (prob of rejection) or 0 (no
+    ## rejection)
 
     n10 <- sum(x1 > x2)
     n01 <- sum(x1 < x2)
 
     k <- n01:(n10 + n01)
-
-    prob <- sum((gamma(n10 + n01 + 1)/(gamma(k + 1) * gamma(n10 + n01 - k + 1)))/(2^(n10 + n01)))
+    prob <- sum(choose(n10 + n01, k)/(2^(n10 + n01)))
 
     res <- 0
     if(prob <= alpha)
@@ -154,7 +172,7 @@ McNemarTestRandom <- function(x1, x2, alpha)
       }
     else
       {
-        h <- gamma(n10 + n01 + 1)/(gamma(n01 + 1) * gamma(n10 +1))
+        h <- choose(n10 + n01, n01)
         if(prob <= alpha)
           {
             res <- (alpha - prob + h)/h

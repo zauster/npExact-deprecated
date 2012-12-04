@@ -8,31 +8,30 @@ This test uses the exact Fisher-Tocher test to test whether the
 correlation between two variables is greater or smaller than 0.
 }
 \usage{
-npCorr(x1, x2, a1 = 0, b1 = 1, a2 = 0, b2 = 1, iterations = 5000,
-       theta = 0.2,
-       alpha = 0.1, pseudoalpha = theta * alpha,
-       alternative = "greater", conditional = FALSE)
+npCorr(x1, x2, lower.x1 = 0, upper.x1 = 1, lower.x2 = 0, upper.x2 = 1,
+       iterations = 5000, alpha = 0.05, alternative = "greater",
+       conditional = FALSE)
 }
 \arguments{
   \item{x1, x2}{
 Two numerical vectors which contain the variables to be tested.
 }
-  \item{a1, a2, b1, b2}{
-The logical bounds of the two variables, whereas \code{a1} and \code{a2}
-refer to the lower bounds and \code{b1} and \code{b2} to the upper bounds.
+  \item{lower.x1, upper.x1, lower.x2, upper.x2}{
+The logical bounds of the two variables, whereas \code{lower.x1} and \code{lower.x2}
+refer to the lower bounds and \code{upper.x2} and \code{upper.x2} to the upper bounds.
 }
   \item{iterations}{
 Number of iterations.
 }
-  \item{theta}{
-    the parameter that minimizes the type II error.
-}
+%   \item{theta}{
+%     the parameter that minimizes the type II error.
+% }
   \item{alpha}{
     the type I error
 }
-  \item{pseudoalpha}{
-    theta * alpha, this is the alpha that is used during the iterations.
-}
+%   \item{pseudoalpha}{
+%     theta * alpha, this is the alpha that is used during the iterations.
+% }
   \item{alternative}{
     a character string describing the alternative hypothesis.
 }
@@ -95,11 +94,8 @@ be used?
   }
 }
 \references{
-  Karl Schlag (2008).
-  Exact tests for correlation and for the slope in simple linear
-  regressions without making assumptions
-  
-  http://www.econ.upf.edu/en/research/onepaper.php?id=1097
+  Schlag, Karl H. 2008, Exact tests for correlation and for the slope in
+    simple linear regressions without making assumptions. Available at \url{http://www.econ.upf.edu/en/research/onepaper.php?id=1097}.
 }
 \author{
 Karl Schlag and Oliver Reiter
@@ -109,7 +105,7 @@ This function is still being tested.
 }
 
 \seealso{
-  http://homepage.univie.ac.at/karl.schlag/
+  \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
 
 \examples{
