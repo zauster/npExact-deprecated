@@ -79,8 +79,8 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
     cat("\n   alpha:", x$alpha)
     cat("\n   theta:", x$theta)
 
-    if(!is.null(x$pseudoalpha))
-      cat("\n   pseudoalpha:", x$pseudoalpha)
+    ## if(!is.null(x$pseudoalpha))
+    ##   cat("\n   pseudoalpha:", x$pseudoalpha)
 
     if(!is.null(x$iterations))
       cat("\n   iterations:", x$iterations)

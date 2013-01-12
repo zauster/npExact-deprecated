@@ -10,7 +10,7 @@
   > x1) <= P(x2 < x1), or equivalently: P(x2 > x1) - P(x2 < x1) <= d.
 }
 \usage{
-npStochin(x1, x2, d = 0, d1 = 0.3,
+npStochin(x1, x2, d = 0, 
           alternative = "greater",
           iterations = 5000, alpha = 0.05)
 }
@@ -22,9 +22,9 @@ npStochin(x1, x2, d = 0, d1 = 0.3,
     the difference in probabilities of the null hypothesis: P(x2 > x1) -
     P(x2 < x1) <= d. Default is 0. 
   }
-  \item{d1}{
-    the hypothesized true value of the difference in probabilities
-  }
+  % \item{d1}{
+  %   the hypothesized true value of the difference in probabilities
+  % }
   \item{alternative}{
     a character string describing the alternative hypothesis. Default is
     "greater". If "less" is given, x1 and x2 are switched for each other.

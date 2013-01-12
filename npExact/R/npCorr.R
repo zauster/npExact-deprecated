@@ -180,7 +180,7 @@ randomFischerTocherTest <- function(x1, x2, n, pseudoalpha)
 
 w <- function(x)
   {
-    as.numeric(x > 0)
+    as.numeric(x >= 0)
   }
 
 gfun <- function(a, r, m, n)
@@ -191,39 +191,42 @@ gfun <- function(a, r, m, n)
 hfun <- function(b, r, n1, n2)
   {
     k <- max(0, r - n2):b
-    return(1 - sum(dhyper(k, n1, n2, r)))
+    return(sum(dhyper(k, n1, n2, r)))
     ## phyper(b, n1, n2, r) ## would be also possible, however
     ## problems when r > n2!
   }
 
 qfun <- function(n1, n2, s1, s2, alpha)
   {
-    term1 <- (alpha - hfun(s1, s1 + s2, n1, n2)) > 0
-    term2 <- (alpha - hfun(s1 - 1, s1 + s2, n1, n2)) > 0
-    term3 <- (alpha - hfun(s1 - 1, s1 + s2, n1, n2))/gfun(s1, s1 + s2,
-                                                          n1, n2)
-    res <- term1 + term2*(1 - term1)*term3
+    term1 <- w(alpha - hfun(s1, s1 + s2, n1, n2))
+    term2 <- alpha - hfun(s1 - 1, s1 + s2, n1, n2)
+    term3 <- term2 / gfun(s1, s1 + s2, n1, n2)
+
+    ## print(term1)
+    ## print(term2)
+    ## print(term3)
+
+    res <- term1 + w(term2) * (1 - term1) * term3
     res
   }
 
 phi1fun <- function(n1, n2, y1, y2, alpha)
   {
-    ## res <- 0
-    ## for(s1 in 0:n1)
-    ##   {
-    ##     for(s2 in 0:n2)
-    ##       {
-    ##         res <- res + dbinom(s1, n1, y1) * dbinom(s2, n2, y2) *
-    ##           qfun(n1, n2, s1, s2, alpha)
-    ##       }
-    ##     print(res)
-    ##   }
     res <- 0
     for(s1 in 0:n1)
       {
-        res <- res + sum(dbinom(s1, n1, y1) * dbinom(0:n2, n2, y2) *
-              qfun(n1, n2, s1, 0:n2, alpha))
+        for(s2 in 0:n2)
+          {
+            res <- res + dbinom(s1, n1, y1) * dbinom(s2, n2, y2) *
+              qfun(n1, n2, s1, s2, alpha)
+          }
       }
+    ## for(s1 in 0:n1)
+    ##   {
+    ##     res <- res + sum(dbinom(s1, n1, y1) * dbinom(0:n2, n2, y2) *
+    ##           qfun(n1, n2, s1, 0:n2, alpha))
+    ## qfun(.., 0:n2) is not the same as qfun(.., 0), .., qfun(.., n2)!
+    ##   }
     res
   }
 
@@ -232,11 +235,8 @@ phi2fun <- function(n, p, q0, q1, alpha)
     res <- 0
     for(j in 0:n)
       {
-        ##       res <- res + choose(n, j) * p^j * (1 - p)^(n - j) * phi1fun(n
-        ## - j, j, q0, q1, alpha)
         res <- res + dbinom(j, n, p) * phi1fun(n - j, j, q0, q1,
                                                alpha)
-
       }
     res
   }
@@ -250,10 +250,29 @@ typeIIError <- function(n, p, q0, q1, theta, alpha)
 
 typeIIError_pq0 <- function(pq0, n, theta, alpha, c = 0.125)
   {
-    z <- min(pq0[2], 1 - 0.25/(pq0[1]*(1 - pq0[1])))
-    typeIIError(n, pq0[1], z, z + c/(pq0[1](1 - pq0[1])),
+    z <- min(pq0[2], 1 - c/(pq0[1]*(1 - pq0[1])))
+    ## print(pq0)
+    res <- typeIIError(n, pq0[1], z, z + c/(pq0[1]*(1 - pq0[1])),
                 theta, alpha)
+    ## res <- ifelse(res >= 1, 1, res)
+    res
   }
+
+optimal_pq0<- function(theta, n, alpha, pq0 = c(.5, .5), c = .125)
+  {
+    control <- list()
+    control$fnscale <- -1
+    res <- optim(c(pq0[1], pq0[2]), typeIIError_pq0,
+                 n = n, theta = theta, alpha = alpha, c = c,
+                 ## method = "L-BFGS-B",
+                 control = control)
+    res$value
+  }
+
+## optimize(optimal_pq0, c(0, 1), n = 20, alpha = .1, c = .12)
+
+## optim(.5, optimal_pq0, n = n, alpha = alpha, method = "Brent",
+##       lower = 0, upper = 1)
 
 ## typeIIError_maxpq0 <- function(theta, n, alpha, c = 0.125)
 ##   {

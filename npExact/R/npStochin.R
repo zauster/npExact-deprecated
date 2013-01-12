@@ -46,7 +46,7 @@
 ## alpha ... level of the test
 ## iterations ... number of iterations
 
-npStochin <- function(x1, x2, d = 0, d1 = 0.3,
+npStochin <- function(x1, x2, d = 0,
                       alternative = "greater",
                       iterations = 5000, alpha = 0.05)
 {
@@ -65,8 +65,8 @@ npStochin <- function(x1, x2, d = 0, d1 = 0.3,
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
 
-  if (min(d + 1, d1 - d,1 - d1) <= 0)
-    stop("we need that -1 < d < d1 < 1")
+  ## if (min(d + 1, d1 - d,1 - d1) <= 0)
+  ##   stop("we need that -1 < d < d1 < 1")
 
   if(alternative == "less")
     {
@@ -97,7 +97,10 @@ npStochin <- function(x1, x2, d = 0, d1 = 0.3,
   ## it <- as.numeric(min_value(n=mi, p=p, p1=(1+d1)/2, alpha=alpha))
   ## if (it[2]>=0.99) stop("increase d1 so that typeII is below 1")
   ## theta <- it[1]
-  theta <- .4
+  theta <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
+                 optimizeTheta, alpha = alpha,
+                 mu0 = p, N = min.length)$par
+  theta <- ifelse(theta[1] < 0.1, 0.1, theta[1])
   pseudoalpha <- alpha * theta
 
   rej <- mean(replicate(iterations,

@@ -102,9 +102,9 @@ npMeanUnpaired <- function(x1, x2,
   ## define local variables
   n1 <- length(x1)
   n2 <- length(x2)
-  ## thetause <- theta(n1, n2, diff = d,
-  ##                   alpha = alpha, plotif = plotif)$theta
-  thetause <- .4
+  thetause <- theta(n1, n2, diff = d,
+                    alpha = alpha, plotif = plotif)$theta
+  ## thetause <- .4
 
 
   if(alternative == "two.sided")
