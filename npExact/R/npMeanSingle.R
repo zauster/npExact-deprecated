@@ -233,14 +233,14 @@ optimizeTheta <- function(par, alpha, mu0, N)
 
 
     ## real function content:
-    res <- (npMeanSingleTypeIIError(alpha, par[1],
-                                    mu0 + par[2], mu0, N) - 0.5)^2
+    res <- abs(npMeanSingleTypeIIError(alpha, par[1],
+                                    mu0 + par[2], mu0, N) - 0.5) ##^2
     res
   }
 
 ## Problems:
 ## If mu0 near 1 -> optimization procedure becomes unstable!
-## optim(c(0.4, .05), optimizeTheta, alpha = .05, mu0 = .4, N = 20)
+optim(c(0.4, .05), optimizeTheta, alpha = .05, mu0 = .4, N = 50)
 
 ## If mu0 near 1, mu.alt -> 1 and theta -> 0 (even -> negative)!
 
