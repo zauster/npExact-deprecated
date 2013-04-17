@@ -60,7 +60,7 @@ npStochin <- function(x1, x2, d = 0,
     warning("Low number of iterations. Results may be inaccurate.")
 
   if(alternative == "two.sided")
-    stop("Not sensible in this case.")
+    stop("Not sensible in this application.")
 
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
@@ -90,18 +90,23 @@ npStochin <- function(x1, x2, d = 0,
   count.x2 <- N1 * N2 - count.x1
   sample.est <- abs(count.x2 - count.x1)/(N1 * N2)
   names(sample.est) <- paste("stochastic inequality:",
-                             ifelse(alternative == "greater",
-                                    "P(x2 > x1)",
-                                    "P(x2 < x1)"))
+                             ## ifelse(alternative == "greater",
+                                    "P(x2 > x1)")
+                                    ## "P(x2 < x1)")) ## makes no sense
 
   ## it <- as.numeric(min_value(n=mi, p=p, p1=(1+d1)/2, alpha=alpha))
   ## if (it[2]>=0.99) stop("increase d1 so that typeII is below 1")
   ## theta <- it[1]
-  theta <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
-                 optimizeTheta, alpha = alpha,
-                 mu0 = p, N = min.length)$par
-  theta <- ifelse(theta[1] < 0.1, 0.1, theta[1])
-  pseudoalpha <- alpha * theta
+  ## theta <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
+  ##                optimizeTheta, alpha = alpha,
+  ##                mu0 = p, N = min.length)$par
+  ## theta <- ifelse(theta[1] < 0.1, 0.1, theta[1])
+  optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                           c(0, 1), p = p, N = min.length,
+                           alpha = alpha)
+  theta <- minTypeIIError(optimaltypeII[[1]],
+                          p = p, N = min.length, alpha = alpha)
+  pseudoalpha <- alpha * theta$theta
 
   rej <- mean(replicate(iterations,
                         sampleBinomTest(x1, x2, min.length,
@@ -111,7 +116,7 @@ npStochin <- function(x1, x2, d = 0,
 ## H1: P(x2 > x1) > P(x2 < x1), or: P(x2 > x1) - P(x2 < x1) > d
   ## names(d) <- "difference in 'greater-than'-Probabilities"
   names(d) <- "relation P(x2 > x1) - P(x2 < x1)"
-  rejection <- ifelse(rej > theta, TRUE, FALSE)
+  rejection <- ifelse(rej > theta$theta, TRUE, FALSE)
 
   structure(list(method = "Nonparametric Test for Stochastic Inequality",
                  data.name = DNAME,
@@ -120,10 +125,10 @@ npStochin <- function(x1, x2, d = 0,
                  probrej = rej,
                  rejection = rejection,
                  alpha = alpha,
-                 theta = theta,
+                 theta = theta$theta,
                  iterations = iterations,
                  pseudoalpha = pseudoalpha,
-                 ## bounds = bounds,
+                 bounds = NULL,
                  null.value = d),
             class = "nphtest")
 }

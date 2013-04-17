@@ -51,33 +51,48 @@ npMeanSingle <- function(x, mu,
 
   if(alternative == "two.sided")
     {
-      theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
-                         optimizeTheta, alpha = alpha,
-                         mu0 = p, N = n)$par
-      theta <- theta.par[1]
-      ## mu1 <- mu + theta.par[2] ## not needed right now
-      pseudoalpha <- (alpha/2) * theta
+      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                               c(0, 1), p = p, N = n,
+                               alpha = alpha)
+      theta <- minTypeIIError(optimaltypeII[[1]],
+                              p = p, N = n, alpha = alpha)
 
-      rj.greater <- mean(replicate(iterations,
+      ## print(theta) ## for debugging only
+      ## theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
+      ##                    optimizeTheta, alpha = alpha,
+      ##                    mu0 = p, N = n)$par
+      ## theta <- theta.par[1]
+      ## mu1 <- mu + theta.par[2] ## not needed right now
+      pseudoalpha <- (alpha/2) * theta$theta
+
+      rej.greater <- mean(replicate(iterations,
                                    transBinomTest(x, p, xp, n,
                                                   pseudoalpha)))
 
       x <- 1 - x
       p <- 1 - p
       xp <- x - p
-      theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
-                         optimizeTheta, alpha = alpha,
-                         mu0 = p, N = n)$par
-      theta <- theta.par[1]
-      ## mu1 <- mu + theta.par[2] ## not needed right now
+      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                               c(0, 1), p = p, N = n,
+                               alpha = alpha)
+      theta <- minTypeIIError(optimaltypeII[[1]],
+                              p = p, N = n, alpha = alpha)
 
-      rj.less <- mean(replicate(iterations,
+      ## theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
+      ##                    optimizeTheta, alpha = alpha,
+      ##                    mu0 = p, N = n)$par
+      ## theta <- theta.par[1]
+      ## mu1 <- mu + theta.par[2] ## not needed right now
+      ## print(theta)
+      pseudoalpha <- (alpha/2) * theta$theta
+
+      rej.less <- mean(replicate(iterations,
                                 transBinomTest(x, p, xp, n,
                                                pseudoalpha)))
 
-      rj <- rj.greater + rj.less
+      rej <- rej.greater + rej.less
     }
-  else
+  else ## alternative == "greater" => default
     {
       if(alternative == "less")
         {
@@ -87,14 +102,19 @@ npMeanSingle <- function(x, mu,
           xp <- x - p
         }
 
-      theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
-                         optimizeTheta, alpha = alpha,
-                         mu0 = p, N = n)$par
-      theta <- ifelse(theta.par[1] < 0.1, 0.1, theta.par[1])
+      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                               c(0, 1), p = p, N = n,
+                               alpha = alpha)
+      theta <- minTypeIIError(optimaltypeII[[1]],
+                              p = p, N = n, alpha = alpha)
+      ## theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
+      ##                    optimizeTheta, alpha = alpha,
+      ##                    mu0 = p, N = n)$par
+      ## theta <- ifelse(theta.par[1] < 0.1, 0.1, theta.par[1])
       ## mu1 <- mu + theta.par[2] ## not needed right now
-      pseudoalpha <- alpha * theta
+      pseudoalpha <- alpha * theta$theta
 
-      rj <- mean(replicate(iterations,
+      rej <- mean(replicate(iterations,
                            transBinomTest(x, p, xp, n,
                                           pseudoalpha)))
     }
@@ -104,7 +124,7 @@ npMeanSingle <- function(x, mu,
   names(sample.est) <- "mean"
   null.value <- mu
   names(null.value) <- "mean"
-  rejection <- ifelse(rj >= theta, TRUE, FALSE)
+  rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
   bounds <- paste("[", round(lower, digits = 3), ", ",
                   round(upper, digits = 3), "]", sep = "")
 
@@ -112,11 +132,11 @@ npMeanSingle <- function(x, mu,
                    data.name = DNAME,
                    alternative = alternative,
                    estimate = sample.est,
-                   probrej = rj,
+                   probrej = rej,
                    rejection = rejection,
                    alpha = alpha,
-                   theta = theta,
-                   mu.alternative = mu + theta.par[2],
+                   theta = theta$theta,
+                   mu.alternative = optimaltypeII$root,
                    iterations = iterations,
                    pseudoalpha = pseudoalpha,
                    bounds = bounds,
@@ -164,103 +184,103 @@ transBinomTest <- function(x, p, xp, n, pseudoalpha)
 ## w
 ## helper function, to ease the reading of the code
 
-w <- function(x)
-  {
-    as.numeric(x >= 0)
-  }
-
-## g1fun
-## helper function, to calculate the type II error in
-## npMeanSingleTypeIIerror
-
-g1fun <- function(k, N, z, alpha)
-  {
-    summationterm1 <- alpha - (1 - pbinom(k - 1, N, z))
-    summationterm2 <- alpha - (1 - pbinom(k, N, z))
-    term3 <- summationterm2/dbinom(k, N, z)
-    res <- w(summationterm1) + (1 - w(summationterm1)) *
-  (w(summationterm2)) * term3
-    res
-  }
-
-## g2fun
-## helper function, to calculate the type II error in
-## npMeanSingleTypeIIerror
-
-g2fun <- function(alpha, mu, N, z)
-  {
-    k <- 0:(N - 1)
-    term2 <- w(alpha - z^N) + (1 - w(alpha - z^N))*(alpha/z^N)
-    res <- sum(dbinom(k, N, mu) * g1fun(k, N, z, alpha)) + mu^N*term2
-    res
-  }
-
-## npMeanSingleTypeIIError
-## calculates the type II error for the npMeanSingle function
-
-## alpha ... level of the test
-## theta ... parameter for the random testing
-## mu.alternative ... value where the type II error is evaluated
-## mu0 ... hypothesized "true" value of the mean (transformed)
-## N ... length of x
-
-npMeanSingleTypeIIError <- function(alpha, theta,
-                                    mu.alternative, mu0, N)
-  {
-    res <- (1 - g2fun(alpha * theta,
-                      mu.alternative, N, mu0))/(1 - theta)
-    ifelse(res >= 1, 1, res)
-  }
-
-## optimizeTheta
-## finds the value of theta and d (difference of mu.alternative and
-## mu0), such that the type II error is 0.5 at this value
-
-## par ... the two parameters to be optimized, theta and the
-## difference of the 'true' mean to the hypothesized mean
-## alpha ... level of the test
-## mu0 ... hypothesized "true" value of the mean
-## N ... length of x
-optimizeTheta <- function(par, alpha, mu0, N)
-  {
-    ## for debugging purposes:
-    ## print(paste("theta: ", par[1], " mu.alt: ", mu0 + par[2]))
-    ## par[1] <- ifelse(par[1] < 0, par[1] <- 0.8,
-    ##                  ifelse(par[1] > 1, par[1] <- 0.9, par[1] <- par[1]))
-    ## par[2] <- ifelse(par[2] < 0, par[2] <- 0.1,
-    ##                  ifelse(par[2] > 1, par[2] <- 0.9, par[2] <- par[2]))
-    ## print(paste("theta: ", par[1], " mu.alt: ", mu0 + par[2]))
-
-
-    ## real function content:
-    res <- abs(npMeanSingleTypeIIError(alpha, par[1],
-                                    mu0 + par[2], mu0, N) - 0.5) ##^2
-    res
-  }
-
-## Problems:
-## If mu0 near 1 -> optimization procedure becomes unstable!
-optim(c(0.4, .05), optimizeTheta, alpha = .05, mu0 = .4, N = 50)
-
-## If mu0 near 1, mu.alt -> 1 and theta -> 0 (even -> negative)!
-
-## alpha <- 1:5/25
-## theta <- 5:20/25
-## mu0 <- 1:19/40
-## mu.alt <- mu0 + .05
-
-## for(i in alpha)
+## w <- function(x)
 ##   {
-##     for(j in theta)
-##       {
-##         for(k in 1:19)
-##           {
-##             print(paste("TII:", round(npMeanSingleTypeIIError(i, j,
-##                                                         mu.alt[k], mu0[k],
-##                                                         50),
-##                                       digits = 3),
-##                         " alpha: ", i, " theta: ", j,
-##                         " mualt: ", mu.alt[k], " mu0: ", mu0[k]))
-##           }
-##       }
+##     as.numeric(x >= 0)
 ##   }
+
+## ## g1fun
+## ## helper function, to calculate the type II error in
+## ## npMeanSingleTypeIIerror
+
+## g1fun <- function(k, N, z, alpha)
+##   {
+##     summationterm1 <- alpha - (1 - pbinom(k - 1, N, z))
+##     summationterm2 <- alpha - (1 - pbinom(k, N, z))
+##     term3 <- summationterm2/dbinom(k, N, z)
+##     res <- w(summationterm1) + (1 - w(summationterm1)) *
+##   (w(summationterm2)) * term3
+##     res
+##   }
+
+## ## g2fun
+## ## helper function, to calculate the type II error in
+## ## npMeanSingleTypeIIerror
+
+## g2fun <- function(alpha, mu, N, z)
+##   {
+##     k <- 0:(N - 1)
+##     term2 <- w(alpha - z^N) + (1 - w(alpha - z^N))*(alpha/z^N)
+##     res <- sum(dbinom(k, N, mu) * g1fun(k, N, z, alpha)) + mu^N*term2
+##     res
+##   }
+
+## ## npMeanSingleTypeIIError
+## ## calculates the type II error for the npMeanSingle function
+
+## ## alpha ... level of the test
+## ## theta ... parameter for the random testing
+## ## mu.alternative ... value where the type II error is evaluated
+## ## mu0 ... hypothesized "true" value of the mean (transformed)
+## ## N ... length of x
+
+## npMeanSingleTypeIIError <- function(alpha, theta,
+##                                     mu.alternative, mu0, N)
+##   {
+##     res <- (1 - g2fun(alpha * theta,
+##                       mu.alternative, N, mu0))/(1 - theta)
+##     ifelse(res >= 1, 1, res)
+##   }
+
+## ## optimizeTheta
+## ## finds the value of theta and d (difference of mu.alternative and
+## ## mu0), such that the type II error is 0.5 at this value
+
+## ## par ... the two parameters to be optimized, theta and the
+## ## difference of the 'true' mean to the hypothesized mean
+## ## alpha ... level of the test
+## ## mu0 ... hypothesized "true" value of the mean
+## ## N ... length of x
+## optimizeTheta <- function(par, alpha, mu0, N)
+##   {
+##     ## for debugging purposes:
+##     ## print(paste("theta: ", par[1], " mu.alt: ", mu0 + par[2]))
+##     ## par[1] <- ifelse(par[1] < 0, par[1] <- 0.8,
+##     ##                  ifelse(par[1] > 1, par[1] <- 0.9, par[1] <- par[1]))
+##     ## par[2] <- ifelse(par[2] < 0, par[2] <- 0.1,
+##     ##                  ifelse(par[2] > 1, par[2] <- 0.9, par[2] <- par[2]))
+##     ## print(paste("theta: ", par[1], " mu.alt: ", mu0 + par[2]))
+
+
+##     ## real function content:
+##     res <- abs(npMeanSingleTypeIIError(alpha, par[1],
+##                                     mu0 + par[2], mu0, N) - 0.5) ##^2
+##     res
+##   }
+
+## ## Problems:
+## ## If mu0 near 1 -> optimization procedure becomes unstable!
+## optim(c(0.4, .05), optimizeTheta, alpha = .05, mu0 = .4, N = 50)
+
+## ## If mu0 near 1, mu.alt -> 1 and theta -> 0 (even -> negative)!
+
+## ## alpha <- 1:5/25
+## ## theta <- 5:20/25
+## ## mu0 <- 1:19/40
+## ## mu.alt <- mu0 + .05
+
+## ## for(i in alpha)
+## ##   {
+## ##     for(j in theta)
+## ##       {
+## ##         for(k in 1:19)
+## ##           {
+## ##             print(paste("TII:", round(npMeanSingleTypeIIError(i, j,
+## ##                                                         mu.alt[k], mu0[k],
+## ##                                                         50),
+## ##                                       digits = 3),
+## ##                         " alpha: ", i, " theta: ", j,
+## ##                         " mualt: ", mu.alt[k], " mu0: ", mu0[k]))
+## ##           }
+## ##       }
+## ##   }

@@ -11,17 +11,16 @@ on the underlying distributions.
 \tabular{ll}{
 Package: \tab npExact\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2012-07-17\cr
+Version: \tab 0.1 \cr
+Date: \tab 2013-04-16 \cr
 License: \tab GPL-2\cr
 }
-~~ An overview of how to use the package, including the most ~~
-~~ important functions ~~
+~~ Please include some information about the most important functions of
+the package here~~
 }
 \author{
-Karl Schlag
-
-Maintainer: Oliver Reiter
+Karl Schlag, Oliver Reiter, Peter Saffert, Christian Pechhacker, Simona
+Jokubauskaite, Tautvilas Janusauskas
 }
 \references{
   Karl Schlag (2012).

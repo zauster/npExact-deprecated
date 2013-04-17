@@ -45,7 +45,7 @@ be used?
   test on the covariance of two variables with binary outcomes. Using
   the lower and upper bounds, the data in [lower, upper] is transformed
   to [0, 1]. Then, using a random transformation, the data is
-  transformed again to {0, 1}. On this data, the exact Fisher-Tocher
+  transformed again to \{0, 1\}. On this data, the exact Fisher-Tocher
   test is performed with a level of 'pseudoalpha' and the rejection
   TRUE/FALSE is recorded. This last step is repeated 'iterations'
   times. If the proportion of rejected iterations is at least 'theta',

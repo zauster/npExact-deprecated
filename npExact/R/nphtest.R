@@ -74,9 +74,10 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
     if(!is.null(x$bounds))
       {
         cat(paste("   ", x$data.name,
-                  " in ", x$bounds, sep = ""))
+                  " in ", x$bounds,
+                  "\n", sep = ""))
       }
-    cat("\n   alpha:", x$alpha)
+    cat("   alpha:", x$alpha)
     cat("\n   theta:", x$theta)
 
     ## if(!is.null(x$pseudoalpha))

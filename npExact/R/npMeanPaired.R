@@ -50,13 +50,13 @@
 
 ## y1 <- sample(c(1,2), size = 100, replace = TRUE)
 ## y2 <- sample(c(1,2,3,4), size = 100, replace = TRUE)
-## npMeanPaired(y1, y2, low = 0, up = 5, d=1.27, alpha = 0.05)
-## npMeanPaired(runif(20), runif(20), low = 0, up = 1, d = 0.4,
+## npMeanPaired(y1, y2, low = 0, up = 5, alpha = 0.05)
+## npMeanPaired(runif(20), runif(20), low = 0, up = 1,
 ##              alternative = "greater", iterations = 2000)
 
 
-npMeanPaired <- function(x1, x2, low = 0, up = 1,
-                         d, alpha = 0.05,
+npMeanPaired <- function(x1, x2, low = 0, up = 1, ## d = 0,
+                         alpha = 0.05,
                          alternative = "greater",
                          iterations = 5000)
   {
@@ -82,6 +82,14 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1,
     if(alpha >= 1 | alpha <= 0)
       stop("Please supply a sensible value for alpha.")
 
+      if(alternative != "greater" & alternative != "less" & alternative !=
+  "two.sided")
+    stop("Please specify the alternative you want to test. Possible value are: 'greater' (default), 'less' or 'two.sided'")
+
+    ## d <- d/(up - low)
+    ## if(d > 1 | d < 0)
+    ##   stop("Please supply a sensible value for d.")
+
     n <- length(x1)
 
     sample.est <- c(mean(x1), mean(x2))
@@ -90,18 +98,17 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1,
     x1 <- (x1 - low)/(up - low)
     x2 <- (x2 - low)/(up - low)
 
-
     ## Calculate the optimal theta, given a estimated difference of
     ## d = ...
-    ## d <- d/(up - low)
-    ## it <- as.numeric(min_value(n=n, p=1/2, p1=1/2+d/2, alpha=alpha))
-    ## ## print(it)
-    ## theta <- it[1]
-    theta <- 0.4
+    optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                             c(0, 1), p = 0.5, N = n,
+                             alpha = alpha)
+    theta <- minTypeIIError(optimaltypeII[[1]],
+                            p = 0.5, N = n, alpha = alpha)
 
     if(alternative == "two.sided")
       {
-        pseudoalpha <- (alpha/2) * theta
+        pseudoalpha <- (alpha/2) * theta$theta
         rej.upper <- mean(replicate(iterations,
                                     McNemarTestRandom(runif(n) < x1,
                                                       runif(n) < x2,
@@ -121,7 +128,7 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1,
             x1 <- 1 - x1
             x2 <- 1 - x2
           }
-        pseudoalpha <- alpha * theta
+        pseudoalpha <- alpha * theta$theta
         rej <- mean(replicate(iterations,
                               McNemarTestRandom(runif(n) < x1,
                                                 runif(n) < x2,
@@ -130,8 +137,8 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1,
 
     names(sample.est) <- c("mean", "mean")
     null.value <- 0
-    names(null.value) <- "mean difference"
-    rejection <- ifelse(rej > theta, TRUE, FALSE)
+    names(null.value) <- "E[x2] - E[x1]" ##"mean difference"
+    rejection <- ifelse(rej > theta$theta, TRUE, FALSE)
     bounds <- paste("[", low, ", ", up, "]", sep = "")
 
     structure(list(method = "Nonparametric Mean Test for Matched Pairs",
@@ -141,7 +148,7 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1,
                    probrej = rej,
                    rejection = rejection,
                    alpha = alpha,
-                   theta = theta,
+                   theta = theta$theta,
                    iterations = iterations,
                    pseudoalpha = pseudoalpha,
                    bounds = bounds,

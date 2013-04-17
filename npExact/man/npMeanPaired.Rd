@@ -6,10 +6,12 @@
 }
 \description{
   This test performs the exact McNemar Test on a random transformation of
-  the data. The null hypothesis to be tested is H_0: E(x_1) >= E(x_2).
+  the data. The null hypothesis to be tested is H_0: E(x_1) >= E(x_2),
+  with the corresponding alternative hypothesis H_1: E(x_2) < E(x_2) or
+  E(x_2) - E(x_1) > 0
 }
 \usage{
-npMeanPaired(x1, x2, low = 0, up = 1, d, alpha = 0.05,
+npMeanPaired(x1, x2, low = 0, up = 1, alpha = 0.05,
              alternative = "greater", iterations = 5000)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -20,10 +22,10 @@ npMeanPaired(x1, x2, low = 0, up = 1, d, alpha = 0.05,
   \item{low, up}{
     the logical bounds of the variables
   }
-  \item{d}{
-    the hypothesised mean difference, which will be used to minimize the
-    type II error.
-  }
+  % \item{d}{
+  %   the hypothesised mean difference, which will be used to minimize the
+  %   type II error.
+  % }
   \item{alpha}{
     the type I error
   }
@@ -37,7 +39,7 @@ npMeanPaired(x1, x2, low = 0, up = 1, d, alpha = 0.05,
 \details{
   This test uses the known bounds of the variables to transform the data
   into [0, 1]. Then a random transformation is used to
-  turn the data into a binary-valued variables. On this variables the
+  turn the data into binary-valued variables. On this variables the
   exact McNemar Test with level 'pseudoalpha' is performed and the
   result recorded. The last steps are repeated very often and if the
   proportion of rejected iterations is at least 'theta', then the null
@@ -104,7 +106,7 @@ npMeanPaired(x1, x2, low = 0, up = 1, d, alpha = 0.05,
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
 \examples{
-npMeanPaired(runif(20), runif(20), low = 0, up = 1, d = 0.4,
+npMeanPaired(runif(20), runif(20), low = 0, up = 1,
              alternative = "greater", iterations = 2000)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

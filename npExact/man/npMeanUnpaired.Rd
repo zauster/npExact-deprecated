@@ -10,11 +10,10 @@ to be paired.
 }
 \usage{
 npMeanUnpaired(x1, x2,
-               lower = 0, upper = 1, d = 0.3,
+               lower = 0, upper = 1, 
                iterations = 5000,
-               alpha = 0.05, plotif = F,
-               helppoints = 100,
-               alternative = "less")
+               alpha = 0.05,
+               alternative = "greater")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -24,22 +23,22 @@ the two variables to be tested.
   \item{lower, upper}{
 the logical bounds of the variables.
 }
-  \item{d}{
-difference (d = EY2 - EY1) such that type II is minimized when H1:
-E(Y1)+d <= E(Y2)
-}
+%   \item{d}{
+% difference (d = EY2 - EY1) such that type II is minimized when H1:
+% E(Y1)+d <= E(Y2)
+% }
   \item{iterations}{
 the number of iterations
 }
   \item{alpha}{
 the type I error
 }
-  \item{plotif}{
-logical, should a plot be generated?
-}
-  \item{helppoints}{
-the number of helping points for the plot.
-}
+%   \item{plotif}{
+% logical, should a plot be generated?
+% }
+%   \item{helppoints}{
+% the number of helping points for the plot.
+% }
 \item{alternative}{
 the alternative hypothesis (currently unsupported)
 }
@@ -95,7 +94,7 @@ Karl Schlag (2008).
   regressions without making assumptions. Available at \url{http://www.econ.upf.edu/en/research/onepaper.php?id=1097}.
 }
 \author{
-Karl Schlag and Christian Pechhacker
+Karl Schlag, Christian Pechhacker and Peter Saffert
 }
 % \note{
 % %%  ~~further notes~~
@@ -109,7 +108,7 @@ Karl Schlag and Christian Pechhacker
 }
 
 \examples{
-npMeanUnpaired(runif(20), runif(20), d = 0.4)
+npMeanUnpaired(runif(20), runif(20))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
