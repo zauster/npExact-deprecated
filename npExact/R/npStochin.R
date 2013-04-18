@@ -48,13 +48,20 @@
 
 npStochin <- function(x1, x2, d = 0,
                       alternative = "greater",
-                      iterations = 5000, alpha = 0.05)
+                      iterations = 5000, alpha = 0.05,
+                      ignoreNA = FALSE)
 {
   DNAME <- paste(deparse(substitute(x1)), "and",
                  deparse(substitute(x2)))
 
   x1 <- as.vector(x1)
   x2 <- as.vector(x2)
+
+  if(ignoreNA == TRUE)
+    {
+      x1 <- x1[!is.na(x1)]
+      x2 <- x2[!is.na(x2)]
+    }
 
   if(iterations < 500)
     warning("Low number of iterations. Results may be inaccurate.")
