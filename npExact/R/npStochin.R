@@ -45,17 +45,56 @@
 ## x1, x2 ... two data vectors
 ## alpha ... level of the test
 ## iterations ... number of iterations
+## alternative = "greater" -> x1 >> x2
 
 npStochin <- function(x1, x2, d = 0,
                       alternative = "greater",
                       iterations = 5000, alpha = 0.05,
                       ignoreNA = FALSE)
 {
-  DNAME <- paste(deparse(substitute(x1)), "and",
-                 deparse(substitute(x2)))
+  names.x1 <- deparse(substitute(x1))
+  names.x2 <- deparse(substitute(x2))
+  DNAME <- paste(names.x1, "and",
+                 names.x2)
 
   x1 <- as.vector(x1)
   x2 <- as.vector(x2)
+
+  if(alternative == "less")
+    {
+      names.x1.new <- names.x2
+      names.x2 <- names.x1
+      names.x1 <- names.x1.new
+      x1.new <- x2
+      x2 <- x1
+      x1 <- x1.new
+    }
+
+  ## names(sample.est) <- paste("stochastic inequality: P(",
+  ##                            names.x2,
+  ##                            ifelse(alternative == "greater", " > ",
+  ##                                   ifelse(alternative == "less", " < ",
+  ##                                          " > ")),
+  ##                            names.x1, ") - P(",
+  ##                            names.x2,
+  ##                            ifelse(alternative == "greater", " < ",
+  ##                                   ifelse(alternative == "less", " > ",
+  ##                                          " < ")),
+  ##                            names.x1, ")",
+  ##                            sep = "")
+
+  null.hypothesis <- paste("P(", names.x2, " > ", names.x1, ") - P(",
+                           names.x2, " < ", names.x1, ") <= ",
+                           ## ifelse(alternative == "greater", " <= ",
+                           ##        ifelse(alternative == "less", " >= ",
+                           ##               " = ")),
+                           d, sep = "")
+  alt.hypothesis <- paste("P(", names.x2, " > ", names.x1, ") - P(",
+                           names.x2, " < ", names.x1, ") > ",
+                           ## ifelse(alternative == "greater", " > ",
+                           ##        ifelse(alternative == "less", " < ",
+                           ##               " != ")),
+                           d, sep = "")
 
   if(ignoreNA == TRUE)
     {
@@ -67,7 +106,7 @@ npStochin <- function(x1, x2, d = 0,
     warning("Low number of iterations. Results may be inaccurate.")
 
   if(alternative == "two.sided")
-    stop("Not sensible in this application.")
+    stop("Not yet implemented. Please test for greater and less at alpha/2.")
 
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
@@ -75,12 +114,8 @@ npStochin <- function(x1, x2, d = 0,
   ## if (min(d + 1, d1 - d,1 - d1) <= 0)
   ##   stop("we need that -1 < d < d1 < 1")
 
-  if(alternative == "less")
-    {
-      x1.new <- x2
-      x2 <- x1
-      x1 <- x1.new
-    }
+
+
 
   ## define local variables
   N1 <- length(x1)
@@ -96,10 +131,19 @@ npStochin <- function(x1, x2, d = 0,
     }
   count.x2 <- N1 * N2 - count.x1
   sample.est <- abs(count.x2 - count.x1)/(N1 * N2)
-  names(sample.est) <- paste("stochastic inequality:",
-                             ## ifelse(alternative == "greater",
-                                    "P(x2 > x1)")
-                                    ## "P(x2 < x1)")) ## makes no sense
+  names(sample.est) <- paste("stochastic inequality: P(",
+                             names.x2,
+                             ifelse(alternative == "greater", " > ",
+                                    ifelse(alternative == "less", " < ",
+                                           " > ")),
+                             names.x1, ") - P(",
+                             names.x2,
+                             ifelse(alternative == "greater", " < ",
+                                    ifelse(alternative == "less", " > ",
+                                           " < ")),
+                             names.x1, ")",
+                             sep = "")
+
 
   ## it <- as.numeric(min_value(n=mi, p=p, p1=(1+d1)/2, alpha=alpha))
   ## if (it[2]>=0.99) stop("increase d1 so that typeII is below 1")
@@ -128,6 +172,8 @@ npStochin <- function(x1, x2, d = 0,
   structure(list(method = "Nonparametric Test for Stochastic Inequality",
                  data.name = DNAME,
                  alternative = alternative,
+                 null.hypothesis = null.hypothesis,
+                 alt.hypothesis = alt.hypothesis,
                  estimate = sample.est,
                  probrej = rej,
                  rejection = rejection,

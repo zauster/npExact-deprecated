@@ -22,6 +22,17 @@ npMeanSingle <- function(x, mu,
   sample.est <- mean(x)
   x <- as.vector(x)
 
+  null.hypothesis <- paste("E(", DNAME, ") ",
+                           ifelse(alternative == "greater", "<= ",
+                                  ifelse(alternative == "less", ">= ",
+                                         "= ")),
+                           mu, sep = "")
+  alt.hypothesis <- paste("E(", DNAME, ") ",
+                          ifelse(alternative == "greater", "> ",
+                                 ifelse(alternative == "less", "< ",
+                                        "!= ")),
+                          mu, sep = "")
+
   ## warnings
   if (min(x) < lower | max(x) > upper)
     stop("Some values are out of bounds!")
@@ -129,19 +140,21 @@ npMeanSingle <- function(x, mu,
                   round(upper, digits = 3), "]", sep = "")
 
   structure(list(method = method,
-                   data.name = DNAME,
-                   alternative = alternative,
-                   estimate = sample.est,
-                   probrej = rej,
-                   rejection = rejection,
-                   alpha = alpha,
-                   theta = theta$theta,
-                   mu.alternative = optimaltypeII$root,
-                   iterations = iterations,
-                   pseudoalpha = pseudoalpha,
-                   bounds = bounds,
-                   null.value = null.value),
-              class = "nphtest")
+                 data.name = DNAME,
+                 alternative = alternative,
+                 null.hypothesis = null.hypothesis,
+                 alt.hypothesis = alt.hypothesis,
+                 estimate = sample.est,
+                 probrej = rej,
+                 rejection = rejection,
+                 alpha = alpha,
+                 theta = theta$theta,
+                 mu.alternative = optimaltypeII$root,
+                 iterations = iterations,
+                 pseudoalpha = pseudoalpha,
+                 bounds = bounds,
+                 null.value = null.value),
+            class = "nphtest")
 }
 
 

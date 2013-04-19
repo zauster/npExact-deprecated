@@ -25,14 +25,17 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
     cat("\n")
     cat("data: ", x$data.name, "\n")
 
-    if(!is.null(x$alternative))
+    if(!is.null(x$alternative) && !is.null(x$null.hypothesis) && !is.null(x$alt.hypothesis))
       {
         alt.char <- ifelse(x$rejection == TRUE,
                            "greater", "less")
         thus <- ifelse(x$rejection == TRUE,
                        "REJECTED", "NOT rejected")
-        cat("Probability of rejection: ", x$probrej, "is", alt.char,
-            "than theta:", x$theta, "\n\tthus", thus, "\n")
+        cat("Null hypothesis H0: ", x$null.hypothesis, "\n", "\t",
+            thus, "in favour of", "\n")
+        cat("alternative hypothesis H1: ", x$alt.hypothesis, "\n\n")
+        cat("as probability of rejection: ", x$probrej, "is", alt.char,
+            "than theta:", x$theta, "\n") # "\n\tthus", thus, "\n")
       }
     ## out <- character()
     ## if(!is.null(x$statistic))
@@ -50,25 +53,25 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
         cat(fp, "\n")
     }
 
-    if(!is.null(x$alternative)) {
-        cat("alternative hypothesis: ")
-        if(!is.null(x$null.value)) {
-            if(length(x$null.value) == 1L) {
-                alt.char <-
-                    switch(x$alternative,
-                           two.sided = "not equal to",
-                           less = "less than",
-                           greater = "greater than")
-                cat("true", names(x$null.value), "is", alt.char,
-                    x$null.value, "\n")
-            }
-            else {
-                cat(x$alternative, "\nnull values:\n")
-                print(x$null.value, ...)
-            }
-        }
-        else cat(x$alternative, "\n")
-    }
+    ## if(!is.null(x$alternative)) {
+    ##     cat("alternative hypothesis: ")
+    ##     if(!is.null(x$null.value)) {
+    ##         if(length(x$null.value) == 1L) {
+    ##             alt.char <-
+    ##                 switch(x$alternative,
+    ##                        two.sided = "not equal to",
+    ##                        less = "less than",
+    ##                        greater = "greater than")
+    ##             cat("true", names(x$null.value), "is", alt.char,
+    ##                 x$null.value, "\n")
+    ##         }
+    ##         else {
+    ##             cat(x$alternative, "\nnull values:\n")
+    ##             print(x$null.value, ...)
+    ##         }
+    ##     }
+    ##     else cat(x$alternative, "\n")
+    ## }
 
     cat("\ngiven parameters:\n")
     if(!is.null(x$bounds))

@@ -71,8 +71,22 @@ npMeanUnpaired <- function(x1, x2,
                            ## helppoints = 100,
                            alternative = "greater")
 {
-  DNAME <- paste(deparse(substitute(x1)), "and",
-                 deparse(substitute(x2)))
+    names.x1 <- deparse(substitute(x1))
+    names.x2 <- deparse(substitute(x2))
+
+    DNAME <- paste(names.x1, "and", names.x2)
+
+    null.hypothesis <- paste("E(", names.x2, ")",
+                            ifelse(alternative == "greater", " <= ",
+                                   ifelse(alternative == "less", " >= ",
+                                          " = ")),
+                            "E(", names.x1, ")", sep = "")
+
+    alt.hypothesis <- paste("E(", names.x2, ")",
+                            ifelse(alternative == "greater", " > ",
+                                   ifelse(alternative == "less", " < ",
+                                          " != ")),
+                            "E(", names.x1, ")", sep = "")
 
   x1 <- as.vector(x1)
   x2 <- as.vector(x2)
@@ -149,6 +163,8 @@ npMeanUnpaired <- function(x1, x2,
   structure(list(method = method,
                  data.name = DNAME,
                  alternative = alternative,
+                 null.hypothesis = null.hypothesis,
+                 alt.hypothesis = alt.hypothesis,
                  estimate = sample.est,
                  probrej = rej,
                  rejection = rejection,
