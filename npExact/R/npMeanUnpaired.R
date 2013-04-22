@@ -67,9 +67,8 @@ npMeanUnpaired <- function(x1, x2,
                            lower = 0, upper = 1, ## d = 0.3,
                            iterations = 5000,
                            alpha = 0.05,
-                           ## plotif = F,
-                           ## helppoints = 100,
-                           alternative = "greater")
+                           alternative = "greater",
+                           ignoreNA = TRUE)
 {
     names.x1 <- deparse(substitute(x1))
     names.x2 <- deparse(substitute(x2))
@@ -91,8 +90,14 @@ npMeanUnpaired <- function(x1, x2,
   x1 <- as.vector(x1)
   x2 <- as.vector(x2)
 
+  if(ignoreNA == TRUE)
+    {
+      x1 <- x1[!is.na(x1)]
+      x2 <- x2[!is.na(x2)]
+    }
+
   if (min(x1, x2) < lower | max(x1, x2) > upper)
-    stop("Some values are out of bounds!")
+    stop("Some values are out of bounds (or NA)!")
 
   if(iterations < 500)
     warning("Low number of iterations. Results may be inaccurate.")
@@ -120,10 +125,12 @@ npMeanUnpaired <- function(x1, x2,
   min.length <- min(n1, n2)
 
   optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                           c(0, 1), p = 0.5, N = min.length,
+                           c(0, 1), p = 0.3 * (upper - lower),
+                           N = min.length,
                            alpha = alpha)
   theta <- minTypeIIError(optimaltypeII[[1]],
-                          p = 0.5, N = min.length, alpha = alpha)
+                          p = 0.3 * (upper - lower),
+                          N = min.length, alpha = alpha)
   pseudoalpha <- alpha * theta$theta
 
   ## thetause <- theta(n1, n2, diff = d,

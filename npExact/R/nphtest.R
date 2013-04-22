@@ -34,7 +34,7 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
         cat("Null hypothesis H0: ", x$null.hypothesis, "\n", "\t",
             thus, "in favour of", "\n")
         cat("alternative hypothesis H1: ", x$alt.hypothesis, "\n\n")
-        cat("as probability of rejection: ", x$probrej, "is", alt.char,
+        cat("as threshold probability: ", x$probrej, "is", alt.char,
             "than theta:", x$theta, "\n") # "\n\tthus", thus, "\n")
       }
     ## out <- character()

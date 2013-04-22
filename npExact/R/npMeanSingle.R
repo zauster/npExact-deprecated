@@ -16,7 +16,8 @@
 npMeanSingle <- function(x, mu,
                          lower = 0, upper = 1,
                          iterations = 5000, alpha = 0.05,
-                         alternative = "greater")
+                         alternative = "greater",
+                         ignoreNA = FALSE)
 {
   DNAME <- deparse(substitute(x))
   sample.est <- mean(x)
@@ -33,9 +34,14 @@ npMeanSingle <- function(x, mu,
                                         "!= ")),
                           mu, sep = "")
 
+  if(ignoreNA == TRUE)
+    {
+      x <- x[!is.na(x)]
+    }
+
   ## warnings
   if (min(x) < lower | max(x) > upper)
-    stop("Some values are out of bounds!")
+    stop("Some values are out of bounds (or NA)!")
 
   if(iterations < 500)
     warning("Low number of iterations. Results may be inaccurate.")

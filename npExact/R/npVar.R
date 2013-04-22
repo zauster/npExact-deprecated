@@ -31,15 +31,33 @@
 ## npVar(runif(50), low = 0, up = 1, var = 0.1, alt.var = 0.15)
 
 npVar <- function(x, lower = 0, upper = 1, variance,
-                  alt.variance,
+                  ## alt.variance,
                   alternative = "greater",
-                  alpha = 0.05, iterations = 5000)
+                  alpha = 0.05, iterations = 5000,
+                  ignoreNA = FALSE)
 {
   DNAME <- deparse(substitute(x))
-    sample.est <- var(x)
+  sample.est <- var(x)
+  x <- as.vector(x)
+
+  null.hypothesis <- paste("Var(", DNAME, ") ",
+                           ifelse(alternative == "greater", "<= ",
+                                  ifelse(alternative == "less", ">= ",
+                                         "= ")),
+                           variance, sep = "")
+  alt.hypothesis <- paste("Var(", DNAME, ") ",
+                          ifelse(alternative == "greater", "> ",
+                                 ifelse(alternative == "less", "< ",
+                                        "!= ")),
+                          variance, sep = "")
+
+  if(ignoreNA == TRUE)
+    {
+      x <- x[!is.na(x)]
+    }
 
   if (min(x) < lower | max(x) > upper)
-    stop("Some values are out of bounds!")
+    stop("Some values are out of bounds (or NA)!")
 
   if (variance > (upper - lower)/4)
     stop("Hypothesized 'variance' is too large.")
@@ -60,33 +78,27 @@ npVar <- function(x, lower = 0, upper = 1, variance,
   m <- floor(length(x) / 2)
   x <- (x - lower)/(upper - lower)  ## Normalization so that x in [0,1]
   p <- 2 * variance / (upper - lower)^2  ## normalized threshold
-  ## p1 <- 2 * alt.variance / (upper - lower)^2  ## threshold for finetuning and computing typeII error
 
-  ## if (alternative=="greater")
-  ##   {
-  ##     it <- as.numeric(min_value(n=m, p=1-p, p1=1-p1, alpha=alpha))
-  ##     if (it[2]>=0.99)
-  ##       stop("decrease alt.variance so that typeII is below 1")
-  ##   }
-  ## else
-  ##   {
-  ##     it <- as.numeric(min_value(n=m, p=p, p1=p1, alpha=alpha))
-  ##     if (it[2]>=0.99)
-  ##       stop("increase alt.variance so that typeII is below 1")
-  ##   }
-
-  ## theta <- it[1]
-  theta <- 0.4 ## just as long the code above doesn't work
-  pseudoalpha <- alpha * theta ## size adjusted downward for
   ## deterministic test
-
   if(alternative == "two.sided")
     {
-      pseudoalpha <- pseudoalpha/2
+      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                               c(0, 1), p = p, N = m,
+                               alpha = alpha)
+      theta <- minTypeIIError(optimaltypeII[[1]],
+                              p = p, N = m, alpha = alpha)
+      pseudoalpha <- alpha * theta$theta / 2
       rej.greater <- mean(replicate(iterations,
                                     sampleBinomTestnpVar(x, m, p,
                                                          alternative = "greater",
                                                          alpha = pseudoalpha)))
+
+      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                               c(0, 1), p = 1 - p, N = m,
+                               alpha = alpha)
+      theta <- minTypeIIError(optimaltypeII[[1]],
+                              p = 1 - p, N = m, alpha = alpha)
+      pseudoalpha <- alpha * theta$theta / 2
       rej.less <- mean(replicate(iterations,
                                  sampleBinomTestnpVar(x, m, p,
                                                       alternative = "less",
@@ -95,6 +107,18 @@ npVar <- function(x, lower = 0, upper = 1, variance,
     }
   else
     {
+      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                               c(0, 1),
+                               p = ifelse(alternative == "greater",
+                                 p, 1 - p),
+                               N = m,
+                               alpha = alpha)
+      theta <- minTypeIIError(optimaltypeII[[1]],
+                              p = ifelse(alternative == "greater",
+                                p, 1 - p),
+                              N = m, alpha = alpha)
+      pseudoalpha <- alpha * theta$theta
+
       rej <- mean(replicate(iterations,
                             sampleBinomTestnpVar(x, m, p,
                                                  alternative = alternative,
@@ -105,17 +129,20 @@ npVar <- function(x, lower = 0, upper = 1, variance,
   null.value <- variance
   names(null.value) <- "variance"
   bounds <- paste("[", lower, ", ", upper, "]", sep = "")
-  rejection <- ifelse(rej >= theta, TRUE, FALSE)
-  ## alternative <- ifelse(alternative == "greater", "less", "greater")
+  rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
+  ## alternative <- ifelse(alternative == "greater", "less",
+  ## "greater")
 
   structure(list(method = "Nonparametric Variance Test",
                  data.name = DNAME,
                  alternative = alternative,
+                 null.hypothesis = null.hypothesis,
+                 alt.hypothesis = alt.hypothesis,
                  estimate = sample.est,
                  probrej = rej,
                  rejection = rejection,
                  alpha = alpha,
-                 theta = theta,
+                 theta = theta$theta,
                  iterations = iterations,
                  pseudoalpha = pseudoalpha,
                  bounds = bounds,
