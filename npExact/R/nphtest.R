@@ -85,6 +85,11 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
 
     ## if(!is.null(x$pseudoalpha))
     ##   cat("\n   pseudoalpha:", x$pseudoalpha)
+    if(!is.null(x$d.alternative))
+      {
+        cat("\n   d.alt:", x$d.alternative)
+        cat("\n   typeII:", x$typeIIerror)
+      }
 
     if(!is.null(x$iterations))
       cat("\n   iterations:", x$iterations)

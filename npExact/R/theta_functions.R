@@ -131,7 +131,8 @@ minTypeIIError <- function(p.alt, p, N, alpha)
       (1 - g2(p.alt, N, p, alpha*x))/(1 - x)
     }
   typeIIerrors <- sapply(theta[2,], f)
-    ## Calculates minimum value, for given difference d
+
+  ## Calculates minimum value, for given difference d
   ## uses possibleTheta, g2
   if(!is.numeric(typeIIerrors))
     {
@@ -144,13 +145,13 @@ minTypeIIError <- function(p.alt, p, N, alpha)
   righttheta <- ifelse(length(righttheta) == 0, NA, righttheta)
 
   list(theta = righttheta,
-       type2 = mintypeII)
+       typeII = mintypeII)
 }
 
 minTypeIIErrorWrapper <- function(p.alt, p, N, alpha,
                                   typeIIgoal = .5)
   {
-    minTypeIIError(p.alt, p, N, alpha)[[2]] - typeIIgoal
+    minTypeIIError(p.alt, p, N, alpha)$typeII - typeIIgoal
   }
 
 ## uniroot(minTypeIIErrorWrapper, c(0, 1), p = .1, N = 50, alpha = .05)

@@ -64,28 +64,28 @@
 ## H1: E(x1) < E(x2), or E(x1) - E(x2) < 0
 
 npMeanUnpaired <- function(x1, x2,
-                           lower = 0, upper = 1, ## d = 0.3,
+                           lower = 0, upper = 1,
                            iterations = 5000,
                            alpha = 0.05,
                            alternative = "greater",
                            ignoreNA = TRUE)
 {
-    names.x1 <- deparse(substitute(x1))
-    names.x2 <- deparse(substitute(x2))
+  names.x1 <- deparse(substitute(x1))
+  names.x2 <- deparse(substitute(x2))
 
-    DNAME <- paste(names.x1, "and", names.x2)
+  DNAME <- paste(names.x1, "and", names.x2)
 
-    null.hypothesis <- paste("E(", names.x2, ")",
-                            ifelse(alternative == "greater", " <= ",
-                                   ifelse(alternative == "less", " >= ",
-                                          " = ")),
-                            "E(", names.x1, ")", sep = "")
+  null.hypothesis <- paste("E(", names.x2, ")",
+                           ifelse(alternative == "greater", " <= ",
+                                  ifelse(alternative == "less", " >= ",
+                                         " = ")),
+                           "E(", names.x1, ")", sep = "")
 
-    alt.hypothesis <- paste("E(", names.x2, ")",
-                            ifelse(alternative == "greater", " > ",
-                                   ifelse(alternative == "less", " < ",
-                                          " != ")),
-                            "E(", names.x1, ")", sep = "")
+  alt.hypothesis <- paste("E(", names.x2, ")",
+                          ifelse(alternative == "greater", " > ",
+                                 ifelse(alternative == "less", " < ",
+                                        " != ")),
+                          "E(", names.x1, ")", sep = "")
 
   x1 <- as.vector(x1)
   x2 <- as.vector(x2)
@@ -124,13 +124,16 @@ npMeanUnpaired <- function(x1, x2,
   n2 <- length(x2)
   min.length <- min(n1, n2)
 
-  optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                           c(0, 1), p = 0.3 * (upper - lower),
-                           N = min.length,
-                           alpha = alpha)
-  theta <- minTypeIIError(optimaltypeII[[1]],
-                          p = 0.3 * (upper - lower),
-                          N = min.length, alpha = alpha)
+  ## optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+  ##                          c(0, 1), p = 0.3 * (upper - lower),
+  ##                          N = min.length,
+  ##                          alpha = alpha)
+  ## theta <- minTypeIIError(optimaltypeII[[1]],
+  ##                         p = 0.3 * (upper - lower),
+  ##                         N = min.length, alpha = alpha)
+  optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
+                            c(0, 1), n1 = n1, n2 = n2, alpha = alpha)
+  theta <- optimizeTheta(n1, n2, optimaltypeII$minimum, alpha)
   pseudoalpha <- alpha * theta$theta
 
   ## thetause <- theta(n1, n2, diff = d,
@@ -142,11 +145,11 @@ npMeanUnpaired <- function(x1, x2,
     {
       pseudoalpha <- pseudoalpha/2
       rej.upper <- mean(replicate(iterations,
-                            randomTest(x1, x2, n1, n2, pseudoalpha)))
+                                  randomTest(x1, x2, n1, n2, pseudoalpha)))
       x1 <- 1 - x1
       x2 <- 1 - x2
       rej.lower <- mean(replicate(iterations,
-                            randomTest(x1, x2, n1, n2, pseudoalpha)))
+                                  randomTest(x1, x2, n1, n2, pseudoalpha)))
       rej <- rej.upper + rej.lower
     }
   else
@@ -177,6 +180,8 @@ npMeanUnpaired <- function(x1, x2,
                  rejection = rejection,
                  alpha = alpha,
                  theta = theta$theta,
+                 d.alternative = optimaltypeII$minimum,
+                 typeIIerror = theta$typeII,
                  iterations = iterations,
                  pseudoalpha = pseudoalpha,
                  bounds = bounds,
@@ -197,9 +202,9 @@ randomTest <- function(x1, x2, n1, n2, alpha)
     if (s1 >= (1 + k[1]))
       {
         prob <- sum(choose(n1,
-                            k) * choose(n2,
-                                        s3 - k)/choose(n1 + n2,
-                                                       s3))
+                           k) * choose(n2,
+                                       s3 - k)/choose(n1 + n2,
+                                                      s3))
         ## h.alt <- phyper(s1 - 1, n1, n2, A)
       }
 
@@ -221,162 +226,114 @@ randomTest <- function(x1, x2, n1, n2, alpha)
     return(res)
   }
 
-## ######## define help functions
-## #### calculates pvalue of Fisher's test
-## pvalue.fisher <- function(n1, n2, s1, s2)
-##   {
-##     if (s1 == -1 | s2 > n2)
-##       return(0)
-##     else {
-##       term <- function(j)
-##         {
-##           choose(n1, s1 + s2 - j) * choose(n2, j)/choose(n1 + n2, s1 + s2)
-##         }
-##       j <- as.matrix(s2:min(n2, s1 + s2))
-##       return(sum(apply(j, 1, term)))
-##     }
-##   }
 
-## ## calculates typeII error for given y1, y2
-## ## (and of course n1, n2, alpha)
+########################################
+## Theta function new/old
+########################################
 
-## typeII <- function(y1, d, n1, n2, y2 = y1 + d,
-##                    alpha = alpha,
-##                    theta = 0.2)
-##   {
-##     pseudoalpha <- theta * alpha
-##     exmat <- matrix(nrow = n1 + 1,
-##                     ncol = n2 + 1)
-## #### needed to calculate typeII error
 
-##     for (s1 in 0:n1)
-##       {
-##         for (s2 in 0:n2)
-##           {
-##             t1 <- pvalue.fisher(n1, n2, s1, s2)
-##             t2 <- pvalue.fisher(n1, n2, s1 - 1, s2 + 1)
-##             if (t1 > pseudoalpha & pseudoalpha > t2)
-##               {
-##                 pr <- (pseudoalpha - t2)/((choose(n1, s1) * choose(n2, s2))/choose(n1 + n2, s1 + s2))
-##               }
-##             else
-##               {
-##                 if (t1 <= pseudoalpha)
-##                   pr <- 1
-##                 if (t2 >= pseudoalpha)
-##                   pr <- 0
-##               }
-##             exmat[s1 + 1, s2 + 1] <- choose(n1, s1) * y1^s1 *
-##               (1 - y1)^(n1 - s1) * choose(n2, s2) * y2^s2 *
-##                 (1 - y2)^(n2 - s2) * pr
-##           }
-##       }
-##     type2 <- (1 - sum(exmat))/(1 - theta)
-##     return(min(type2, 1))
-##   }
+## calculates pvalue of Fisher's test
+pvalueFisher <- function(n1, n2, s1, s2)
+  {
+    if( s1 == -1 | s2 > n2)
+      return(0)
+    else
+      {
+        phyper(s2 - 1, n2, n1, s1 + s2,
+                     lower.tail = FALSE)
+      }
+  }
 
-## ## same as function typeII error, only order of inputs changed, so that
-## ## function "optimize" can be used
+## calculates typeII error for given y1, y2 (and of course n1,n2, alpha)
+maxTypeII <- function(y1, d, n1, n2, y2 = y1 + d,
+                   alpha = alpha, theta = 0.2)
+{
+  pseudoalpha <- theta * alpha
+  exmat <- matrix(nrow = n1 + 1, ncol = n2 + 1)
+  ## needed to calculate typeII error
 
-## calctheta <- function(theta, y1, y2,
-##                       n1, n2, alpha)
-##   {
+  for(s1 in 0:n1)
+    {
+      for(s2 in 0:n2)
+        {
+          t1 <- pvalueFisher(n1, n2, s1, s2)
+          t2 <- pvalueFisher(n1, n2, s1 - 1, s2 + 1)
 
-##     pseudoalpha <- theta * alpha
-##     exmat <- matrix(nrow = n1 + 1, ncol = n2 + 1)
+          if( t2 >= pseudoalpha)
+            {
+              ## in this case, pr = zero
+              ## so we can skip the calculation of the term
+              exmat[s1 + 1, s2 + 1] <- 0
+            }
+          else
+            {
+              if( t1  > pseudoalpha & pseudoalpha > t2)
+                {
+                  ## pr <- (pseudoalpha - t2) / ((choose(n1, s1) *
+                  ## choose(n2, s2))/ choose(n1 + n2, s1 + s2))
 
-##     for (s1 in 0:n1)
-##       {
-##         for (s2 in 0:n2)
-##           {
-##             t1 <- pvalue.fisher(n1, n2, s1, s2)
-##             t2 <- pvalue.fisher(n1, n2, s1 - 1, s2 + 1)
-##             if (t1 > pseudoalpha & pseudoalpha > t2)
-##               {
-##                 pr <- (pseudoalpha - t2)/((choose(n1, s1) *
-##                                            choose(n2, s2))/choose(n1 + n2, s1 + s2))
-##               }
-##             else
-##               {
-##                 if (t1 <= pseudoalpha)
-##                   pr <- 1
-##                 if (t2 >= pseudoalpha)
-##                   pr <- 0
-##               }
-##             exmat[s1 + 1, s2 + 1] <- choose(n1, s1) * y1^s1 *
-##               (1 - y1)^(n1 - s1) * choose(n2, s2) * y2^s2 *
-##                 (1 - y2)^(n2 - s2) * pr
-##           }
-##       }
-##     type2 <- (1 - sum(exmat))/(1 - theta)
-##     return(min(type2, 1))
-##   }
+                  pr <- (pseudoalpha - t2) / dhyper(s1, n1, n2, s1 + s2)
+                }
+              else
+                {
+                  if(t1 <= pseudoalpha) pr <- 1
+                }
+              exmat[s1 + 1,
+                    s2 + 1] <- dbinom(s1, n1, y1) * dbinom(s2, n2, y2) * pr
+            }
+        }
+    }
+  type2 <- (1 - sum(exmat)) / (1 - theta)
+  return(min(type2, 1))
+}
 
-## ###### calculate theta
-## theta <- function(n1, n2, diff, alpha = alpha,
-##                   plotif = plotif, helppoints = 100)
-##   {
+## mean(system.time(maxTypeII))
 
-##     ## STEP 1) maximize typeII error over y1, y2
-##     maxexpect <- optimize(typeII, c(0, 1 - diff), tol = 0.001,
-##                           d = diff, n1 = n1, n2 = n2,
-##                           alpha = alpha, maximum = T)
-##     e1opt <- maxexpect$maximum
-##     e2opt <- e1opt + diff
-##     ## print(paste('Given theta=0.2 the maximal typeII error
-##     ## (=', round(maxexpect$objective,3), ') found for EY1
-##     ## =',round(e1opt,3)))
-##     ## if (plotif == T)
-##     ##   {
-##     ##     par(mfrow = c(2, 1))
-##     ##     y1 <- seq(0, 1 - diff, length = helppoints)
-##     ##     typeIIerror <- c()
-##     ##     for (i in 1:helppoints)
-##     ##       {
-##     ##         typeIIerror[i] <- typeII(y1[i],
-##     ##                                  diff, n1, n2,
-##     ##                                  y2 = y1[i] + diff,
-##     ##                                  alpha = alpha,
-##     ##                                  theta = 0.2)
-##     ##       }
-##     ##     plot(typeIIerror ~ y1, type = "l",
-##     ##          xlab = "(EY1-lower)/(upper-lower)",
-##     ##          ylab = "TypeII Error",
-##     ##          main = paste("TypeII Error Plot"))
-##     ##     abline(v = e1opt, h = maxexpect$objective, lty = 2)
-##     ## }
+## same as function typeII error,  only order of inputs changed,
+## so that function "optimize" can be used
+minTypeII <- function(theta, y1, y2, n1, n2, alpha)
+{
+  maxTypeII(y1, d = y2 - y1, n1, n2, y2,
+         alpha = alpha, theta = theta)
+}
 
-##     ## STEP 2) minimize typeII error over theta
-##     thetaval <- optimize(calctheta, c(0, 1), tol = 0.001,
-##                          n1 = n1, n2 = n2,
-##                          y1 = e1opt, y2 = e2opt,
+### calculate theta
+optimizeTheta <- function(n1, n2, diff = d,
+                  alpha = alpha)
+{
+  ## STEP 1)  maximize typeII error over y1, y2
+  maxexpect <- optimize(maxTypeII, c(0, 1 - diff),
+                        tol = 0.001, d = diff, n1 = n1, n2 = n2,
+                        alpha = alpha, maximum = T)
+  e1opt <- maxexpect$maximum
+  e2opt <- e1opt + diff
+
+  ## STEP 2)  minimize typeII error over theta
+  thetaval <- optimize(minTypeII, c(0,1),
+                       tol = 0.001, n1 = n1, n2 = n2,
+                       y1 = e1opt, y2 = e2opt, alpha = alpha)
+
+  ## if(thetaval$objective == 1)
+  ##   stop("TypeII error = 1. Increase difference d")
+
+  return(list(typeII = thetaval$objective,
+              theta = thetaval$minimum ))
+}
+
+npMeanUnpairedminTypeIIErrorWrapper <- function(d, n1, n2, alpha,
+                                               typeIIgoal = 0.5)
+  {
+    (optimizeTheta(n1, n2, d, alpha)$typeII - typeIIgoal)^2
+  }
+
+## optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
+##                           c(0, 1), n1 = 25, n2 = 29, alpha = .05)
+## theta <- optimizeTheta(n1, n2, optimaltypeII$minimum, alpha)
+## optimaltypeII <- uniroot(npMeanUnpairedminTypeIIErrorWrapper,
+##                          c(0, 29), n1 = 25, n2 = 29,
 ##                          alpha = alpha)
-
-##     if (thetaval$objective == 1)
-##       stop("TypeII error = 1. Increase difference d.")
-
-##     ## print(paste("TypeII error equals",
-##     ##             round(thetaval$objective, 3),
-##     ##             " given choice of d and optimal theta."))
-
-##     ## if (plotif == T)
-##     ##   {
-##     ##     theta1 <- seq(0, 1, length = helppoints)
-##     ##     typeIIerror1 <- c()
-##     ##     for (i in 1:helppoints)
-##     ##       {
-##     ##         typeIIerror1[i] <- calctheta(theta1[i],
-##     ##         y1 = e1opt, y2 = e2opt, n1 = n1, n2 = n2, alpha =
-##     ##     alpha)
-##     ##       }
-
-##     ##     plot(typeIIerror1 ~ theta1, type = "l", xlab = "theta",
-##     ##         ylab = "TypeII Error", main = paste("TypeII Error Plot"),
-##     ##         xlim = c(0, 1), ylim = c(0, 0.9))
-##     ##     abline(v = thetaval$minimum, h = thetaval$objective,
-##     ##         lty = 2)
-##     ## }
-
-##     return(list(typeII = thetaval$objective,
-##                 theta = thetaval$minimum))
-##   }
+## theta <- optimizeTheta(n1, n2,
+##                        optimaltypeII[[1]], alpha = alpha)
+## thetause <- theta(N1, N2 , diff = d,
+##                   alpha = alpha)$theta
+## pseudoalpha <- alpha * thetause

@@ -81,7 +81,7 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1, ## d = 0,
     x1 <- as.vector(x1)
     x2 <- as.vector(x2)
 
-    if(complete.cases == TRUE)
+    if(completeCases == TRUE)
       {
         complete <- complete.cases(cbind(x1, x2))
         x1 <- x1[complete]
@@ -173,6 +173,8 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1, ## d = 0,
                    rejection = rejection,
                    alpha = alpha,
                    theta = theta$theta,
+                   d.alternative = optimaltypeII$root,
+                   typeIIerror = theta$typeII,
                    iterations = iterations,
                    pseudoalpha = pseudoalpha,
                    bounds = bounds,

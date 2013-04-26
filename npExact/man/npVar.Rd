@@ -101,7 +101,7 @@ Karl Schlag and Oliver Reiter
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
 \examples{
-npVar(runif(50), lower = 0, upper = 1, var = 0.1, alt.var = 0.15)
+npVar(runif(50), lower = 0, upper = 1, var = 0.1)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
