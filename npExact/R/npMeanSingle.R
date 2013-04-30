@@ -43,7 +43,7 @@ npMeanSingle <- function(x, mu,
   if (min(x) < lower | max(x) > upper)
     stop("Some values are out of bounds (or NA)!")
 
-  if(iterations < 500)
+  if(!is.null(iterations) & iterations < 500)
     warning("Low number of iterations. Results may be inaccurate.")
 
   if(alpha >= 1 | alpha <= 0)
@@ -65,27 +65,34 @@ npMeanSingle <- function(x, mu,
 
   n <- length(x)
   xp <- x - p
+      epsilon <- 1 * 10^(-6)
+
+      error <- 1
+      i <- 1
+      rej.matrix <- NULL
 
   if(alternative == "two.sided")
     {
+      ## first the upper side
       optimaltypeII <- uniroot(minTypeIIErrorWrapper,
                                c(0, 1), p = p, N = n,
                                alpha = alpha)
       theta <- minTypeIIError(optimaltypeII[[1]],
                               p = p, N = n, alpha = alpha)
-
-      ## print(theta) ## for debugging only
-      ## theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
-      ##                    optimizeTheta, alpha = alpha,
-      ##                    mu0 = p, N = n)$par
-      ## theta <- theta.par[1]
-      ## mu1 <- mu + theta.par[2] ## not needed right now
       pseudoalpha <- (alpha/2) * theta$theta
 
-      rej.greater <- mean(replicate(iterations,
-                                   transBinomTest(x, p, xp, n,
-                                                  pseudoalpha)))
+      while(error > epsilon & i <= 20)
+        {
+          rej.matrix <- cbind(rej.matrix,
+                              replicate(iterations,
+                                        transBinomTest(x, p, xp, n,
+                                                       pseudoalpha)))
+          rej.greater <- mean(rej.matrix)
+          error <- exp(-2 * (iterations * i) * (rej.greater - theta$theta)^2)
+          i <- i + 1
+        }
 
+      ## secondly the lower side
       x <- 1 - x
       p <- 1 - p
       xp <- x - p
@@ -94,18 +101,21 @@ npMeanSingle <- function(x, mu,
                                alpha = alpha)
       theta <- minTypeIIError(optimaltypeII[[1]],
                               p = p, N = n, alpha = alpha)
-
-      ## theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
-      ##                    optimizeTheta, alpha = alpha,
-      ##                    mu0 = p, N = n)$par
-      ## theta <- theta.par[1]
-      ## mu1 <- mu + theta.par[2] ## not needed right now
-      ## print(theta)
       pseudoalpha <- (alpha/2) * theta$theta
 
-      rej.less <- mean(replicate(iterations,
-                                transBinomTest(x, p, xp, n,
-                                               pseudoalpha)))
+      error <- 1
+      i <- 1
+      rej.matrix <- NULL
+      while(error > epsilon & i <= 20)
+        {
+          rej.matrix <- cbind(rej.matrix,
+                              replicate(iterations,
+                                        transBinomTest(x, p, xp, n,
+                                                       pseudoalpha)))
+          rej.less <- mean(rej.matrix)
+          error <- exp(-2 * (iterations * i) * (rej.less - theta$theta)^2)
+          i <- i + 1
+        }
 
       rej <- rej.greater + rej.less
     }
@@ -113,7 +123,6 @@ npMeanSingle <- function(x, mu,
     {
       if(alternative == "less")
         {
-          ## print("less")
           x <- 1 - x
           p <- 1 - p
           xp <- x - p
@@ -124,18 +133,22 @@ npMeanSingle <- function(x, mu,
                                alpha = alpha)
       theta <- minTypeIIError(optimaltypeII[[1]],
                               p = p, N = n, alpha = alpha)
-      ## theta.par <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
-      ##                    optimizeTheta, alpha = alpha,
-      ##                    mu0 = p, N = n)$par
-      ## theta <- ifelse(theta.par[1] < 0.1, 0.1, theta.par[1])
-      ## mu1 <- mu + theta.par[2] ## not needed right now
       pseudoalpha <- alpha * theta$theta
 
-      rej <- mean(replicate(iterations,
-                           transBinomTest(x, p, xp, n,
-                                          pseudoalpha)))
+      while(error > epsilon & i <= 20)
+        {
+          rej.matrix <- cbind(rej.matrix,
+                              replicate(iterations,
+                                        transBinomTest(x, p, xp, n,
+                                                       pseudoalpha)))
+          rej <- mean(rej.matrix)
+          error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
+          i <- i + 1
+          print(i)
+        }
     }
-  ## print(p + theta.par[2])
+  if(i == 21)
+    warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
 
   method <- "Nonparametric Single Mean Test"
   names(sample.est) <- "mean"
@@ -157,7 +170,7 @@ npMeanSingle <- function(x, mu,
                  theta = theta$theta,
                  d.alternative = optimaltypeII$root,
                  typeIIerror = theta$typeII,
-                 iterations = iterations,
+                 iterations = iterations * (i - 1),
                  pseudoalpha = pseudoalpha,
                  bounds = bounds,
                  null.value = null.value),

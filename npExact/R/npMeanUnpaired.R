@@ -33,13 +33,13 @@
 ##   Return Values                                                       #
 ##                       obs1   number of observations in sample1        #
 ##                       obs2   number of observations in sample2        #
-##                       lower    lower bound for data values              #
-##                       upper     upper bound for data values              #
+##                       lower    lower bound for data values            #
+##                       upper     upper bound for data values           #
 ##                       theta  cutoff level theta                       #
 ##                       alpha  significance level alpha                 #
 ##                       avg1   average of values in data1               #
 ##                       avg2   average of values in data2               #
-##                       P(rej)  probability of rejection in the under    #
+##                       P(rej)  probability of rejection in the under   #
 ##                              lying randomdomized test                 #
 ##                                                                       #
 ##   Author            Christian Pechhacker                              #
@@ -124,22 +124,10 @@ npMeanUnpaired <- function(x1, x2,
   n2 <- length(x2)
   min.length <- min(n1, n2)
 
-  ## optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-  ##                          c(0, 1), p = 0.3 * (upper - lower),
-  ##                          N = min.length,
-  ##                          alpha = alpha)
-  ## theta <- minTypeIIError(optimaltypeII[[1]],
-  ##                         p = 0.3 * (upper - lower),
-  ##                         N = min.length, alpha = alpha)
   optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
                             c(0, 1), n1 = n1, n2 = n2, alpha = alpha)
   theta <- optimizeTheta(n1, n2, optimaltypeII$minimum, alpha)
   pseudoalpha <- alpha * theta$theta
-
-  ## thetause <- theta(n1, n2, diff = d,
-  ##                   alpha = alpha, plotif = plotif)$theta
-  ## thetause <- .4
-
 
   if(alternative == "two.sided")
     {
@@ -228,7 +216,7 @@ randomTest <- function(x1, x2, n1, n2, alpha)
 
 
 ########################################
-## Theta function new/old
+## Theta function new
 ########################################
 
 
