@@ -286,8 +286,7 @@ minTypeII <- function(theta, y1, y2, n1, n2, alpha)
 }
 
 ### calculate theta
-optimizeTheta <- function(n1, n2, diff = d,
-                  alpha = alpha)
+optimizeTheta <- function(n1, n2, diff, alpha = alpha)
 {
   ## STEP 1)  maximize typeII error over y1, y2
   maxexpect <- optimize(maxTypeII, c(0, 1 - diff),

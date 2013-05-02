@@ -115,6 +115,7 @@ npMeanSingle <- function(x, mu,
           rej.less <- mean(rej.matrix)
           error <- exp(-2 * (iterations * i) * (rej.less - theta$theta)^2)
           i <- i + 1
+          print(paste("Iteration: ", i - 1))
         }
 
       rej <- rej.greater + rej.less
@@ -144,7 +145,7 @@ npMeanSingle <- function(x, mu,
           rej <- mean(rej.matrix)
           error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
           i <- i + 1
-          print(i)
+          print(paste("Iteration: ", i - 1))
         }
     }
   if(i == 21)
