@@ -58,6 +58,7 @@
 npMeanPaired <- function(x1, x2, low = 0, up = 1, ## d = 0,
                          alpha = 0.05,
                          alternative = "greater",
+                         epsilon = 1 * 10^(-6),
                          iterations = 5000,
                          completeCases = FALSE)
   {
@@ -120,8 +121,11 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1, ## d = 0,
     x1 <- (x1 - low)/(up - low)
     x2 <- (x2 - low)/(up - low)
 
+    error <- 1
+    i <- 1
+    rejMatrix <- NULL
+
     ## Calculate the optimal theta, given a estimated difference of
-    ## d = ...
     optimaltypeII <- uniroot(minTypeIIErrorWrapper,
                              c(0, 1), p = 0.5, N = n,
                              alpha = alpha)
@@ -130,32 +134,61 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1, ## d = 0,
 
     if(alternative == "two.sided")
       {
-        pseudoalpha <- (alpha/2) * theta$theta
-        rej.upper <- mean(replicate(iterations,
-                                    McNemarTestRandom(runif(n) < x1,
-                                                      runif(n) < x2,
-                                                      pseudoalpha)))
-        x1 <- 1 - x1
-        x2 <- 1 - x2
-        rej.lower <- mean(replicate(iterations,
-                                    McNemarTestRandom(runif(n) < x1,
-                                                      runif(n) < x2,
-                                                      pseudoalpha)))
-        rej <- rej.upper + rej.lower
+          pseudoalpha <- (alpha/2) * theta$theta
+          while(error > epsilon & i <= 20)
+            {
+                rejMatrix <- cbind(rejMatrix,
+                                   replicate(iterations,
+                                             McNemarTestRandom(runif(n) < x1,
+                                                               runif(n) < x2,
+                                                               pseudoalpha)))
+                rejUpper <- mean(rejMatrix)
+                error <- exp(-2 * (iterations * i) * (rejUpper - theta$theta)^2)
+                i <- i + 1
+            }
+          error <- i <- 1
+          rejMatrix <- NULL
+
+          x1 <- 1 - x1
+          x2 <- 1 - x2
+          while(error > epsilon & i <= 20)
+            {
+                rejMatrix <- cbind(rejMatrix,
+                                   replicate(iterations,
+                                             McNemarTestRandom(runif(n) < x1,
+                                                               runif(n) < x2,
+                                                               pseudoalpha)))
+                rejLess <- mean(rejMatrix)
+                error <- exp(-2 * (iterations * i) * (rejLess - theta$theta)^2)
+                i <- i + 1
+            }
+
+
+          rej <- rejUpper + rejLess
       }
-    else
-      {
-        if(alternative == "less")
+        else
           {
-            x1 <- 1 - x1
-            x2 <- 1 - x2
+              if(alternative == "less")
+                {
+                    x1 <- 1 - x1
+                    x2 <- 1 - x2
+                }
+              pseudoalpha <- alpha * theta$theta
+              while(error > epsilon & i <= 20)
+                {
+                    rejMatrix <- cbind(rejMatrix,
+                                       replicate(iterations,
+                                                 McNemarTestRandom(runif(n) < x1,
+                                                                   runif(n) < x2,
+                                                                   pseudoalpha)))
+                    rej <- mean(rejMatrix)
+                    error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
+                    i <- i + 1
+                }
           }
-        pseudoalpha <- alpha * theta$theta
-        rej <- mean(replicate(iterations,
-                              McNemarTestRandom(runif(n) < x1,
-                                                runif(n) < x2,
-                                                pseudoalpha)))
-      }
+
+    if(i == 21)
+      warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
 
     names(sample.est) <- c("mean", "mean")
     null.value <- 0
@@ -175,7 +208,7 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1, ## d = 0,
                    theta = theta$theta,
                    d.alternative = optimaltypeII$root,
                    typeIIerror = theta$typeII,
-                   iterations = iterations,
+                   iterations = iterations * (i - 1),
                    pseudoalpha = pseudoalpha,
                    bounds = bounds,
                    null.value = null.value),

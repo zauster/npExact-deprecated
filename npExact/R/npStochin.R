@@ -50,6 +50,7 @@
 npStochin <- function(x1, x2, d = 0,
                       alternative = "greater",
                       iterations = 5000, alpha = 0.05,
+                      epsilon = 1 * 10^(-6),
                       ignoreNA = FALSE)
 {
   names.x1 <- deparse(substitute(x1))
@@ -69,19 +70,6 @@ npStochin <- function(x1, x2, d = 0,
       x2 <- x1
       x1 <- x1.new
     }
-
-  ## names(sample.est) <- paste("stochastic inequality: P(",
-  ##                            names.x2,
-  ##                            ifelse(alternative == "greater", " > ",
-  ##                                   ifelse(alternative == "less", " < ",
-  ##                                          " > ")),
-  ##                            names.x1, ") - P(",
-  ##                            names.x2,
-  ##                            ifelse(alternative == "greater", " < ",
-  ##                                   ifelse(alternative == "less", " > ",
-  ##                                          " < ")),
-  ##                            names.x1, ")",
-  ##                            sep = "")
 
   null.hypothesis <- paste("P(", names.x2, " > ", names.x1, ") - P(",
                            names.x2, " < ", names.x1, ") <= ",
@@ -111,12 +99,6 @@ npStochin <- function(x1, x2, d = 0,
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
 
-  ## if (min(d + 1, d1 - d,1 - d1) <= 0)
-  ##   stop("we need that -1 < d < d1 < 1")
-
-
-
-
   ## define local variables
   N1 <- length(x1)
   N2 <- length(x2)
@@ -144,14 +126,6 @@ npStochin <- function(x1, x2, d = 0,
                              names.x1, ")",
                              sep = "")
 
-
-  ## it <- as.numeric(min_value(n=mi, p=p, p1=(1+d1)/2, alpha=alpha))
-  ## if (it[2]>=0.99) stop("increase d1 so that typeII is below 1")
-  ## theta <- it[1]
-  ## theta <- optim(c(0.4, ifelse(p + p/4 > 1, (1 - p)/2, p/4)),
-  ##                optimizeTheta, alpha = alpha,
-  ##                mu0 = p, N = min.length)$par
-  ## theta <- ifelse(theta[1] < 0.1, 0.1, theta[1])
   optimaltypeII <- uniroot(minTypeIIErrorWrapper,
                            c(0, 1), p = p, N = min.length,
                            alpha = alpha)
@@ -159,9 +133,22 @@ npStochin <- function(x1, x2, d = 0,
                           p = p, N = min.length, alpha = alpha)
   pseudoalpha <- alpha * theta$theta
 
-  rej <- mean(replicate(iterations,
-                        sampleBinomTest(x1, x2, min.length,
-                                        p, d, pseudoalpha)))
+  error <- i <- 1
+  rejMatrix <- NULL
+
+  while(error > epsilon & i <= 20)
+    {
+        rejMatrix <- cbind(rejMatrix,
+                           replicate(iterations,
+                                     sampleBinomTest(x1, x2, min.length,
+                                                     p, d, pseudoalpha)))
+        rej <- mean(rejMatrix)
+        error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
+        i <- i + 1
+    }
+
+  if(i == 21)
+    warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
 
 ## H0: P(x2 > x1) <= P(x2 < x1), or: P(x2 > x1) - P(x2 < x1) <= d
 ## H1: P(x2 > x1) > P(x2 < x1), or: P(x2 > x1) - P(x2 < x1) > d
@@ -181,7 +168,7 @@ npStochin <- function(x1, x2, d = 0,
                  theta = theta$theta,
                  d.alternative = optimaltypeII$root,
                  typeIIerror = theta$typeII,
-                 iterations = iterations,
+                 iterations = iterations * (i - 1),
                  pseudoalpha = pseudoalpha,
                  bounds = NULL,
                  null.value = d),

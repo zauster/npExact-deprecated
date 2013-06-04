@@ -34,6 +34,7 @@ npVar <- function(x, lower = 0, upper = 1, variance,
                   ## alt.variance,
                   alternative = "greater",
                   alpha = 0.05, iterations = 5000,
+                  epsilon = 1 * 10^(-6),
                   ignoreNA = FALSE)
 {
   DNAME <- deparse(substitute(x))
@@ -79,51 +80,82 @@ npVar <- function(x, lower = 0, upper = 1, variance,
   x <- (x - lower)/(upper - lower)  ## Normalization so that x in [0,1]
   p <- 2 * variance / (upper - lower)^2  ## normalized threshold
 
+  error <- i <- 1
+  rejMatrix <- NULL
+
   ## deterministic test
   if(alternative == "two.sided")
     {
-      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                               c(0, 1), p = p, N = m,
-                               alpha = alpha)
-      theta <- minTypeIIError(optimaltypeII[[1]],
-                              p = p, N = m, alpha = alpha)
-      pseudoalpha <- alpha * theta$theta / 2
-      rej.greater <- mean(replicate(iterations,
-                                    sampleBinomTestnpVar(x, m, p,
-                                                         alternative = "greater",
-                                                         alpha = pseudoalpha)))
+        optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                 c(0, 1), p = p, N = m,
+                                 alpha = alpha)
+        theta <- minTypeIIError(optimaltypeII[[1]],
+                                p = p, N = m, alpha = alpha)
+        pseudoalpha <- alpha * theta$theta / 2
+        while(error > epsilon & i <= 20)
+          {
+              rejMatrix <- cbind(rejMatrix,
+                                 replicate(iterations,
+                                           sampleBinomTestnpVar(x, m, p,
+                                                                alternative = "greater",
+                                                                alpha = pseudoalpha)))
+              rejUpper <- mean(rejMatrix)
+              error <- exp(-2 * (iterations * i) * (rejUpper - theta$theta)^2)
+              i <- i + 1
+          }
 
-      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                               c(0, 1), p = 1 - p, N = m,
-                               alpha = alpha)
-      theta <- minTypeIIError(optimaltypeII[[1]],
-                              p = 1 - p, N = m, alpha = alpha)
-      pseudoalpha <- alpha * theta$theta / 2
-      rej.less <- mean(replicate(iterations,
-                                 sampleBinomTestnpVar(x, m, p,
-                                                      alternative = "less",
-                                                      alpha = pseudoalpha)))
-      rej <- rej.greater + rej.less
-    }
-  else
-    {
-      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                               c(0, 1),
-                               p = ifelse(alternative == "greater",
-                                 p, 1 - p),
-                               N = m,
-                               alpha = alpha)
-      theta <- minTypeIIError(optimaltypeII[[1]],
-                              p = ifelse(alternative == "greater",
-                                p, 1 - p),
-                              N = m, alpha = alpha)
-      pseudoalpha <- alpha * theta$theta
+        optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                 c(0, 1), p = 1 - p, N = m,
+                                 alpha = alpha)
+        theta <- minTypeIIError(optimaltypeII[[1]],
+                                p = 1 - p, N = m, alpha = alpha)
+        pseudoalpha <- alpha * theta$theta / 2
 
-      rej <- mean(replicate(iterations,
-                            sampleBinomTestnpVar(x, m, p,
-                                                 alternative = alternative,
-                                                 alpha = pseudoalpha)))
+        error <- i <- 1
+        rejMatrix <- NULL
+
+        while(error > epsilon & i <= 20)
+          {
+              rejMatrix <- cbind(rejMatrix,
+                                 replicate(iterations,
+                                           sampleBinomTestnpVar(x, m, p,
+                                                                alternative = "less",
+                                                                alpha = pseudoalpha)))
+              rejLess <- mean(rejMatrix)
+              error <- exp(-2 * (iterations * i) * (rejLess - theta$theta)^2)
+              i <- i + 1
+          }
+        rej <- rejUpper + rejLess
     }
+      else
+        {
+            optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                     c(0, 1),
+                                     p = ifelse(alternative == "greater",
+                                         p, 1 - p),
+                                     N = m,
+                                     alpha = alpha)
+            theta <- minTypeIIError(optimaltypeII[[1]],
+                                    p = ifelse(alternative == "greater",
+                                        p, 1 - p),
+                                    N = m, alpha = alpha)
+            pseudoalpha <- alpha * theta$theta
+
+            while(error > epsilon & i <= 20)
+              {
+                  rejMatrix <- cbind(rejMatrix,
+                                     replicate(iterations,
+                                               sampleBinomTestnpVar(x, m, p,
+                                                                    alternative = alternative,
+                                                                    alpha = pseudoalpha)))
+                  rej <- mean(rejMatrix)
+                  error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
+                  i <- i + 1
+              }
+        }
+
+  if(i == 21)
+    warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
 
   names(sample.est) <- "variance"
   null.value <- variance
@@ -145,7 +177,7 @@ npVar <- function(x, lower = 0, upper = 1, variance,
                  theta = theta$theta,
                  d.alternative = optimaltypeII$root,
                  typeIIerror = theta$typeII,
-                 iterations = iterations,
+                 iterations = iterations * (i - 1),
                  pseudoalpha = pseudoalpha,
                  bounds = bounds,
                  null.value = null.value),

@@ -68,6 +68,7 @@ npMeanUnpaired <- function(x1, x2,
                            iterations = 5000,
                            alpha = 0.05,
                            alternative = "greater",
+                           epsilon = 1 * 10^(-6),
                            ignoreNA = TRUE)
 {
   names.x1 <- deparse(substitute(x1))
@@ -129,27 +130,60 @@ npMeanUnpaired <- function(x1, x2,
   theta <- optimizeTheta(n1, n2, optimaltypeII$minimum, alpha)
   pseudoalpha <- alpha * theta$theta
 
+  error <- i <- 1
+  rejMatrix <- NULL
+
   if(alternative == "two.sided")
     {
-      pseudoalpha <- pseudoalpha/2
-      rej.upper <- mean(replicate(iterations,
-                                  randomTest(x1, x2, n1, n2, pseudoalpha)))
-      x1 <- 1 - x1
-      x2 <- 1 - x2
-      rej.lower <- mean(replicate(iterations,
-                                  randomTest(x1, x2, n1, n2, pseudoalpha)))
-      rej <- rej.upper + rej.lower
+        pseudoalpha <- pseudoalpha/2
+        while(error > epsilon & i <= 20)
+          {
+              rejMatrix <- cbind(rejMatrix,
+                                 replicate(iterations,
+                                           randomTest(x1, x2, n1, n2, pseudoalpha)))
+              rejUpper <- mean(rejMatrix)
+              error <- exp(-2 * (iterations * i) * (rejUpper - theta$theta)^2)
+              i <- i + 1
+          }
+        x1 <- 1 - x1
+        x2 <- 1 - x2
+
+        error <- i <- 1
+        rejMatrix <- NULL
+        while(error > epsilon & i <= 20)
+          {
+              rejMatrix <- cbind(rejMatrix,
+                                 replicate(iterations,
+                                           randomTest(x1, x2, n1, n2, pseudoalpha)))
+              rejLess <- mean(rejMatrix)
+              error <- exp(-2 * (iterations * i) * (rejLess - theta$theta)^2)
+              i <- i + 1
+          }
+
+        rej <- rejUpper + rejLess
     }
-  else
-    {
-      if(alternative == "less")
+      else
         {
-          x1 <- 1 - x1
-          x2 <- 1 - x2
+            if(alternative == "less")
+              {
+                  x1 <- 1 - x1
+                  x2 <- 1 - x2
+              }
+            while(error > epsilon & i <= 20)
+              {
+                  rejMatrix <- cbind(rejMatrix,
+                                     replicate(iterations,
+                                               randomTest(x1, x2,
+                                                          n1, n2,
+                                                          pseudoalpha)))
+                  rej <- mean(rejMatrix)
+                  error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
+                  i <- i + 1
+              }
         }
-      rej <- mean(replicate(iterations,
-                            randomTest(x1, x2, n1, n2, pseudoalpha)))
-    }
+
+  if(i == 21)
+    warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
 
   method <- "Nonparametric Mean Test for unpaired variables"
   names(sample.est) <- c("mean", "mean")
@@ -170,7 +204,7 @@ npMeanUnpaired <- function(x1, x2,
                  theta = theta$theta,
                  d.alternative = optimaltypeII$minimum,
                  typeIIerror = theta$typeII,
-                 iterations = iterations,
+                 iterations = iterations * (i - 1),
                  pseudoalpha = pseudoalpha,
                  bounds = bounds,
                  null.value = null.value),

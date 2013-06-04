@@ -17,6 +17,7 @@ npMeanSingle <- function(x, mu,
                          lower = 0, upper = 1,
                          iterations = 5000, alpha = 0.05,
                          alternative = "greater",
+                         epsilon = 1 * 10^(-6),
                          ignoreNA = FALSE)
 {
   DNAME <- deparse(substitute(x))
@@ -65,11 +66,10 @@ npMeanSingle <- function(x, mu,
 
   n <- length(x)
   xp <- x - p
-      epsilon <- 1 * 10^(-6)
 
-      error <- 1
-      i <- 1
-      rej.matrix <- NULL
+  error <- 1
+  i <- 1
+  rejMatrix <- NULL
 
   if(alternative == "two.sided")
     {
@@ -83,12 +83,12 @@ npMeanSingle <- function(x, mu,
 
       while(error > epsilon & i <= 20)
         {
-          rej.matrix <- cbind(rej.matrix,
+          rejMatrix <- cbind(rejMatrix,
                               replicate(iterations,
                                         transBinomTest(x, p, xp, n,
                                                        pseudoalpha)))
-          rej.greater <- mean(rej.matrix)
-          error <- exp(-2 * (iterations * i) * (rej.greater - theta$theta)^2)
+          rejGreater <- mean(rejMatrix)
+          error <- exp(-2 * (iterations * i) * (rejGreater - theta$theta)^2)
           i <- i + 1
         }
 
@@ -105,20 +105,20 @@ npMeanSingle <- function(x, mu,
 
       error <- 1
       i <- 1
-      rej.matrix <- NULL
+      rejMatrix <- NULL
       while(error > epsilon & i <= 20)
         {
-          rej.matrix <- cbind(rej.matrix,
+          rejMatrix <- cbind(rejMatrix,
                               replicate(iterations,
                                         transBinomTest(x, p, xp, n,
                                                        pseudoalpha)))
-          rej.less <- mean(rej.matrix)
-          error <- exp(-2 * (iterations * i) * (rej.less - theta$theta)^2)
+          rejLess <- mean(rejMatrix)
+          error <- exp(-2 * (iterations * i) * (rejLess - theta$theta)^2)
           i <- i + 1
           print(paste("Iteration: ", i - 1))
         }
 
-      rej <- rej.greater + rej.less
+      rej <- rejGreater + rejLess
     }
   else ## alternative == "greater" => default
     {
@@ -138,11 +138,11 @@ npMeanSingle <- function(x, mu,
 
       while(error > epsilon & i <= 20)
         {
-          rej.matrix <- cbind(rej.matrix,
+          rejMatrix <- cbind(rejMatrix,
                               replicate(iterations,
                                         transBinomTest(x, p, xp, n,
                                                        pseudoalpha)))
-          rej <- mean(rej.matrix)
+          rej <- mean(rejMatrix)
           error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
           i <- i + 1
           print(paste("Iteration: ", i - 1))

@@ -41,6 +41,7 @@ npCorr <- function(x1, x2, lower.x1 = 0, upper.x1 = 1,
                    lower.x2 = 0, upper.x2 = 1,
                    iterations = 5000, alpha = 0.05,
                    alternative = "greater",
+                   epsilon = 1 * 10^(-6),
                    conditional = FALSE)
   {
     ## What this test does:
@@ -49,11 +50,25 @@ npCorr <- function(x1, x2, lower.x1 = 0, upper.x1 = 1,
     ## Apply the Fisher Tocher one-sided test.
     ## Repeat and record the probability of rejection rej.
     ## Reject null if rej is greater than theta.
-    DNAME <- paste(deparse(substitute(x1)), "and",
-                   deparse(substitute(x2)))
+    names.x1 <- deparse(substitute(x1))
+    names.x2 <- deparse(substitute(x2))
+    DNAME <- paste(names.x1, "and", names.x2)
 
     x1 <- as.vector(x1)
     x2 <- as.vector(x2)
+    sample.est <- cov(x1, x2)
+
+    ## H_0: Cov(x_1,x_2) <= 0 against H_1: Cov(x_1,x_2) > 0
+    null.hypothesis <- paste("Cov(", names.x1, ", ", names.x2, ")",
+                             ifelse(alternative == "greater", " <= ",
+                                    ifelse(alternative == "less", " >= ",
+                                           " = ")),
+                             "0", sep = "")
+    alt.hypothesis <- paste("Cov(", names.x1, ", ", names.x2, ")",
+                             ifelse(alternative == "greater", " > ",
+                                    ifelse(alternative == "less", " < ",
+                                           " != ")),
+                             "0", sep = "")
 
     ## Warnings
     if(min(x1) < lower.x1 | max(x1) > upper.x1 | (min(x2) < lower.x2 | max(x2) > upper.x2) &
@@ -76,7 +91,8 @@ npCorr <- function(x1, x2, lower.x1 = 0, upper.x1 = 1,
     rej <- 0
 
     ## hardcoding, until it works
-    theta <- 0.4
+    theta <- NULL
+    theta$theta <- 0.4
 
     ## Normalization of x1 and x2
     x1 <- (x1 - lower.x1)/(upper.x1 - lower.x1)
@@ -88,35 +104,62 @@ npCorr <- function(x1, x2, lower.x1 = 0, upper.x1 = 1,
       }
     x2 <- (x2 - lower.x2)/(upper.x2 - lower.x2)
 
+    error <- i <- 1
+    rejMatrix <- NULL
+
     if(alternative == "two.sided")
       {
-        pseudoalpha <- (alpha/2)* theta
-        rej.upper <- mean(replicate(iterations,
-                                    randomFischerTocherTest(x1, x2, n,
-                                                            pseudoalpha)))
-        x2 <- 1 - x2
-        rej.lower <- mean(replicate(iterations,
-                                    randomFischerTocherTest(x1, x2, n,
-                                                            pseudoalpha)))
-        rej <- rej.upper + rej.lower
-      }
-    else
-      {
-        if(alternative == "less")
-          {
-            x2 <- 1 - x2
-          }
-        pseudoalpha <- alpha * theta
-        rej <- mean(replicate(iterations,
-                              randomFischerTocherTest(x1, x2,
-                                                      n, pseudoalpha)))
-      }
+          pseudoalpha <- (alpha/2)* theta$theta
+          while(error > epsilon & i <= 20)
+            {
+                rejMatrix <- cbind(rejMatrix,
+                                   replicate(iterations,
+                                             randomFischerTocherTest(x1, x2, n,
+                                                                     pseudoalpha)))
+                rejUpper <- mean(rejMatrix)
+                error <- exp(-2 * (iterations * i) * (rejUpper - theta$theta)^2)
+                i <- i + 1
+            }
 
+          x2 <- 1 - x2
+          error <- i <- 1
+          rejMatrix <- NULL
+          while(error > epsilon & i <= 20)
+            {
+                rejMatrix <- cbind(rejMatrix,
+                                   replicate(iterations,
+                                             randomFischerTocherTest(x1, x2, n,
+                                                                     pseudoalpha)))
+                rejLess <- mean(rejMatrix)
+                error <- exp(-2 * (iterations * i) * (rejLess - theta$theta)^2)
+                i <- i + 1
+            }
+          rej <- rejUpper + rejLess
+      }
+        else
+          {
+              if(alternative == "less")
+                {
+                    x2 <- 1 - x2
+                }
+              pseudoalpha <- alpha * theta$theta
+              while(error > epsilon & i <= 20)
+                {
+                    rejMatrix <- cbind(rejMatrix,
+                                       replicate(iterations,
+                                                 randomFischerTocherTest(x1, x2,
+                                                                         n, pseudoalpha)))
+                    rej <- mean(rejMatrix)
+                    error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
+                    i <- i + 1
+                }
+          }
+    if(i == 21)
+      warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
 
     method <- paste(ifelse(conditional == TRUE,
                            "Conditional", "Unconditional"),
                     "Nonparametric Correlation Test")
-    sample.est <- cov(x1, x2)
     names(sample.est) <- "covariance"
     null.value <- 0
     names(null.value) <- "covariance"
@@ -127,13 +170,15 @@ npCorr <- function(x1, x2, lower.x1 = 0, upper.x1 = 1,
 
     structure(list(method = method,
                    data.name = DNAME,
+                   null.hypothesis = null.hypothesis,
+                   alt.hypothesis = alt.hypothesis,
                    alternative = alternative,
                    estimate = sample.est,
                    probrej = rej,
                    rejection = rejection,
                    alpha = alpha,
-                   theta = theta,
-                   iterations = iterations,
+                   theta = theta$theta,
+                   iterations = iterations * (i - 1),
                    pseudoalpha = pseudoalpha,
                    bounds = bounds,
                    null.value = null.value),
