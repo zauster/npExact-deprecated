@@ -13,7 +13,9 @@ npMeanUnpaired(x1, x2,
                lower = 0, upper = 1, 
                iterations = 5000,
                alpha = 0.05,
-               alternative = "greater")
+               alternative = "greater",
+               epsilon = 1 * 10^(-6),
+               ignoreNA = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -41,6 +43,13 @@ the type I error
 % }
 \item{alternative}{
 the alternative hypothesis (currently unsupported)
+}
+  \item{epsilon}{
+    the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
+    (\textrm{rejectionProbability} - \textrm{theta})^2)} is smaller than \code{epsilon}
+}
+\item{ignoreNA}{
+  if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}
 }
 }
 \details{
@@ -108,7 +117,9 @@ Karl Schlag, Christian Pechhacker and Peter Saffert
 }
 
 \examples{
-npMeanUnpaired(runif(20), runif(20))
+data(bargaining)
+npMeanUnpaired(bargaining$US, bargaining$IS, lower = 0, upper = 10,
+               alternative = "less", ignoreNA = TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

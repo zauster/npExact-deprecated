@@ -31,7 +31,6 @@
 ## npVar(runif(50), low = 0, up = 1, var = 0.1, alt.var = 0.15)
 
 npVar <- function(x, lower = 0, upper = 1, variance,
-                  ## alt.variance,
                   alternative = "greater",
                   alpha = 0.05, iterations = 5000,
                   epsilon = 1 * 10^(-6),

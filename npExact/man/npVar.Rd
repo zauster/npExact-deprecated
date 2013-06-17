@@ -8,12 +8,13 @@ A test on the variance of a variable.
 This is a program that implements a nonrandomized one-sided test for
 the variance of a single sample of independent observations.
 }
+
 \usage{
 npVar(x, lower = 0, upper = 1, variance,
-                  alt.variance,
-                  alternative = "greater",
-                  alpha = 0.05, iterations = 5000)
+      alternative = "greater", alpha = 0.05, iterations = 5000,
+      epsilon = 1 * 10^(-6), ignoreNA = FALSE)
 }
+
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{
@@ -25,9 +26,6 @@ the logical bounds of the variable
   \item{variance}{
 the value of the variance to be tested as H0: VarY >= w
 }
-  \item{alt.variance}{
-finetuning the type II error for H1: VarY <= w1
-}
   \item{alternative}{
 the alternative hypothesis, default = "greater"
 }
@@ -36,6 +34,13 @@ the type I error
 }
   \item{iterations}{
 the number of iterations
+}
+  \item{epsilon}{
+    the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
+    (\textrm{rejectionProbability} - \textrm{theta})^2)} is smaller than \code{epsilon}
+}
+\item{ignoreNA}{
+  if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}
 }
 }
 \details{
@@ -101,7 +106,9 @@ Karl Schlag and Oliver Reiter
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
 \examples{
-npVar(runif(50), lower = 0, upper = 1, var = 0.1)
+data(mshscores)
+npVar(mshscores$civil, lower = 0, upper = 1, var = 0.01)
+npVar(mshscores$civil, lower = 0, upper = 1, var = 0.1, alternative = "less")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

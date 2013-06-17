@@ -55,7 +55,7 @@
 ##              alternative = "greater", iterations = 2000)
 
 
-npMeanPaired <- function(x1, x2, low = 0, up = 1, ## d = 0,
+npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                          alpha = 0.05,
                          alternative = "greater",
                          epsilon = 1 * 10^(-6),
@@ -90,7 +90,7 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1, ## d = 0,
       }
 
     ## Warnings
-    if(min(x1, x2) < low | max(x1, x2) > up)
+    if(min(x1, x2) < lower | max(x1, x2) > upper)
       stop("Some values are out of bounds (or NA)!")
 
     if(length(x1) != length(x2))
@@ -109,7 +109,7 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1, ## d = 0,
        "two.sided")
       stop("Please specify the alternative you want to test. Possible value are: 'greater' (default), 'less' or 'two.sided'")
 
-    ## d <- d/(up - low)
+    ## d <- d/(upper - lower)
     ## if(d > 1 | d < 0)
     ##   stop("Please supply a sensible value for d.")
 
@@ -118,8 +118,8 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1, ## d = 0,
     sample.est <- c(mean(x1), mean(x2))
 
 #### Normalize vectors to [0,1]
-    x1 <- (x1 - low)/(up - low)
-    x2 <- (x2 - low)/(up - low)
+    x1 <- (x1 - lower)/(upper - lower)
+    x2 <- (x2 - lower)/(upper - lower)
 
     error <- 1
     i <- 1
@@ -194,7 +194,7 @@ npMeanPaired <- function(x1, x2, low = 0, up = 1, ## d = 0,
     null.value <- 0
     names(null.value) <- "E[x2] - E[x1]" ##"mean difference"
     rejection <- ifelse(rej > theta$theta, TRUE, FALSE)
-    bounds <- paste("[", low, ", ", up, "]", sep = "")
+    bounds <- paste("[", lower, ", ", upper, "]", sep = "")
 
     structure(list(method = "Nonparametric Mean Test for Matched Pairs",
                    data.name = DNAME,

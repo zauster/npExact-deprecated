@@ -12,7 +12,9 @@
 \usage{
 npStochin(x1, x2, d = 0, 
           alternative = "greater",
-          iterations = 5000, alpha = 0.05)
+          iterations = 5000, alpha = 0.05,
+          epsilon = 1 * 10^(-6),
+          ignoreNA = FALSE)
 }
 \arguments{
   \item{x1, x2}{
@@ -35,13 +37,20 @@ npStochin(x1, x2, d = 0,
   \item{alpha}{
     the type I error
   }
+  \item{epsilon}{
+    the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
+    (\textrm{rejectionProbability} - \textrm{theta})^2)} is smaller than \code{epsilon}
+}
+\item{ignoreNA}{
+  if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}
+}  
 }
 \details{
   The function draws two random samples (with the length of the shorter
   vector) of the data vectors and sees them as matched pairs. These
-  matched pairs are then compared and the occurrences of x1_i > x2_i and
-  x1_i < x2_i are counted. The exact binomial test then tests whether
-  the success probability of x1_i > x2_i is greater than 0.5 (in the
+  matched pairs are then compared and the occurrences of \eqn{x_1 > x_2} and
+  \eqn{x_1 < x_2} are counted. The exact binomial test then tests whether
+  the success probability of \eqn{x_1 > x_2} is greater than 0.5 (in the
   default case). These steps are then repeated \code{iterations} times
   and rejection at level \code{alpha x theta} is recorded (for
   \code{theta}, see below). If the rejection probability (the fraction
@@ -117,9 +126,10 @@ npStochin(x1, x2, d = 0,
 % %% ~~objects to See Also as \code{\link{help}}, ~~~
 % }
 \examples{
-npStochin(runif(20), runif(20),
-          alternative = "greater",
-          iterations = 2000)
+data(french)
+x <- french[, 1]
+y <- french[, 2]
+npStochin(x, y, ignoreNA = TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

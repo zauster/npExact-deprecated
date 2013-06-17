@@ -10,7 +10,7 @@ correlation between two variables is greater or smaller than 0.
 \usage{
 npCorr(x1, x2, lower.x1 = 0, upper.x1 = 1, lower.x2 = 0, upper.x2 = 1,
        iterations = 5000, alpha = 0.05, alternative = "greater",
-       conditional = FALSE)
+       epsilon = 1 * 10^(-6), conditional = FALSE)
 }
 \arguments{
   \item{x1, x2}{
@@ -34,7 +34,11 @@ Number of iterations.
 % }
   \item{alternative}{
     a character string describing the alternative hypothesis.
-}
+  }
+  \item{epsilon}{
+    the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
+    (\textrm{rejectionProbability} - \textrm{theta})^2)} is smaller than \code{epsilon}
+  }
   \item{conditional}{
 Logical, should the conditional or the unconditional version of the test
 be used?
@@ -46,10 +50,11 @@ be used?
   the lower and upper bounds, the data in [lower, upper] is transformed
   to [0, 1]. Then, using a random transformation, the data is
   transformed again to \{0, 1\}. On this data, the exact Fisher-Tocher
-  test is performed with a level of 'pseudoalpha' and the rejection
-  TRUE/FALSE is recorded. This last step is repeated 'iterations'
-  times. If the proportion of rejected iterations is at least 'theta',
-  then the null hypothesis is rejected.
+  test is performed with a level of \code{pseudoalpha} and the rejection
+  TRUE/FALSE is recorded. This last step is repeated \code{iterations}
+  times (until the probability of rejection and theta are different
+  enough). If the proportion of rejected iterations is at least
+  \code{theta}, then the null hypothesis is rejected.
 }
 \value{
   A list with class "nphtest" containing the following components:
@@ -109,10 +114,11 @@ This function is still being tested.
 }
 
 \examples{
-x1 <- runif(20)
-x2 <- runif(20)
-npCorr(x1, x2) ## should NOT reject
-npCorr(sort(x1), sort(x2)) ## should reject
+data(uncertainty)
+first <- uncertainty$w1
+second <- uncertainty$w2
+npCorr(first, second, lower.x1 = 0, upper.x1 = 60, lower.x2 = 0,
+upper.x2 = 60)
 }
 % Add one or more standard keywords, see file 'KExWORDS' in the
 % R documentation directory.

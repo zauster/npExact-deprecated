@@ -11,15 +11,16 @@
   E(x_2) - E(x_1) > 0
 }
 \usage{
-npMeanPaired(x1, x2, low = 0, up = 1, alpha = 0.05,
-             alternative = "greater", iterations = 5000)
+npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
+             alternative = "greater", epsilon = 1 * 10^(-6),
+             iterations = 5000, completeCases = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x1, x2}{
     the numerical vectors which contain the variables to be tested.
   }
-  \item{low, up}{
+  \item{lower, upper}{
     the logical bounds of the variables
   }
   % \item{d}{
@@ -32,17 +33,26 @@ npMeanPaired(x1, x2, low = 0, up = 1, alpha = 0.05,
   \item{alternative}{
     a character string describing the alternative hypothesis.
   }
-  \item{iterations}{
+\item{iterations}{
     Number of iterations.
   }
+  \item{epsilon}{
+    the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
+    (\textrm{rejectionProbability} - \textrm{theta})^2)} is smaller than \code{epsilon}
+}
+\item{completeCases}{
+  if \code{TRUE}, only Pairs of the two data vectors, which are
+  complete, are being used for the computation. Default \code{FALSE}.
+}
+
 }
 \details{
   This test uses the known bounds of the variables to transform the data
   into [0, 1]. Then a random transformation is used to
   turn the data into binary-valued variables. On this variables the
-  exact McNemar Test with level 'pseudoalpha' is performed and the
+  exact McNemar Test with level \code{pseudoalpha} is performed and the
   result recorded. The last steps are repeated very often and if the
-  proportion of rejected iterations is at least 'theta', then the null
+  proportion of rejected iterations is at least \code{theta}, then the null
   hypothesis is rejected.
 }
 \value{
@@ -106,8 +116,10 @@ npMeanPaired(x1, x2, low = 0, up = 1, alpha = 0.05,
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
 \examples{
-npMeanPaired(runif(20), runif(20), low = 0, up = 1,
-             alternative = "greater", iterations = 2000)
+data(uncertainty)
+first <- uncertainty$w1
+second <- uncertainty$w2
+npMeanPaired(first, second, lower = 0, upper = 60, alternative = "less")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

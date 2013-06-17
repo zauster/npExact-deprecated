@@ -4,7 +4,7 @@
 \title{Pain experienced before and after a knie operation}
 \description{
   There are two ways to determine where to start an operation on a knee,
-  either with a computer or with the hand. The data describes the pain
+  either with a computer or manually. The data describes the pain
   experienced by the patients before and after the surgery.
 }
 \usage{pain}

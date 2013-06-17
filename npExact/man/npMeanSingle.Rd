@@ -11,7 +11,9 @@ sample based on Schlag (2008).
 \usage{
 npMeanSingle(x, mu, lower = 0, upper = 1,
              iterations = 5000, alpha = 0.05,
-             alternative = "greater")
+             alternative = "greater",
+             epsilon = 1 * 10^(-6),
+             ignoreNA = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -34,6 +36,13 @@ type I error, level of the test
 \item{alternative}{
 the alternative hypothesis (currently unsupported)
 }
+  \item{epsilon}{
+    the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
+    (\textrm{rejectionProbability} - \textrm{theta})^2)} is smaller than \code{epsilon}
+}
+\item{ignoreNA}{
+  if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}
+}
 }
 \details{
 This test performs a test on the mean of a variable, of which only
@@ -45,7 +54,7 @@ With the known bounds, the data is transformed to lie in [0, 1]. Then,
 probability (which is its value after the transformation into [0,
 1]). The exact binomial test then calculates the rejection probability
 of this new data. These steps are repeated very often. If the fraction
-of rejection is greater than "theta", one can reject the null
+of rejection is greater than \code{theta}, one can reject the null
 hypothesis.
 
 \code{theta} (and a \code{mu} in the set of the alternative hypothesis)
@@ -117,8 +126,10 @@ Karl Schlag, Peter Saffert and Oliver Reiter
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
 \examples{
-x <- runif(30)
-npMeanSingle(x, mu = 0.5)
+data(pain)
+pain$decrease <- with(pain, before - after)
+without_pc <- pain[pain$pc == 0, "decrease"]
+npMeanSingle(without_pc, mu = 50, lower = 0, upper = 100)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
