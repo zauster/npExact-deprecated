@@ -126,7 +126,8 @@ npMeanUnpaired <- function(x1, x2,
   min.length <- min(n1, n2)
 
   optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
-                            c(0, 1), n1 = n1, n2 = n2, alpha = alpha)
+                            c(0, 1), n1 = n1, n2 = n2, alpha = alpha,
+                            tol = .Machine$double.eps^0.25)
   theta <- optimizeTheta(n1, n2, optimaltypeII$minimum, alpha)
   pseudoalpha <- alpha * theta$theta
 
@@ -336,14 +337,16 @@ optimizeTheta <- function(n1, n2, diff, alpha = alpha)
 {
   ## STEP 1)  maximize typeII error over y1, y2
   maxexpect <- optimize(maxTypeII, c(0, 1 - diff),
-                        tol = 0.001, d = diff, n1 = n1, n2 = n2,
+                        ## tol = .Machine$double.eps^0.5,
+                        d = diff, n1 = n1, n2 = n2,
                         alpha = alpha, maximum = T)
   e1opt <- maxexpect$maximum
   e2opt <- e1opt + diff
 
   ## STEP 2)  minimize typeII error over theta
   thetaval <- optimize(minTypeII, c(0,1),
-                       tol = 0.001, n1 = n1, n2 = n2,
+                       ## tol = .Machine$double.eps^0.5,
+                       n1 = n1, n2 = n2,
                        y1 = e1opt, y2 = e2opt, alpha = alpha)
 
   ## if(thetaval$objective == 1)

@@ -21,8 +21,12 @@ npMeanSingle <- function(x, mu,
                          ignoreNA = FALSE)
 {
   DNAME <- deparse(substitute(x))
-  sample.est <- mean(x)
+
+  if(is.data.frame(x))
+      stop("Please provide 'x' as a vector.")
+
   x <- as.vector(x)
+  sample.est <- mean(x)
 
   null.hypothesis <- paste("E(", DNAME, ") ",
                            ifelse(alternative == "greater", "<= ",
@@ -43,9 +47,6 @@ npMeanSingle <- function(x, mu,
   ## warnings
   if (min(x) < lower | max(x) > upper)
     stop("Some values are out of bounds (or NA)!")
-
-  if(!is.null(iterations) & iterations < 500)
-    warning("Low number of iterations. Results may be inaccurate.")
 
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
@@ -115,7 +116,6 @@ npMeanSingle <- function(x, mu,
           rejLess <- mean(rejMatrix)
           error <- exp(-2 * (iterations * i) * (rejLess - theta$theta)^2)
           i <- i + 1
-          print(paste("Iteration: ", i - 1))
         }
 
       rej <- rejGreater + rejLess
@@ -136,7 +136,7 @@ npMeanSingle <- function(x, mu,
                               p = p, N = n, alpha = alpha)
       pseudoalpha <- alpha * theta$theta
 
-      while(error > epsilon & i <= 20)
+      while(error > epsilon & (iterations * i <= 100000))
         {
           rejMatrix <- cbind(rejMatrix,
                               replicate(iterations,
@@ -145,11 +145,14 @@ npMeanSingle <- function(x, mu,
           rej <- mean(rejMatrix)
           error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
           i <- i + 1
-          print(paste("Iteration: ", i - 1))
         }
     }
-  if(i == 21)
-    warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
+
+  if(!is.null(iterations) & iterations * (i - 1) < 500)
+    warning("Low number of iterations. Results may be inaccurate.")
+
+  if(iterations * i >= 100000)
+    warning("The maximum number of iterations was reached. Rejection may be very sensible to the choice of the parameters.")
 
   method <- "Nonparametric Single Mean Test"
   names(sample.est) <- "mean"

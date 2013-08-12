@@ -70,6 +70,17 @@ npCorr <- function(x1, x2, lower.x1 = 0, upper.x1 = 1,
                                            " != ")),
                              "0", sep = "")
 
+    ## if(is.null(upper.x1) & is.null(lower.x1))
+    ##     {
+    ##         upper.x1 <- upper.x2
+    ##         lower.x1 <- lower.x2
+    ##     }
+    ## if(is.null(upper.x2) & is.null(lower.x2))
+    ##     {
+    ##         upper.x2 <- upper.x1
+    ##         lower.x2 <- lower.x1
+    ##     }
+
     ## Warnings
     if(min(x1) < lower.x1 | max(x1) > upper.x1 | (min(x2) < lower.x2 | max(x2) > upper.x2) &
        conditional == FALSE)
