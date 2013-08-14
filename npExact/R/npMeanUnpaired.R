@@ -76,17 +76,17 @@ npMeanUnpaired <- function(x1, x2,
 
   DNAME <- paste(names.x1, "and", names.x2)
 
-  null.hypothesis <- paste("E(", names.x2, ")",
-                           ifelse(alternative == "greater", " <= ",
-                                  ifelse(alternative == "less", " >= ",
+  null.hypothesis <- paste("E(", names.x1, ")",
+                           ifelse(alternative == "less", " >= ",
+                                  ifelse(alternative == "greater", " <= ",
                                          " = ")),
-                           "E(", names.x1, ")", sep = "")
+                           "E(", names.x2, ")", sep = "")
 
-  alt.hypothesis <- paste("E(", names.x2, ")",
-                          ifelse(alternative == "greater", " > ",
-                                 ifelse(alternative == "less", " < ",
+  alt.hypothesis <- paste("E(", names.x1, ")",
+                          ifelse(alternative == "less", " < ",
+                                 ifelse(alternative == "greater", " > ",
                                         " != ")),
-                          "E(", names.x1, ")", sep = "")
+                          "E(", names.x2, ")", sep = "")
 
   x1 <- as.vector(x1)
   x2 <- as.vector(x2)
@@ -165,7 +165,7 @@ npMeanUnpaired <- function(x1, x2,
     }
       else
         {
-            if(alternative == "less")
+            if(alternative == "greater")
               {
                   x1 <- 1 - x1
                   x2 <- 1 - x2
@@ -187,7 +187,8 @@ npMeanUnpaired <- function(x1, x2,
     warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
 
   method <- "Nonparametric Mean Test for unpaired variables"
-  names(sample.est) <- c("mean", "mean")
+  names(sample.est) <- c(paste("mean(", names.x1, ")", sep = ""),
+                         paste("mean(", names.x2, ")", sep = ""))
   null.value <- 0
   names(null.value) <- "E[x2] - E[x1]" ## "mean difference"
   rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)

@@ -107,12 +107,13 @@ npStochin <- function(x1, x2, d = 0,
 
   ## sample estimate
   count.x1 <- 0
+  count.x2 <- 0
   for(i in 1:N1)
     {
       count.x1 <- count.x1 + sum(x1[i] > x2)
+      count.x2 <- count.x2 + sum(x1[i] < x2)
     }
-  count.x2 <- N1 * N2 - count.x1
-  sample.est <- abs(count.x2 - count.x1)/(N1 * N2)
+  sample.est <- (count.x2 - count.x1)/(N1 * N2)
   names(sample.est) <- paste("stochastic inequality: P(",
                              names.x2,
                              ifelse(alternative == "greater", " > ",
@@ -166,7 +167,7 @@ npStochin <- function(x1, x2, d = 0,
                  rejection = rejection,
                  alpha = alpha,
                  theta = theta$theta,
-                 d.alternative = optimaltypeII$root,
+                 d.alternative = (optimaltypeII$root*2 - 1),
                  typeIIerror = theta$typeII,
                  iterations = iterations * (i - 1),
                  pseudoalpha = pseudoalpha,

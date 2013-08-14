@@ -35,60 +35,6 @@ g2 <- function(mu, N, z, alpha)
     res
   }
 
-## g1 <- function(k,n,z,alpha)
-## #Calculates g1 term from formula
-## #k
-## #z
-## {
-##     j <- k:n
-##     sum1 <- choose(n,j)*(z^j)*(1-z)^(n-j)
-##     t1 <- as.numeric(alpha-sum(sum1)>=0)
-
-##     t2 <- 1-as.numeric(alpha-sum(sum1)>=0)
-##     j <- (k+1):n
-##     sum2 <-  choose(n,j)*(z^j)*(1-z)^(n-j)
-##     t3 <- as.numeric(alpha-sum(sum2)>=0)
-##     t4 <- (alpha-sum(sum2))/(choose(n,k)*(z^k)*(1-z)^(n-k))
-##     res <- t1+t2*t3*t4
-##     res
-## }
-
-## g2 <- function(miu,n,z,alpha)
-## #Calculates g2 term from formula
-## #k
-## #z
-## #uses g1
-## {
-##     k <- 0:(n-1)
-##     t1 <- sum(sapply(k, function(x)choose(n,x)*(miu^x)*(1-miu)^(n-x)*g1(x,n,z,alpha)),na.rm =TRUE)
-##     t2 <- miu^n*(as.numeric(alpha-z^n>=0)+(1-as.numeric(alpha-z^n>=0))*alpha/(z^n))
-##     res <- t1+t2
-##     res
-## }
-
-## mean(replicate(100, system.time(g2fun(.4, 50, .6, .05))["elapsed"]))
-## mean(replicate(100, system.time(g2(.4, 50, .6, .05))["elapsed"]))
-
-## mean(replicate(100, system.time(g1fun(27, 50, .45, .05))["elapsed"]))
-## mean(replicate(100, system.time(g1(27, 50, .45, .05))["elapsed"]))
-
-## for(i in 1:100)
-##   {
-##     print(identical(round(g2(.4, i, .6, .05), 5),
-##                     round(g2fun(.4, i, .6, .05), 5)))
-##   }
-## bei i in z: bei 1 nicht gleiches ergebnis
-
-
-## for(i in 1:49/50)
-##   {
-##     print(identical(round(g1(24, 50, 0.5, i), 5),
-##                     round(g1fun(24, 50, 0.5, i), 5)))
-##   }
-
-## fazit
-## gleiches ergebnis, g2fun (und g1fun) schneller
-
 possibleTheta <- function(N, p, alpha)
 # Calculates possible values of theta, which are in interval (0,1)
 {

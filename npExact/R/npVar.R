@@ -30,7 +30,7 @@
 ## example
 ## npVar(runif(50), low = 0, up = 1, var = 0.1, alt.var = 0.15)
 
-npVar <- function(x, lower = 0, upper = 1, variance,
+npVarianceSingle <- function(x, lower = 0, upper = 1, variance,
                   alternative = "greater",
                   alpha = 0.05, iterations = 5000,
                   epsilon = 1 * 10^(-6),
@@ -59,7 +59,7 @@ npVar <- function(x, lower = 0, upper = 1, variance,
   if (min(x) < lower | max(x) > upper)
     stop("Some values are out of bounds (or NA)!")
 
-  if (variance > (upper - lower)/4)
+  if (variance > 0.25*(upper - lower)^2)
     stop("Hypothesized 'variance' is too large.")
 
   ## if (alt.variance >= variance & alternative == "less")
@@ -174,7 +174,7 @@ npVar <- function(x, lower = 0, upper = 1, variance,
                  rejection = rejection,
                  alpha = alpha,
                  theta = theta$theta,
-                 d.alternative = optimaltypeII$root,
+                 d.alternative = 0.5 * optimaltypeII$root * (upper - lower)^2,
                  typeIIerror = theta$typeII,
                  iterations = iterations * (i - 1),
                  pseudoalpha = pseudoalpha,

@@ -1,5 +1,5 @@
-\name{npVar}
-\alias{npVar}
+\name{npVarianceSingle}
+\alias{npVarianceSingle}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 A test on the variance of a variable.
@@ -10,7 +10,7 @@ the variance of a single sample of independent observations.
 }
 
 \usage{
-npVar(x, lower = 0, upper = 1, variance,
+npVarianceSingle(x, lower = 0, upper = 1, variance,
       alternative = "greater", alpha = 0.05, iterations = 5000,
       epsilon = 1 * 10^(-6), ignoreNA = FALSE)
 }
@@ -107,8 +107,8 @@ Karl Schlag and Oliver Reiter
 }
 \examples{
 data(mshscores)
-npVar(mshscores$civil, lower = 0, upper = 1, var = 0.01)
-npVar(mshscores$civil, lower = 0, upper = 1, var = 0.1, alternative = "less")
+npVarianceSingle(mshscores$civil, lower = 0, upper = 1, var = 0.01)
+npVarianceSingle(mshscores$civil, lower = 0, upper = 1, var = 0.1, alternative = "less")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
