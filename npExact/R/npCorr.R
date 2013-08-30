@@ -124,9 +124,7 @@ npCorr <- function(x1, x2, lower.x1 = 0, upper.x1 = 1,
                 while(error > epsilon & i <= 20)
                     {
                         rejMatrix <- cbind(rejMatrix,
-                                           replicate(iterations,
-                                                     randomFischerTocherTest(x1, x2, n,
-                                                                             pseudoalpha)))
+                                           replicate(iterations, randomFischerTocherTest(x1, x2, n, pseudoalpha)))
                         rejUpper <- mean(rejMatrix)
                         error <- exp(-2 * (iterations * i) * (rejUpper - theta$theta)^2)
                         i <- i + 1
@@ -138,9 +136,7 @@ npCorr <- function(x1, x2, lower.x1 = 0, upper.x1 = 1,
                 while(error > epsilon & i <= 20)
                     {
                         rejMatrix <- cbind(rejMatrix,
-                                           replicate(iterations,
-                                                     randomFischerTocherTest(x1, x2, n,
-                                                                             pseudoalpha)))
+                                           replicate(iterations, randomFischerTocherTest(x1, x2, n, pseudoalpha)))
                         rejLess <- mean(rejMatrix)
                         error <- exp(-2 * (iterations * i) * (rejLess - theta$theta)^2)
                         i <- i + 1
@@ -157,15 +153,13 @@ npCorr <- function(x1, x2, lower.x1 = 0, upper.x1 = 1,
                 while(error > epsilon & i <= 20)
                     {
                         rejMatrix <- cbind(rejMatrix,
-                                           replicate(iterations,
-                                                     randomFischerTocherTest(x1, x2,
-                                                                             n, pseudoalpha)))
+                                           replicate(iterations, randomFischerTocherTest(x1, x2, n, pseudoalpha)))
                         rej <- mean(rejMatrix)
                         error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
                         i <- i + 1
                     }
             }
-        if(i == 21)
+        if(i * iterations >= 100000)
             warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
 
         method <- paste(ifelse(conditional == TRUE,
@@ -212,17 +206,17 @@ randomFischerTocherTest <- function(x1, x2, n, pseudoalpha)
         if(zeros * ones > 0)
             {
                 r <- a + b
-                ## prob <- phyper(b, ones, zeros, r, lower.tail = FALSE)
-                k <- max(0, r - zeros):b
-                prob <- 1 - sum(dhyper(k, ones, zeros, r))
+                prob <- 0
+                if(a >= 1 + max(0, r - zeros))
+                    {
+                        k <- max(0, r - zeros):b
+                        prob <- 1 - sum(dhyper(k, ones, zeros, r))
+                    }
 
                 ## prob <- hfun(b, r, ones, zeros) ## safer variant than above
                 if(prob <= pseudoalpha)
                     {
-                        h2 <- prob + choose(zeros,
-                                            a) * choose(ones,
-                                                        r - a) / choose(zeros + ones,
-                                                                        r)
+                        h2 <- prob + choose(zeros, a) * choose(ones, r - a) / choose(zeros + ones, r)
                         rej <- ifelse(prob + h2 <= pseudoalpha, 1,
                                       (pseudoalpha - prob)/(h2 - prob))
                     }

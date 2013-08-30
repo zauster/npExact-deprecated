@@ -207,7 +207,9 @@ transBinomTest <- function(x, p, xp, n, pseudoalpha)
       }
     else
       {
-        h2 <- (p^ones) * ((1 - p)^zeros) * choose(zeros + ones, ones)
+        ## h2 <- (p^ones) * ((1 - p)^zeros) * choose(zeros + ones,
+          ## ones)
+          h2 <- dbinom(ones, zeros + ones, p)
         if (res.binomtest <= (pseudoalpha + h2))
           {
             res <- ((pseudoalpha - res.binomtest + h2)/h2)
@@ -215,109 +217,3 @@ transBinomTest <- function(x, p, xp, n, pseudoalpha)
       }
     res
   }
-
-#### Functions to calculate the typeII error ####
-
-## w
-## helper function, to ease the reading of the code
-
-## w <- function(x)
-##   {
-##     as.numeric(x >= 0)
-##   }
-
-## ## g1fun
-## ## helper function, to calculate the type II error in
-## ## npMeanSingleTypeIIerror
-
-## g1fun <- function(k, N, z, alpha)
-##   {
-##     summationterm1 <- alpha - (1 - pbinom(k - 1, N, z))
-##     summationterm2 <- alpha - (1 - pbinom(k, N, z))
-##     term3 <- summationterm2/dbinom(k, N, z)
-##     res <- w(summationterm1) + (1 - w(summationterm1)) *
-##   (w(summationterm2)) * term3
-##     res
-##   }
-
-## ## g2fun
-## ## helper function, to calculate the type II error in
-## ## npMeanSingleTypeIIerror
-
-## g2fun <- function(alpha, mu, N, z)
-##   {
-##     k <- 0:(N - 1)
-##     term2 <- w(alpha - z^N) + (1 - w(alpha - z^N))*(alpha/z^N)
-##     res <- sum(dbinom(k, N, mu) * g1fun(k, N, z, alpha)) + mu^N*term2
-##     res
-##   }
-
-## ## npMeanSingleTypeIIError
-## ## calculates the type II error for the npMeanSingle function
-
-## ## alpha ... level of the test
-## ## theta ... parameter for the random testing
-## ## mu.alternative ... value where the type II error is evaluated
-## ## mu0 ... hypothesized "true" value of the mean (transformed)
-## ## N ... length of x
-
-## npMeanSingleTypeIIError <- function(alpha, theta,
-##                                     mu.alternative, mu0, N)
-##   {
-##     res <- (1 - g2fun(alpha * theta,
-##                       mu.alternative, N, mu0))/(1 - theta)
-##     ifelse(res >= 1, 1, res)
-##   }
-
-## ## optimizeTheta
-## ## finds the value of theta and d (difference of mu.alternative and
-## ## mu0), such that the type II error is 0.5 at this value
-
-## ## par ... the two parameters to be optimized, theta and the
-## ## difference of the 'true' mean to the hypothesized mean
-## ## alpha ... level of the test
-## ## mu0 ... hypothesized "true" value of the mean
-## ## N ... length of x
-## optimizeTheta <- function(par, alpha, mu0, N)
-##   {
-##     ## for debugging purposes:
-##     ## print(paste("theta: ", par[1], " mu.alt: ", mu0 + par[2]))
-##     ## par[1] <- ifelse(par[1] < 0, par[1] <- 0.8,
-##     ##                  ifelse(par[1] > 1, par[1] <- 0.9, par[1] <- par[1]))
-##     ## par[2] <- ifelse(par[2] < 0, par[2] <- 0.1,
-##     ##                  ifelse(par[2] > 1, par[2] <- 0.9, par[2] <- par[2]))
-##     ## print(paste("theta: ", par[1], " mu.alt: ", mu0 + par[2]))
-
-
-##     ## real function content:
-##     res <- abs(npMeanSingleTypeIIError(alpha, par[1],
-##                                     mu0 + par[2], mu0, N) - 0.5) ##^2
-##     res
-##   }
-
-## ## Problems:
-## ## If mu0 near 1 -> optimization procedure becomes unstable!
-## optim(c(0.4, .05), optimizeTheta, alpha = .05, mu0 = .4, N = 50)
-
-## ## If mu0 near 1, mu.alt -> 1 and theta -> 0 (even -> negative)!
-
-## ## alpha <- 1:5/25
-## ## theta <- 5:20/25
-## ## mu0 <- 1:19/40
-## ## mu.alt <- mu0 + .05
-
-## ## for(i in alpha)
-## ##   {
-## ##     for(j in theta)
-## ##       {
-## ##         for(k in 1:19)
-## ##           {
-## ##             print(paste("TII:", round(npMeanSingleTypeIIError(i, j,
-## ##                                                         mu.alt[k], mu0[k],
-## ##                                                         50),
-## ##                                       digits = 3),
-## ##                         " alpha: ", i, " theta: ", j,
-## ##                         " mualt: ", mu.alt[k], " mu0: ", mu0[k]))
-## ##           }
-## ##       }
-## ##   }

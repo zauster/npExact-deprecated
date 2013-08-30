@@ -272,55 +272,75 @@ pvalueFisher <- function(n1, n2, s1, s2)
                      lower.tail = FALSE))
   }
 
-## calculates typeII error for given y1, y2 (and of course n1,n2, alpha)
-maxTypeII <- function(y1, d, n1, n2, y2 = y1 + d,
-                      alpha = alpha, theta = 0.2)
-{
-  pseudoalpha <- theta * alpha
-  exmat <- matrix(nrow = n1 + 1, ncol = n2 + 1)
-  ## needed to calculate typeII error
-  res <- 0
-  for(s1 in 0:n1)
-    {
-  ##     for(s2 in 0:n2)
-  ##       {
-  ##         t1 <- pvalueFisher(n1, n2, s1, s2)
-  ##         t2 <- pvalueFisher(n1, n2, s1 - 1, s2 + 1)
+## ## calculates typeII error for given y1, y2 (and of course n1,n2, alpha)
+## maxTypeII <- function(y1, d, n1, n2, y2 = y1 + d,
+##                       alpha = alpha, theta = 0.2)
+## {
+##   pseudoalpha <- theta * alpha
+##   ## exmat <- matrix(nrow = n1 + 1, ncol = n2 + 1)
+##   res <- 0
+##   for(s1 in 0:n1)
+##     {
+##   ##     for(s2 in 0:n2)
+##   ##       {
+##   ##         t1 <- pvalueFisher(n1, n2, s1, s2)
+##   ##         t2 <- pvalueFisher(n1, n2, s1 - 1, s2 + 1)
 
-  ##         if( t2 >= pseudoalpha)
-  ##           {
-  ##             ## in this case, pr = zero
-  ##             ## so we can skip the calculation of the term
-  ##             exmat[s1 + 1, s2 + 1] <- 0
-  ##           }
-  ##         else
-  ##           {
-  ##             if( t1  > pseudoalpha & pseudoalpha > t2)
-  ##               {
-  ##                 ## pr <- (pseudoalpha - t2) / ((choose(n1, s1) *
-  ##                 ## choose(n2, s2))/ choose(n1 + n2, s1 + s2))
-  ##                 pr <- (pseudoalpha - t2) / dhyper(s1, n1, n2, s1 + s2)
-  ##               }
-  ##             else
-  ##               {
-  ##                 if(t1 <= pseudoalpha) pr <- 1
-  ##               }
-  ##             exmat[s1 + 1,
-  ##                   s2 + 1] <- dbinom(s1, n1, y1) * dbinom(s2, n2, y2) * pr
-  ##           }
-  ##       }
-  ## }
-      ## now instead of the second for clause -> vectorized if-clauses!
-      t1 <- pvalueFisher(n1, n2, s1, 0:n2)
-      t2 <- pvalueFisher(n1, n2, s1 - 1, 1:(n2 + 1))
-      res <- res + sum(ifelse(t2 >= pseudoalpha, 0,
-                    ifelse(t1 > pseudoalpha & pseudoalpha > t2,
-                           dbinom(s1, n1, y1) * dbinom(0:n2, n2, y2) * (pseudoalpha - t2) / dhyper(s1, n1, n2, s1 + 0:n2),
-                           dbinom(s1, n1, y1) * dbinom(0:n2, n2, y2) * 1)))
-    }
-  type2 <- (1 - res) / (1 - theta)
-  ## type2 <- (1 - sum(exmat)) / (1 - theta)
-  return(min(type2, 1))
+##   ##         if( t2 >= pseudoalpha)
+##   ##           {
+##   ##             ## in this case, pr = zero
+##   ##             ## so we can skip the calculation of the term
+##   ##             exmat[s1 + 1, s2 + 1] <- 0
+##   ##           }
+##   ##         else
+##   ##           {
+##   ##             if( t1  > pseudoalpha & pseudoalpha > t2)
+##   ##               {
+##   ##                 ## pr <- (pseudoalpha - t2) / ((choose(n1, s1) *
+##   ##                 ## choose(n2, s2))/ choose(n1 + n2, s1 + s2))
+##   ##                 pr <- (pseudoalpha - t2) / dhyper(s1, n1, n2, s1 + s2)
+##   ##               }
+##   ##             else
+##   ##               {
+##   ##                 if(t1 <= pseudoalpha) pr <- 1
+##   ##               }
+##   ##             exmat[s1 + 1,
+##   ##                   s2 + 1] <- dbinom(s1, n1, y1) * dbinom(s2, n2, y2) * pr
+##   ##           }
+##   ##       }
+##   ## }
+##       ## now instead of the second for clause -> vectorized if-clauses!
+##       t1 <- pvalueFisher(n1, n2, s1, 0:n2)
+##       t2 <- pvalueFisher(n1, n2, s1 - 1, 1:(n2 + 1))
+##       res <- res + sum(ifelse(t2 >= pseudoalpha, 0,
+##                     ifelse(t1 > pseudoalpha & pseudoalpha > t2,
+##                            dbinom(s1, n1, y1) * dbinom(0:n2, n2, y2) * (pseudoalpha - t2) / dhyper(s1, n1, n2, s1 + 0:n2),
+##                            dbinom(s1, n1, y1) * dbinom(0:n2, n2, y2) * 1)))
+##     }
+##   type2 <- (1 - res) / (1 - theta)
+##   ## type2 <- (1 - sum(exmat)) / (1 - theta)
+##   return(min(type2, 1))
+## }
+
+maxTypeII <- function(y1, d, n1, n2, y2 = y1 + d,
+                       alpha = 0.05, theta = 0.2)
+{
+    pseudoalpha <- theta * alpha
+    res <- 0
+    f <- function(s1, n1, n2, y1, y2)
+        {
+            t1 <- pvalueFisher(n1, n2, s1, 0:n2)
+            t2 <- pvalueFisher(n1, n2, s1 - 1, 1:(n2 + 1))
+            res <- sum(ifelse(t2 >= pseudoalpha, 0,
+                              ifelse(t1 > pseudoalpha & pseudoalpha > t2,
+                                     dbinom(s1, n1, y1) * dbinom(0:n2, n2, y2) * (pseudoalpha - t2) / dhyper(s1, n1, n2, s1 + 0:n2),
+                                     dbinom(s1, n1, y1) * dbinom(0:n2, n2, y2) * 1)))
+            res
+        }
+    res <- sum(sapply(0:n1,
+                      f, n1, n2, y1, y2))
+    type2 <- (1 - res)/(1 - theta)
+    return(min(type2, 1))
 }
 
 ## mean(system.time(maxTypeII))
