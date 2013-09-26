@@ -2,7 +2,7 @@
 \alias{npMeanUnpaired}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-A test on two unpaired variables.
+A test on the means of two unpaired variables.
 }
 \description{
 A test on the mean of two variables, where the observations do not have
@@ -25,24 +25,14 @@ the two variables to be tested.
   \item{lower, upper}{
 the logical bounds of the variables.
 }
-%   \item{d}{
-% difference (d = EY2 - EY1) such that type II is minimized when H1:
-% E(Y1)+d <= E(Y2)
-% }
   \item{iterations}{
-the number of iterations
+the number of iterations.
 }
   \item{alpha}{
-the type I error
+    the type I error.
 }
-%   \item{plotif}{
-% logical, should a plot be generated?
-% }
-%   \item{helppoints}{
-% the number of helping points for the plot.
-% }
-\item{alternative}{
-the alternative hypothesis (currently unsupported)
+  \item{alternative}{
+    a character string describing the alternative hypothesis.    
 }
   \item{epsilon}{
     the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
@@ -53,7 +43,23 @@ the alternative hypothesis (currently unsupported)
 }
 }
 \details{
-Details to be added...
+This function performs a test on the means of two variables, \eqn{H_0:
+  E(x_1) >= E(x_2)}, with the corresponding alternative hypothesis
+\eqn{H_1:  E(x_1) < E(x_2)} or \eqn{E(x_2) - E(x_1) > 0}. 
+
+  First, the data is transformed to lie in [0, 1]. This is done with the
+  ex ante known bounds of the variables. Afterwards, the iteration phase
+  takes place: In each iteration, each observation is randomly assigned
+  a value {0, 1} (according to its probability, the value in [0, 1]). A
+  randomized Fischer-Tocher-Test with level \code{pseudoalpha} is then
+  applied to the data and its result recorded. If the fraction of the
+  rejections is at least \code{theta}, then one can reject the null
+  hypothesis.
+
+  \code{theta} (and a \code{mu} in the set of the alternative
+  hypothesis) is found in an optimization procedure. \code{theta} and the
+  alternative \code{mu} are chosen as to bring the type II error to
+  0.5. Please see the cited paper below for further information.
 }
 \value{
 A list with class "nphtest" containing the following components:
@@ -69,8 +75,7 @@ A list with class "nphtest" containing the following components:
     a character string describing the alternative hypothesis.
   }
   \item{estimate}{
-    the estimated mean or difference in means depending on
-    whether it was a one-sample test or a two-sample test.
+    the sample means of the two variables.
   }
   \item{probrej}{
     the probability with which the null hypothesis can be rejected.
@@ -82,36 +87,28 @@ A list with class "nphtest" containing the following components:
     the specified hypothesized value of the correlation between the variables.
   }
   \item{alpha}{
-    the type I error
+    the type I error.
   }
   \item{theta}{
     the parameter that minimizes the type II error.
   }
   \item{pseudoalpha}{
-    theta * alpha, this is the alpha that is used during the iterations.
+    \code{theta} * \code{alpha}, this is the alpha that is used during the iterations.
   }
   \item{rejection}{
-    Logical. Given alpha, the type I error, and theta, can a rejection be achieved?
+    Logical. Given \code{alpha}, the type I error, and \code{theta}, can a rejection be achieved?
   }
   \item{iterations}{
     the number of iterations that were performed.
   }
 }
 \references{
-Karl Schlag (2008).
-  Exact tests for correlation and for the slope in simple linear
-  regressions without making assumptions. Available at \url{http://www.econ.upf.edu/en/research/onepaper.php?id=1097}.
+Karl Schlag (2008), A New Method for Constructing Exact Tests without
+Making any Assumptions. Available at \url{http://www.econ.upf.edu/en/research/onepaper.php?id=1109}.
 }
 \author{
-Karl Schlag, Christian Pechhacker and Peter Saffert
+Karl Schlag, Christian Pechhacker, Peter Saffert and Oliver Reiter
 }
-% \note{
-% %%  ~~further notes~~
-% }
-
-% %% ~Make other sections like Warning with \section{Warning }{....} ~
-
-
 \seealso{
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
@@ -123,5 +120,5 @@ npMeanUnpaired(bargaining$US, bargaining$IS, lower = 0, upper = 10,
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-% \keyword{ ~kwd1 }
-% \keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{unpaired data}
+\keyword{mean test}% __ONLY ONE__ keyword per line

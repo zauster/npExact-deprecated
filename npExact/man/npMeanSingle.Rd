@@ -18,23 +18,23 @@ npMeanSingle(x, mu, lower = 0, upper = 1,
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{
-The data vector to be tested.
+the data vector to be tested.
 }
   \item{mu}{
-test value for EY <= mu
+test value for \eqn{E(x) <= \mu}.
 }
   \item{lower, upper}{
 exogenously known bounds for any outcome that can be generated in
-either sample
+the sample.
 }
   \item{iterations}{
-number of iterations
+number of iterations.
 }
   \item{alpha}{
-type I error, level of the test
+    the type I error.
 }
 \item{alternative}{
-the alternative hypothesis (currently unsupported)
+    a character string describing the alternative hypothesis.
 }
   \item{epsilon}{
     the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
@@ -96,10 +96,10 @@ A list with class "nphtest" containing the following components:
     the parameter that minimizes the type II error.
   }
   \item{pseudoalpha}{
-    theta * alpha, this is the alpha that is used during the iterations.
+    \code{theta} * \code{alpha}, this is the alpha that is used during the iterations.
   }
   \item{rejection}{
-    Logical. Given alpha, the type I error, and theta, can a rejection be achieved?
+    Logical. Given \code{alpha}, the type I error, and \code{theta}, can a rejection be achieved?
   }
   \item{iterations}{
     the number of iterations that were performed.
@@ -133,5 +133,5 @@ npMeanSingle(without_pc, mu = 50, lower = 0, upper = 100)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-% \keyword{ ~kwd1 }
-% \keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{single sample}
+\keyword{mean test}% __ONLY ONE__ keyword per line

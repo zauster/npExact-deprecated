@@ -11,12 +11,12 @@ on the underlying distributions.
 \tabular{ll}{
 Package: \tab npExact\cr
 Type: \tab Package\cr
-Version: \tab 0.1 \cr
-Date: \tab 2013-04-16 \cr
+Version: \tab 0.2 \cr
+Date: \tab 2013-09-26 \cr
 License: \tab GPL-2\cr
 }
-~~ Please include some information about the most important functions of
-the package here~~
+xxx Please include some information about the most important functions of
+the package here
 }
 \author{
 Karl Schlag, Oliver Reiter, Peter Saffert, Christian Pechhacker, Simona
@@ -28,11 +28,10 @@ Jokubauskaite, Tautvilas Janusauskas
   New and Old Results not only for Experimental Game Theory. Available
   at \url{http://homepage.univie.ac.at/karl.schlag/research/statistics/exacthypothesistesting8.pdf}
 }
-\keyword{nonparametric, distribution-free}
+%% \keyword{nonparametric, distribution-free}
 
 \seealso{
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
 % \examples{
-% npCorr(runif(20), runif(20))
 % }

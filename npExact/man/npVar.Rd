@@ -6,7 +6,9 @@ A test on the variance of a variable.
 }
 \description{
 This is a program that implements a nonrandomized one-sided test for
-the variance of a single sample of independent observations.
+the variance of a single sample of independent observations. The null
+hypothesis that is being tested is \eqn{H_0: Var(x) >= w} against
+\eqn{H_1: Var(x) < w}
 }
 
 \usage{
@@ -21,19 +23,19 @@ npVarianceSingle(x, lower = 0, upper = 1, variance,
 the data vector to be tested.
 }
   \item{lower, upper}{
-the logical bounds of the variable
+the logical bounds of the variable.
 }
   \item{variance}{
-the value of the variance to be tested as H0: VarY >= w
+the value of the variance to be tested as \eqn{H_0: Var(x) >= w}.
 }
   \item{alternative}{
 the alternative hypothesis, default = "greater"
 }
   \item{alpha}{
-the type I error
+the type I error.
 }
   \item{iterations}{
-the number of iterations
+the number of iterations.
 }
   \item{epsilon}{
     the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
@@ -44,7 +46,19 @@ the number of iterations
 }
 }
 \details{
-More details to come...
+  This function does the following steps in each iteration: First, it
+  permutes the data vector. Then it calculates pairwise
+  differences and squares them: \eqn{(x_{1:(n/2)} - x_{(n/2 +
+      1):n})^2}. These values all lie in [0, 1] and are then randomly
+  transformed into {0, 1}. A binomial test with \eqn{p = 2 *
+    \textrm{variance} / (\textrm{upper} - \textrm{lower})^2} is then
+  performed on the data. If the fraction of recorded rejections lies
+  above the value \code{theta}, the null hypothesis can be rejected.
+
+  \code{theta} (and a \code{w} in the set of the alternative hypothesis)
+is found in an optimization procedure. \code{theta} and the
+alternative \code{w} are chosen as to bring the type II error to
+0.5. Please see the cited paper below for further information.
 }
 \value{
 A list with class "nphtest" containing the following components:
@@ -73,16 +87,16 @@ A list with class "nphtest" containing the following components:
     the specified hypothesized value of the correlation between the variables.
   }
   \item{alpha}{
-    the type I error
+    the type I error.
   }
   \item{theta}{
     the parameter that minimizes the type II error.
   }
   \item{pseudoalpha}{
-    theta * alpha, this is the alpha that is used during the iterations.
+    \code{theta} * \code{alpha}, this is the alpha that is used during the iterations.
   }
   \item{rejection}{
-    Logical. Given alpha, the type I error, and theta, can a rejection be achieved?
+    Logical. Given \code{alpha}, the type I error, and \code{theta}, can a rejection be achieved?
   }
   \item{iterations}{
     the number of iterations that were performed.
@@ -112,5 +126,5 @@ npVarianceSingle(mshscores$civil, lower = 0, upper = 1, var = 0.1, alternative =
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-% \keyword{ ~kwd1 }
-% \keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{variance test}
+\keyword{single sample}

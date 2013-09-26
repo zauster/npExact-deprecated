@@ -2,13 +2,14 @@
 \alias{npMeanPaired}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-  A test on the mean difference of two variables, if the observations are paired.
+  A test on the mean difference of two variables, with their
+  observations being paired.
 }
 \description{
   This test performs the exact McNemar Test on a random transformation of
-  the data. The null hypothesis to be tested is H_0: E(x_1) >= E(x_2),
-  with the corresponding alternative hypothesis H_1: E(x_2) < E(x_2) or
-  E(x_2) - E(x_1) > 0
+  the data. The null hypothesis to be tested is \eqn{H_0: E(x_1) >= E(x_2)},
+  with the corresponding alternative hypothesis \eqn{H_1: E(x_1) < E(x_2)} or
+  \eqn{E(x_2) - E(x_1) > 0}.
 }
 \usage{
 npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
@@ -21,14 +22,10 @@ npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
     the numerical vectors which contain the variables to be tested.
   }
   \item{lower, upper}{
-    the logical bounds of the variables
+    the logical bounds of the variables.
   }
-  % \item{d}{
-  %   the hypothesised mean difference, which will be used to minimize the
-  %   type II error.
-  % }
   \item{alpha}{
-    the type I error
+    the type I error.
   }
   \item{alternative}{
     a character string describing the alternative hypothesis.
@@ -41,8 +38,8 @@ npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
     (\textrm{rejectionProbability} - \textrm{theta})^2)} is smaller than \code{epsilon}
 }
 \item{completeCases}{
-  if \code{TRUE}, only Pairs of the two data vectors, which are
-  complete, are being used for the computation. Default \code{FALSE}.
+  if \code{TRUE}, only pairs of the two data vectors which are
+  complete are being used for the computation. Default \code{FALSE}.
 }
 
 }
@@ -51,9 +48,15 @@ npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
   into [0, 1]. Then a random transformation is used to
   turn the data into binary-valued variables. On this variables the
   exact McNemar Test with level \code{pseudoalpha} is performed and the
-  result recorded. The last steps are repeated very often and if the
-  proportion of rejected iterations is at least \code{theta}, then the null
-  hypothesis is rejected.
+  result recorded. The random transformation and the test are then
+  repeated \code{iterations} times. If the proportion of rejected
+  iterations is at least \code{theta}, then the null hypothesis is
+  rejected.  
+
+  \code{theta} (and a \code{mu} in the set of the alternative
+  hypothesis) is found in an optimization procedure. \code{theta} and
+  the alternative \code{mu} are chosen as to bring the type II error to
+  0.5. Please see the cited paper below for further information. 
 }
 \value{
   A list with class "nphtest" containing the following components:
@@ -69,8 +72,7 @@ npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
     a character string describing the alternative hypothesis.
   }
   \item{estimate}{
-    the estimated mean or difference in means depending on
-    whether it was a one-sample test or a two-sample test.
+    the sample means of the given data.
   }
   \item{probrej}{
     the probability with which the null hypothesis can be rejected.
@@ -79,19 +81,19 @@ npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
     the lower and upper bounds of the variables.
   }
   \item{null.value}{
-    the specified hypothesized value of the correlation between the variables.
+    the specified hypothesized value of the difference of the variable means.
   }
   \item{alpha}{
-    the type I error
+    the type I error.
   }
   \item{theta}{
     the parameter that minimizes the type II error.
   }
   \item{pseudoalpha}{
-    theta * alpha, this is the alpha that is used during the iterations.
+    \code{theta} * \code{alpha}, this is the alpha that is used during the iterations.
   }
   \item{rejection}{
-    Logical. Given alpha, the type I error, and theta, can a rejection be achieved?
+    Logical. Given \code{alpha}, the type I error, and \code{theta}, can a rejection be achieved?
   }
   \item{iterations}{
     the number of iterations that were performed.
@@ -106,9 +108,9 @@ npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
 \author{
   Karl Schlag and Christian Pechhacker
 }
-% \note{
-% %%  ~~further notes~~
-% }
+\note{
+  A note can also be included.
+}
 
 % %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -123,5 +125,5 @@ npMeanPaired(first, second, lower = 0, upper = 60, alternative = "less")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-% \keyword{ ~kwd1 }
-% \keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{pairwise}
+\keyword{mean test}

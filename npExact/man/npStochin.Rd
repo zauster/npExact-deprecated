@@ -6,8 +6,9 @@
 }
 \description{
   This test performs the exact McNemar test on a bootstrapped sample of
-  the data. The corresponding null hypothesis for this test is H_0: P(x2
-  > x1) <= P(x2 < x1), or equivalently: P(x2 > x1) - P(x2 < x1) <= d.
+  the data. The corresponding null hypothesis for this test is \eqn{H_0:
+    P(x_2 > x_1) <= P(x_2 < x_1)}, or equivalently: \eqn{P(x_2 > x_1) -
+    P(x_2 < x_1) <= d}. 
 }
 \usage{
 npStochin(x1, x2, d = 0, 
@@ -21,21 +22,18 @@ npStochin(x1, x2, d = 0,
     the numerical vectors which contain the variables to be tested.
   }
   \item{d}{
-    the difference in probabilities of the null hypothesis: P(x2 > x1) -
-    P(x2 < x1) <= d. Default is 0. 
+    the difference in probabilities of the null hypothesis: \eqn{P(x_2 >
+      x_1) - P(x_2 < x_1) <= d}. Default is 0. 
   }
-  % \item{d1}{
-  %   the hypothesized true value of the difference in probabilities
-  % }
   \item{alternative}{
     a character string describing the alternative hypothesis. Default is
-    "greater". If "less" is given, x1 and x2 are switched for each other.
+    "greater". If "less" is given, \code{x1} and \code{x2} are switched for each other.
   }
   \item{iterations}{
     Number of iterations.
   }
   \item{alpha}{
-    the type I error
+    the type I error.
   }
   \item{epsilon}{
     the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
@@ -52,14 +50,14 @@ npStochin(x1, x2, d = 0,
   \eqn{x_1 < x_2} are counted. The exact binomial test then tests whether
   the success probability of \eqn{x_1 > x_2} is greater than 0.5 (in the
   default case). These steps are then repeated \code{iterations} times
-  and rejection at level \code{alpha x theta} is recorded (for
+  and rejection at level \code{alpha} times \code{theta} is recorded (for
   \code{theta}, see below). If the rejection probability (the fraction
   of rejections in all iterations) is above the threshold \code{theta},
   the null hypothesis is rejected.
 
   \code{theta} (and a \code{d} in the set of the alternative hypothesis)
   is found in an optimization procedure. \code{theta} and the
-  alternative \code{d} are chosen as to bring the type II error to
+  alternative \code{d} are chosen so as to bring the type II error to
   0.5. Please see the cited paper below for further information.
 }
 \value{
@@ -76,8 +74,7 @@ npStochin(x1, x2, d = 0,
     a character string describing the alternative hypothesis.
   }
   \item{estimate}{
-    the estimated mean or difference in means depending on
-    whether it was a one-sample test or a two-sample test.
+    an estimate of \eqn{P(x_2 > x_1) - P(x_2 < x_1)}.
   }
   \item{probrej}{
     the probability with which the null hypothesis can be rejected.
@@ -89,16 +86,16 @@ npStochin(x1, x2, d = 0,
     the specified hypothesized value of the correlation between the variables.
   }
   \item{alpha}{
-    the type I error
+    the type I error.
   }
   \item{theta}{
     the parameter that minimizes the type II error.
   }
   \item{pseudoalpha}{
-    theta * alpha, this is the alpha that is used during the iterations.
+    \code{theta} * \code{alpha}, this is the alpha that is used during the iterations.
   }
   \item{rejection}{
-    Logical. Given alpha, the type I error, and theta, can a rejection be achieved?
+    Logical. Given \code{alpha}, the type I error, and \code{theta}, can a rejection be achieved?
   }
   \item{iterations}{
     the number of iterations that were performed.
@@ -133,5 +130,5 @@ npStochin(x, y, ignoreNA = TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-% \keyword{ ~kwd1 }
-% \keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{unpaired data}
+\keyword{stochastic inequality}% __ONLY ONE__ keyword per line

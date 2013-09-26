@@ -1,10 +1,10 @@
 ## exportPattern("^[[:alpha:]]+")
 
-export("npCorr",
-       "npMeanPaired",
+export("npMeanPaired",
        "npMeanSingle",
        "npMeanUnpaired",
        "npVarianceSingle",
+       ## "npCorr",
        "npStochin")
 
 S3method("print", "nphtest")

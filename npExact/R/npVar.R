@@ -216,19 +216,21 @@ sampleBinomTestnpVar <- function(x, m, p, alternative, alpha)
     ##                lower.tail = ifelse(alternative == "greater",
     ##                  TRUE, FALSE)) ## not exact
 
-    res <- 0
     if(prob <= alpha) ## reject with probability 1
-      {
-        res <- 1
-      }
+        {
+            res <- 1
+        }
     else
-      {
-        ## h <- (p^zeros)*((1 - p)^ones) * choose(ones + zeros, zeros)
-        h <- dbinom(zeros, zeros + ones, p) ## more efficient
-        if (prob <= alpha + h) ##(reject with positive probability)
-          {
-            res <- ((alpha - prob + h) / h)
-          }
-      }
+        {
+            h <- dbinom(zeros, zeros + ones, p) ## more efficient
+            if (prob <= alpha + h) ##(reject with positive probability)
+                {
+                    res <- ((alpha - prob + h) / h)
+                }
+            else
+                {
+                    res <- 0
+                }
+        }
     return(res)
-  }
+}
