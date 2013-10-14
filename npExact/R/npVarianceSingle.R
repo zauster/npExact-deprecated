@@ -37,8 +37,8 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, variance,
                   ignoreNA = FALSE)
 {
   DNAME <- deparse(substitute(x))
-  sample.est <- var(x)
   x <- as.vector(x)
+  sample.est <- var(x)
 
   null.hypothesis <- paste("Var(", DNAME, ") ",
                            ifelse(alternative == "greater", "<= ",
@@ -54,6 +54,7 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, variance,
   if(ignoreNA == TRUE)
     {
       x <- x[!is.na(x)]
+      sample.est <- var(x)
     }
 
   if (min(x) < lower | max(x) > upper)

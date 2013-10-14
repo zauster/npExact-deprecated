@@ -20,7 +20,7 @@ npVarianceSingle(x, lower = 0, upper = 1, variance,
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{
-the data vector to be tested.
+a (non-empty) numeric vector of data values.
 }
   \item{lower, upper}{
 the logical bounds of the variable.
@@ -110,19 +110,18 @@ Karl Schlag (2008).
 \author{
 Karl Schlag and Oliver Reiter
 }
-% \note{
-% %%  ~~further notes~~
-% }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
 \examples{
+## see if the minority share holder shores have a variance greater
+## than 0.05
 data(mshscores)
-npVarianceSingle(mshscores$civil, lower = 0, upper = 1, var = 0.01)
-npVarianceSingle(mshscores$civil, lower = 0, upper = 1, var = 0.1, alternative = "less")
+
+scores <- as.vector(as.matrix(mshscores))
+npVarianceSingle(scores, lower = 0, upper = 1, var = 0.05, ignoreNA = TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

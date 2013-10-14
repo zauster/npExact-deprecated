@@ -9,18 +9,13 @@ A test on the mean of two variables, where the observations do not have
 to be paired.
 }
 \usage{
-npMeanUnpaired(x1, x2,
-               lower = 0, upper = 1, 
-               iterations = 5000,
-               alpha = 0.05,
-               alternative = "greater",
-               epsilon = 1 * 10^(-6),
-               ignoreNA = FALSE)
+npMeanUnpaired(x1, x2, lower = 0, upper = 1, iterations = 5000, alpha = 0.05,
+               alternative = "greater", epsilon = 1 * 10^(-6), ignoreNA = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x1, x2}{
-the two variables to be tested.
+    the (non-empty) numerical data vectors which contain the variables to be tested.
 }
   \item{lower, upper}{
 the logical bounds of the variables.

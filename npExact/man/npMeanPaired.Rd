@@ -19,7 +19,7 @@ npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x1, x2}{
-    the numerical vectors which contain the variables to be tested.
+    the (non-empty) numerical data vectors which contain the variables to be tested.
   }
   \item{lower, upper}{
     the logical bounds of the variables.
@@ -108,9 +108,9 @@ npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
 \author{
   Karl Schlag and Christian Pechhacker
 }
-\note{
-  A note can also be included.
-}
+%% \note{
+%%   A note can also be included.
+%% }
 
 % %% ~Make other sections like Warning with \section{Warning }{....} ~
 

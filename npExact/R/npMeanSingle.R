@@ -23,7 +23,12 @@ npMeanSingle <- function(x, mu,
   DNAME <- deparse(substitute(x))
 
   if(is.data.frame(x))
-      stop("Please provide 'x' as a vector.")
+      {
+          if(ncol(x) > 1)
+              stop("Please provide 'x' as a vector.")
+
+          x <- x[,1]
+      }
 
   x <- as.vector(x)
   sample.est <- mean(x)

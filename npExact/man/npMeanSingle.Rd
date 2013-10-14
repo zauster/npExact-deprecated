@@ -9,16 +9,14 @@ A test on the mean of a single variable.
 sample based on Schlag (2008).
 }
 \usage{
-npMeanSingle(x, mu, lower = 0, upper = 1,
-             iterations = 5000, alpha = 0.05,
-             alternative = "greater",
-             epsilon = 1 * 10^(-6),
-             ignoreNA = FALSE)
+npMeanSingle(x, mu, lower = 0, upper = 1, iterations = 5000,
+             alpha = 0.05, alternative = "greater",
+             epsilon = 1 * 10^(-6), ignoreNA = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{
-the data vector to be tested.
+a (non-empty) numeric vector of data values.
 }
   \item{mu}{
 test value for \eqn{E(x) <= \mu}.
@@ -126,12 +124,19 @@ Karl Schlag, Peter Saffert and Oliver Reiter
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
 \examples{
+## test whether countries with a French origin have a mean greater than 0.25
+data(french)
+origin <- french[,1]
+npMeanSingle(origin, mu = .25, lower = 0, upper = 1, alternative =
+"greater")
+
+## test if the decrease in pain before and after the surgery is smaller
+## than 50
 data(pain)
 pain$decrease <- with(pain, before - after)
 without_pc <- pain[pain$pc == 0, "decrease"]
-npMeanSingle(without_pc, mu = 50, lower = 0, upper = 100)
+npMeanSingle(without_pc, mu = 50, lower = 0, upper = 100,
+alternative = "less")
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
 \keyword{single sample}
-\keyword{mean test}% __ONLY ONE__ keyword per line
+\keyword{mean test}

@@ -11,15 +11,12 @@
     P(x_2 < x_1) <= d}. 
 }
 \usage{
-npStochin(x1, x2, d = 0, 
-          alternative = "greater",
-          iterations = 5000, alpha = 0.05,
-          epsilon = 1 * 10^(-6),
-          ignoreNA = FALSE)
+npStochin(x1, x2, d = 0, alternative = "greater", iterations = 5000,
+          alpha = 0.05, epsilon = 1 * 10^(-6), ignoreNA = FALSE)
 }
 \arguments{
   \item{x1, x2}{
-    the numerical vectors which contain the variables to be tested.
+    the (non-empty) numerical data vectors which contain the variables to be tested.
   }
   \item{d}{
     the difference in probabilities of the null hypothesis: \eqn{P(x_2 >
