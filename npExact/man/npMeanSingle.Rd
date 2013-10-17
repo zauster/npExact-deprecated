@@ -124,11 +124,12 @@ Karl Schlag, Peter Saffert and Oliver Reiter
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
 \examples{
-## test whether countries with a French origin have a mean greater than 0.25
-data(french)
-origin <- french[,1]
-npMeanSingle(origin, mu = .25, lower = 0, upper = 1, alternative =
-"greater")
+## test whether Americans gave more than 5 dollars in a round of
+## the Ultimatum game
+data(bargaining)
+us_offers <- bargaining$US
+npMeanSingle(us_offers, mu = 5, lower = 0, upper = 10, alternative =
+"greater", ignoreNA = TRUE) ## no rejection
 
 ## test if the decrease in pain before and after the surgery is smaller
 ## than 50

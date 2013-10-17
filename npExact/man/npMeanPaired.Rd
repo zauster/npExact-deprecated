@@ -118,10 +118,19 @@ npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
 \examples{
-data(uncertainty)
-first <- uncertainty$w1
-second <- uncertainty$w2
-npMeanPaired(first, second, lower = 0, upper = 60, alternative = "less")
+## test whether pain after the surgery is less than before the surgery
+data(pain)
+npMeanPaired(pain$before, pain$after, lower = 0, upper = 100)
+
+## when the computer was used in the surgery
+before_pc <- pain[pain$pc == 1, "before"]
+after_pc <- pain[pain$pc == 1, "after"]
+npMeanPaired(before_pc, after_pc, lower = 0, upper = 100)
+
+## when only hands were used
+before_hand <- pain[pain$pc == 0, "before"]
+after_hand <- pain[pain$pc == 0, "after"]
+npMeanPaired(before_hand, after_hand, lower = 0, upper = 100)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

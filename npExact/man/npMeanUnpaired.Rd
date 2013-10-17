@@ -109,9 +109,16 @@ Karl Schlag, Christian Pechhacker, Peter Saffert and Oliver Reiter
 }
 
 \examples{
+## test whether countries with french origin score lower than
+## countries with no french origin
+data(french)
+npMeanUnpaired(french[,1], french[,2], alternative = "less", ignoreNA =
+TRUE)
+
+## test whether American tend to be more generous than Isrealis
+## in a round of the Ultimatum game
 data(bargaining)
-npMeanUnpaired(bargaining$US, bargaining$IS, lower = 0, upper = 10,
-               alternative = "less", ignoreNA = TRUE)
+npMeanUnpaired(bargaining$US, bargaining$IS, lower = 0, upper = 10, ignoreNA = TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
