@@ -59,8 +59,7 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                          alpha = 0.05,
                          alternative = "greater",
                          epsilon = 1 * 10^(-6),
-                         iterations = 5000,
-                         completeCases = FALSE)
+                         iterations = 5000)
     {
         names.x1 <- deparse(substitute(x1))
         names.x2 <- deparse(substitute(x2))
@@ -84,8 +83,9 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
         x1 <- as.vector(x1)
         x2 <- as.vector(x2)
 
-        if(completeCases == TRUE)
+        if(any(is.na(c(x1, x2))) == TRUE)
             {
+                warning("Pairs containing NA's were removed completely.")
                 complete <- complete.cases(cbind(x1, x2))
                 x1 <- x1[complete]
                 x2 <- x2[complete]
@@ -93,7 +93,7 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
 
         ## Warnings
         if(min(x1, x2) < lower | max(x1, x2) > upper)
-            stop("Some values are out of bounds (or NA)!")
+            stop("Some values are out of bounds!")
 
         if(length(x1) != length(x2))
             stop("Unequal length of input vectors!")

@@ -2,45 +2,49 @@
 \alias{npMeanPaired}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-  A test on the mean difference of two variables, with their
-  observations being paired.
+  A test for the mean difference between two bounded random variables given matched pairs.
 }
 \description{
-  This test performs the exact McNemar Test on a random transformation of
-  the data. The null hypothesis to be tested is \eqn{H_0: E(x_1) >= E(x_2)},
-  with the corresponding alternative hypothesis \eqn{H_1: E(x_1) < E(x_2)} or
-  \eqn{E(x_2) - E(x_1) > 0}.
+  This test requires that the user knows bounds before gathering the data
+such that the properties of the data generating process imply that all observations will be within these bounds.
+The data input consists of pairs of observations, each pair consisting of an observation of each random variable,
+different pairs being independently generated.
+
+Under alternative = "greater", it is a test of the null hypothesis
+\eqn{H_0: E(x_1) <= E(x_2)} against the alternative hypothesis \eqn{H_1: E(x_1) > E(x_2)}.
 }
 \usage{
 npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
              alternative = "greater", epsilon = 1 * 10^(-6),
-             iterations = 5000, completeCases = FALSE)
+             iterations = 5000)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x1, x2}{
-    the (non-empty) numerical data vectors which contain the variables to be tested.
+    the (non-empty) numerical data vectors which contain the variables
+    to be tested. The first values of the vectors are assumed to be the
+    first matched pair of observations, the second values the second
+    matched pair and so on.
   }
   \item{lower, upper}{
-    the logical bounds of the variables.
+    the theoretical lower and upper bounds on the data outcomes known ex-ante before gathering the data.
   }
   \item{alpha}{
     the type I error.
   }
   \item{alternative}{
-    a character string describing the alternative hypothesis.
+    a character string describing the alternative hypothesis, can take values "greater", "less" or "two.sided".
   }
 \item{iterations}{
     Number of iterations.
   }
   \item{epsilon}{
-    the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
-    (\textrm{rejectionProbability} - \textrm{theta})^2)} is smaller than \code{epsilon}
+    the tolerance in terms of probability of the monte carlo simulations.
 }
-\item{completeCases}{
-  if \code{TRUE}, only pairs of the two data vectors which are
-  complete are being used for the computation. Default \code{FALSE}.
-}
+%% \item{completeCases}{
+%%   if \code{TRUE}, only pairs of the two data vectors which are
+%%   complete are being used for the computation. Default \code{FALSE}.
+%% }
 
 }
 \details{
@@ -53,11 +57,14 @@ npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
   iterations is at least \code{theta}, then the null hypothesis is
   rejected.  
 
-  \code{theta} (and a \code{mu} in the set of the alternative
-  hypothesis) is found in an optimization procedure. \code{theta} and
-  the alternative \code{mu} are chosen as to bring the type II error to
-  0.5. Please see the cited paper below for further information. 
+  \code{theta} (and a value \code{mu} of the difference between the two
+means in the set of the alternative hypothesis) is found in an
+optimization procedure. \code{theta} and \code{mu} are chosen as to
+maximize the set of data generating processes belonging to the
+alternative hypothesis that yield type II error probability below
+0.5. Please see the cited paper below for further information.
 }
+
 \value{
   A list with class "nphtest" containing the following components:
 

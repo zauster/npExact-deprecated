@@ -23,13 +23,13 @@ npVarianceSingle(x, lower = 0, upper = 1, variance,
 a (non-empty) numeric vector of data values.
 }
   \item{lower, upper}{
-the logical bounds of the variable.
+the theoretical lower and upper bounds on the data outcomes known ex-ante before gathering the data.
 }
   \item{variance}{
 the value of the variance to be tested as \eqn{H_0: Var(x) >= w}.
 }
   \item{alternative}{
-the alternative hypothesis, default = "greater"
+a character string describing the alternative hypothesis, can take values "greater", "less" or "two.sided"
 }
   \item{alpha}{
 the type I error.
@@ -38,8 +38,7 @@ the type I error.
 the number of iterations.
 }
   \item{epsilon}{
-    the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
-    (\textrm{rejectionProbability} - \textrm{theta})^2)} is smaller than \code{epsilon}
+    the tolerance in terms of probability of the monte carlo simulations.
 }
 \item{ignoreNA}{
   if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}

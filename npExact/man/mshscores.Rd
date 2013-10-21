@@ -1,14 +1,15 @@
 \name{mshscores}
 \docType{data}
 \alias{mshscores}
-\title{Minority share holder scores for common and civil law countries}
+\title{Indices of minority shareholder protection of countries with common and with civil law.}
 \description{
-  This data gives the minority share holder scores in countries with
-  civil or common law.
+  This data contains the indices of minority shareholder protection on a
+  scale from 0 to 1 in 51 countries with civil law and 21 countries with
+  common loaw. A higher value of the index means that country is more
+  protected. The data set is taken from Djankov et al. (2008). 
 }
 \usage{mshscores}
 \format{A dataframe containing 51 observations for civil law and 21 for
   common law.}
-\source{Karl Schlag}
-\references{Karl Schlag}
+\references{Djankov et al. (2008), J. Financial Economics 88 (2008) 430-465.}
 \keyword{datasets}

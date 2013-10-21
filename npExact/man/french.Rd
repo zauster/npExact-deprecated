@@ -1,15 +1,17 @@
 \name{french}
 \docType{data}
 \alias{french}
-\title{Minority share holder scores of countries with civil law
-  with/without french origin}
+\title{Indices of minority shareholder protection of countries with civil law with and without french origin.}
 \description{
-  This data gives minority share holder scores in countries with civil
-  law, but differentiating countries with/without french origin.
+  This data contains the indices of minority shareholder protection on a
+  scale from 0 to 1 in 51 countries with civil law, differentiating
+  between those with (32 observations) and those without (19
+  observations) french origin. A higher value of the index means that
+  country is more protected. The data set is taken from Djankov et
+  al. (2008). 
 }
 \usage{french}
 \format{A dataframe containing 32 observations of countries with french
   origin and 19 countries without french origin.}
-\source{Karl Schlag}
-\references{Karl Schlag}
+\references{Djankov et al. (2008), J. Financial Economics 88 (2008) 430-465.}
 \keyword{datasets}

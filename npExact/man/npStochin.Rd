@@ -33,8 +33,7 @@ npStochin(x1, x2, d = 0, alternative = "greater", iterations = 5000,
     the type I error.
   }
   \item{epsilon}{
-    the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
-    (\textrm{rejectionProbability} - \textrm{theta})^2)} is smaller than \code{epsilon}
+    the tolerance in terms of probability of the monte carlo simulations.
 }
 \item{ignoreNA}{
   if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}

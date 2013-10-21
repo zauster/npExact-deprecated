@@ -22,8 +22,7 @@ a (non-empty) numeric vector of data values.
 test value for \eqn{E(x) <= \mu}.
 }
   \item{lower, upper}{
-exogenously known bounds for any outcome that can be generated in
-the sample.
+the theoretical lower and upper bounds on the data outcomes known ex-ante before gathering the data.
 }
   \item{iterations}{
 number of iterations.
@@ -32,11 +31,10 @@ number of iterations.
     the type I error.
 }
 \item{alternative}{
-    a character string describing the alternative hypothesis.
+    a character string describing the alternative hypothesis, can take values "greater", "less" or "two.sided".
 }
   \item{epsilon}{
-    the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
-    (\textrm{rejectionProbability} - \textrm{theta})^2)} is smaller than \code{epsilon}
+    the tolerance in terms of probability of the monte carlo simulations.
 }
 \item{ignoreNA}{
   if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}

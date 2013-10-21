@@ -18,7 +18,7 @@ npMeanUnpaired(x1, x2, lower = 0, upper = 1, iterations = 5000, alpha = 0.05,
     the (non-empty) numerical data vectors which contain the variables to be tested.
 }
   \item{lower, upper}{
-the logical bounds of the variables.
+the theoretical lower and upper bounds on the data outcomes known ex-ante before gathering the data.
 }
   \item{iterations}{
 the number of iterations.
@@ -27,11 +27,11 @@ the number of iterations.
     the type I error.
 }
   \item{alternative}{
-    a character string describing the alternative hypothesis.    
-}
+    a character string describing the alternative hypothesis, can take
+    values "greater", "less" or "two.sided".
+  }
   \item{epsilon}{
-    the algorithms keeps repeating until \eqn{exp(-2 * \textrm{iterations} *
-    (\textrm{rejectionProbability} - \textrm{theta})^2)} is smaller than \code{epsilon}
+  the tolerance in terms of probability of the monte carlo simulations.
 }
 \item{ignoreNA}{
   if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}
