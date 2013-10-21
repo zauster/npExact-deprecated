@@ -30,7 +30,7 @@
 ## example
 ## npVar(runif(50), low = 0, up = 1, var = 0.1, alt.var = 0.15)
 
-npVarianceSingle <- function(x, lower = 0, upper = 1, variance,
+npVarianceSingle <- function(x, lower = 0, upper = 1, v,
                   alternative = "greater",
                   alpha = 0.05, iterations = 5000,
                   epsilon = 1 * 10^(-6),
@@ -44,12 +44,12 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, variance,
                            ifelse(alternative == "greater", "<= ",
                                   ifelse(alternative == "less", ">= ",
                                          "= ")),
-                           variance, sep = "")
+                           v, sep = "")
   alt.hypothesis <- paste("Var(", DNAME, ") ",
                           ifelse(alternative == "greater", "> ",
                                  ifelse(alternative == "less", "< ",
                                         "!= ")),
-                          variance, sep = "")
+                          v, sep = "")
 
   if(ignoreNA == TRUE)
     {
@@ -60,8 +60,8 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, variance,
   if (min(x) < lower | max(x) > upper)
     stop("Some values are out of bounds (or NA)!")
 
-  if (variance > 0.25*(upper - lower)^2)
-    stop("Hypothesized 'variance' is too large.")
+  if (v > 0.25*(upper - lower)^2)
+    stop("Hypothesized variance v is too large.")
 
   ## if (alt.variance >= variance & alternative == "less")
   ##   stop("A 'alt.variance' < 'variance' is needed when alternative is 'less'.")
@@ -78,7 +78,7 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, variance,
   ## Computation of sample mean and variance for output
   m <- floor(length(x) / 2)
   x <- (x - lower)/(upper - lower)  ## Normalization so that x in [0,1]
-  p <- 2 * variance / (upper - lower)^2  ## normalized threshold
+  p <- 2 * v / (upper - lower)^2  ## normalized threshold
 
   error <- i <- 1
   rejMatrix <- NULL
@@ -158,7 +158,7 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, variance,
     warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
 
   names(sample.est) <- "variance"
-  null.value <- variance
+  null.value <- v
   names(null.value) <- "variance"
   bounds <- paste("[", lower, ", ", upper, "]", sep = "")
   rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)

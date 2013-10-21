@@ -10,6 +10,5 @@
 \usage{pain}
 \format{A dataframe containing 50 observations. Column "pc" indicates if
 a computer was used (coded with "1") or not (coded with "0")}
-\source{Karl Schlag}
 \references{Karl Schlag}
 \keyword{datasets}

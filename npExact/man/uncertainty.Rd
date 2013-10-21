@@ -10,10 +10,10 @@
   if the choice of their opponent was in the interval they specified,
   and were paid more the smaller this interval was. So the width W_i of
   this interval in round i gives an indication of how uncertain they are
-  in round i. The data contains the interval width in round 1 and 2.
+  in round i. The data contains the interval width in round 1 and 2
+  which makes this a sample of matched pairs. 
 }
 \usage{uncertainty}
 \format{A dataframe containing the 25 intervals in each round of the game.}
-\source{Karl Schlag}
 \references{Karl Schlag}
 \keyword{datasets}

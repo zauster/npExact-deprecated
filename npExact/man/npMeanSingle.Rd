@@ -2,11 +2,17 @@
 \alias{npMeanSingle}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-A test on the mean of a single variable.
+A test for the mean of a bounded random variable based on a single
+sample of iid observations.
 }
 \description{
-\code{npMeanSingle} provides an exact test for the mean of a single
-sample based on Schlag (2008).
+This test requires that the user knows upper and lower bounds before gathering the data
+such that the properties of the data generating process imply that all observations will be within these bounds.
+The data input consists of a sequence of observations, each being an independent realization of the random variable.
+No further distributional assumptions are made.
+
+For any \eqn{mu} that lies between the two bounds, under alternative = "greater", it is a test of the null hypothesis \eqn{H_0 : E(X) <= \mu} against
+the alternative hypothesis \eqn{H_1 : E(X) > \mu}. 
 }
 \usage{
 npMeanSingle(x, mu, lower = 0, upper = 1, iterations = 5000,
@@ -19,13 +25,13 @@ npMeanSingle(x, mu, lower = 0, upper = 1, iterations = 5000,
 a (non-empty) numeric vector of data values.
 }
   \item{mu}{
-test value for \eqn{E(x) <= \mu}.
+threshold value for the null hypothesis.
 }
   \item{lower, upper}{
 the theoretical lower and upper bounds on the data outcomes known ex-ante before gathering the data.
 }
   \item{iterations}{
-number of iterations.
+the number of iterations used, should not be changed if the exact solution should be derived 
 }
   \item{alpha}{
     the type I error.
@@ -34,29 +40,22 @@ number of iterations.
     a character string describing the alternative hypothesis, can take values "greater", "less" or "two.sided".
 }
   \item{epsilon}{
-    the tolerance in terms of probability of the monte carlo simulations.
+    the tolerance in terms of probability of the Monte Carlo simulations.
 }
 \item{ignoreNA}{
   if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}
 }
 }
 \details{
-This test performs a test on the mean of a variable, of which only
-exogenous bounds must be known, but not the distribution of the
-variable.
-
-With the known bounds, the data is transformed to lie in [0, 1]. Then,
-0 and 1 are randomly assigned to each value, according to its
-probability (which is its value after the transformation into [0,
-1]). The exact binomial test then calculates the rejection probability
-of this new data. These steps are repeated very often. If the fraction
-of rejection is greater than \code{theta}, one can reject the null
-hypothesis.
-
-\code{theta} (and a \code{mu} in the set of the alternative hypothesis)
-is found in an optimization procedure. \code{theta} and the
-alternative \code{mu} are chosen as to bring the type II error to
-0.5. Please see the cited paper below for further information.
+  Using the known bounds, the data is transformed to lie in [0, 1] using an affine transformation. Then the data is randomly
+transformed into a new data set that has values 0, \code{mu} and 1 using a mean preserving transformation.
+The exact randomized binomial test is then used to calculate the rejection probability of this under new data
+when level is \code{theta}*\code{alpha}. This random transformation is repeated \code{iterations} times. If the average rejection probability
+is greater than theta, one can reject the null hypothesis. If however the average rejection probability is too close to theta
+then the iterations are continued. The values of \code{theta} and a value of \code{mu} in the alternative hypothesis is found in an
+optimization procedure to maximize the set of parameters in the alternative hypothesis under which the type II error
+probability is below 0.5. Please see the cited paper below for further
+information.
 }
 
 \value{
@@ -77,7 +76,8 @@ A list with class "nphtest" containing the following components:
     whether it was a one-sample test or a two-sample test.
   }
   \item{probrej}{
-    the probability with which the null hypothesis can be rejected.
+    numerical estimate of the rejection probability of the randomized test, derived by taking
+an average of \code{iterations} realizations of the rejection probability. 
   }
   \item{bounds}{
     the lower and upper bounds of the variables.
@@ -92,10 +92,11 @@ A list with class "nphtest" containing the following components:
     the parameter that minimizes the type II error.
   }
   \item{pseudoalpha}{
-    \code{theta} * \code{alpha}, this is the alpha that is used during the iterations.
+    \code{theta}*\code{alpha}, this is the level used when calculating the average rejection probability
+during the iterations.
   }
   \item{rejection}{
-    Logical. Given \code{alpha}, the type I error, and \code{theta}, can a rejection be achieved?
+    logical indicator for whether or not the null hypothesis can be rejected.
   }
   \item{iterations}{
     the number of iterations that were performed.

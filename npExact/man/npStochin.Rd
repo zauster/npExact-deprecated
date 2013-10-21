@@ -2,13 +2,16 @@
 \alias{npStochin}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-  A test for stochastic inequality.
+A test of a stochastic inequality given two independent samples 
 }
 \description{
-  This test performs the exact McNemar test on a bootstrapped sample of
-  the data. The corresponding null hypothesis for this test is \eqn{H_0:
-    P(x_2 > x_1) <= P(x_2 < x_1)}, or equivalently: \eqn{P(x_2 > x_1) -
-    P(x_2 < x_1) <= d}. 
+The data input consists of a sequence of independent realizations observations
+of each random variable, observations of the different sequences also being independent.
+
+Given \eqn{-1 < d < 1} it is a test of the null hypothesis \eqn{H_0 :
+  P(X_2 > X_1) <= P(X_2 < X_1) + d} against the alternative hypothesis
+  \eqn{H_1 : P(X_2 > X_1) > P(X_2 < X_1) + d}.
+
 }
 \usage{
 npStochin(x1, x2, d = 0, alternative = "greater", iterations = 5000,
@@ -19,42 +22,42 @@ npStochin(x1, x2, d = 0, alternative = "greater", iterations = 5000,
     the (non-empty) numerical data vectors which contain the variables to be tested.
   }
   \item{d}{
-    the difference in probabilities of the null hypothesis: \eqn{P(x_2 >
-      x_1) - P(x_2 < x_1) <= d}. Default is 0. 
+    the maximal difference in probabilities assumed \eqn{H_0 : P(X_2 >
+      X_1) - P(X_2 < X_1) <= d}. Default is 0. 
   }
   \item{alternative}{
     a character string describing the alternative hypothesis. Default is
     "greater". If "less" is given, \code{x1} and \code{x2} are switched for each other.
   }
   \item{iterations}{
-    Number of iterations.
+the number of iterations used, should not be changed if the exact solution should be derived.
   }
   \item{alpha}{
     the type I error.
   }
   \item{epsilon}{
-    the tolerance in terms of probability of the monte carlo simulations.
+    the tolerance in terms of probability of the Monte Carlo simulations.
 }
 \item{ignoreNA}{
   if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}
 }  
 }
 \details{
-  The function draws two random samples (with the length of the shorter
-  vector) of the data vectors and sees them as matched pairs. These
-  matched pairs are then compared and the occurrences of \eqn{x_1 > x_2} and
-  \eqn{x_1 < x_2} are counted. The exact binomial test then tests whether
-  the success probability of \eqn{x_1 > x_2} is greater than 0.5 (in the
-  default case). These steps are then repeated \code{iterations} times
-  and rejection at level \code{alpha} times \code{theta} is recorded (for
-  \code{theta}, see below). If the rejection probability (the fraction
-  of rejections in all iterations) is above the threshold \code{theta},
-  the null hypothesis is rejected.
 
-  \code{theta} (and a \code{d} in the set of the alternative hypothesis)
-  is found in an optimization procedure. \code{theta} and the
-  alternative \code{d} are chosen so as to bring the type II error to
-  0.5. Please see the cited paper below for further information.
+  The data is randomly matched into pairs and then treats them as
+matched pairs. The number of pairs is equal to the number of
+observations in the smaller sequence. The exact randomized test is then
+used to determine if sufficiently many occurrences of \eqn{x_2 > x_1}
+occur when compared to how often \eqn{x_2 < x_1} occurs, using level
+\code{theta}*\code{alpha}. The matching into pairs is repeated
+\code{iterations} times. The test gives a rejection of the average
+rejection probability in these iterations lies above \code{theta}. If
+the average rejection probability lies too close to theta then the
+number of iterations is increased.
+
+\code{theta} is determined to maximize the set of differences \eqn{P(X_2>X_1)
+- P(X_2<X_1)} belonging to the alternative hypothesis in which the type
+II error probability lies below 0.5. For more details see the paper.
 }
 \value{
   A list with class "nphtest" containing the following components:
@@ -73,7 +76,8 @@ npStochin(x1, x2, d = 0, alternative = "greater", iterations = 5000,
     an estimate of \eqn{P(x_2 > x_1) - P(x_2 < x_1)}.
   }
   \item{probrej}{
-    the probability with which the null hypothesis can be rejected.
+    numerical estimate of the rejection probability of the randomized
+    test, derived by taking an average of \code{iterations} realizations of the rejection probability. 
   }
   \item{bounds}{
     the lower and upper bounds of the variables.
@@ -88,10 +92,12 @@ npStochin(x1, x2, d = 0, alternative = "greater", iterations = 5000,
     the parameter that minimizes the type II error.
   }
   \item{pseudoalpha}{
-    \code{theta} * \code{alpha}, this is the alpha that is used during the iterations.
+   \code{theta}*\code{alpha}, this is the level used when calculating
+    the average rejection probability during the iterations.
   }
   \item{rejection}{
-    Logical. Given \code{alpha}, the type I error, and \code{theta}, can a rejection be achieved?
+    logical indicator for whether or not the null hypothesis can be
+    rejected. 
   }
   \item{iterations}{
     the number of iterations that were performed.
@@ -128,3 +134,4 @@ npStochin(x, y, ignoreNA = TRUE)
 % R documentation directory.
 \keyword{unpaired data}
 \keyword{stochastic inequality}% __ONLY ONE__ keyword per line
+Number of iterations.

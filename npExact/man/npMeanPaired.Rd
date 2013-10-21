@@ -8,7 +8,7 @@
   This test requires that the user knows bounds before gathering the data
 such that the properties of the data generating process imply that all observations will be within these bounds.
 The data input consists of pairs of observations, each pair consisting of an observation of each random variable,
-different pairs being independently generated.
+different pairs being independently generated. No further distributional assumptions are made. 
 
 Under alternative = "greater", it is a test of the null hypothesis
 \eqn{H_0: E(x_1) <= E(x_2)} against the alternative hypothesis \eqn{H_1: E(x_1) > E(x_2)}.
@@ -36,26 +36,33 @@ npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
     a character string describing the alternative hypothesis, can take values "greater", "less" or "two.sided".
   }
 \item{iterations}{
-    Number of iterations.
+    the number of iterations used, should not be changed if the exact solution should be derived
   }
   \item{epsilon}{
-    the tolerance in terms of probability of the monte carlo simulations.
+    the tolerance in terms of probability of the Monte Carlo simulations.
 }
 %% \item{completeCases}{
 %%   if \code{TRUE}, only pairs of the two data vectors which are
 %%   complete are being used for the computation. Default \code{FALSE}.
 %% }
 
-}
+} 
+
 \details{
+
   This test uses the known bounds of the variables to transform the data
-  into [0, 1]. Then a random transformation is used to
-  turn the data into binary-valued variables. On this variables the
-  exact McNemar Test with level \code{pseudoalpha} is performed and the
-  result recorded. The random transformation and the test are then
-  repeated \code{iterations} times. If the proportion of rejected
-  iterations is at least \code{theta}, then the null hypothesis is
-  rejected.  
+into [0, 1]. Then a random transformation is used to turn the data into
+binary-valued variables. On this variables the exact McNemar Test with
+level \code{pseudoalpha} is performed and the result recorded. The
+random transformation and the test are then repeated \code{iterations}
+times. If the average rejection probability \code{probrej} of the
+iterations is at least \code{theta}, then the null hypothesis is
+rejected. If however \code{probrej} is too close to the threshold
+\code{theta} then the number of iterations is increased. The algorithm
+keeps increasing the number of iterations until the bound on the mistake
+involved by running these iterations is below \code{epsilon}. This error
+epsilon is incorporated into the overall level \code{alpha} in order to
+maintain that the test is exact.
 
   \code{theta} (and a value \code{mu} of the difference between the two
 means in the set of the alternative hypothesis) is found in an
@@ -82,7 +89,8 @@ alternative hypothesis that yield type II error probability below
     the sample means of the given data.
   }
   \item{probrej}{
-    the probability with which the null hypothesis can be rejected.
+    numerical estimate of the rejection probability of the randomized test, derived by taking
+an average of \code{iterations} realizations of the rejection probability. 
   }
   \item{bounds}{
     the lower and upper bounds of the variables.
@@ -97,10 +105,11 @@ alternative hypothesis that yield type II error probability below
     the parameter that minimizes the type II error.
   }
   \item{pseudoalpha}{
-    \code{theta} * \code{alpha}, this is the alpha that is used during the iterations.
+    \code{theta}*\code{alpha}, this is the level used when calculating the average rejection probability
+during the iterations.
   }
   \item{rejection}{
-    Logical. Given \code{alpha}, the type I error, and \code{theta}, can a rejection be achieved?
+    logical indicator for whether or not the null hypothesis can be rejected.
   }
   \item{iterations}{
     the number of iterations that were performed.

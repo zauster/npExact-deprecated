@@ -220,7 +220,8 @@ McNemarTestRandom <- function(x1, x2, alpha)
     {
         ## performs the randomized McNemar test
         ## x1, x2 are binary-valued vectors of equal length
-        ## n10, n01 ... counts of (1,0) and (0,1) respectively
+        ## n10, n01 ... counts of (1,0) and (0,1) respectively.
+        ##              (1, 1) and (0, 0) are dropped
 
         ## returns either 1 (rejection), p (prob of rejection) or 0 (no
         ## rejection)

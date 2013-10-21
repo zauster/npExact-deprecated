@@ -2,17 +2,20 @@
 \alias{npVarianceSingle}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-A test on the variance of a variable.
+A test for the variance of a bounded random variable based on a single sample of iid observations.
 }
 \description{
-This is a program that implements a nonrandomized one-sided test for
-the variance of a single sample of independent observations. The null
-hypothesis that is being tested is \eqn{H_0: Var(x) >= w} against
-\eqn{H_1: Var(x) < w}
+This test requires that the user knows upper and lower bounds before gathering the data
+such that the properties of the data generating process imply that all observations will be within these bounds.
+The data input consists of a sequence of observations, each being an independent realization of the random variable.
+No further distributional assumptions are made.
+
+This is a test of the null hypothesis \eqn{H_0: Var(X) <= v} against
+\eqn{H_1 : Var(X) > v}. 
 }
 
 \usage{
-npVarianceSingle(x, lower = 0, upper = 1, variance,
+npVarianceSingle(x, lower = 0, upper = 1, v,
       alternative = "greater", alpha = 0.05, iterations = 5000,
       epsilon = 1 * 10^(-6), ignoreNA = FALSE)
 }
@@ -25,8 +28,8 @@ a (non-empty) numeric vector of data values.
   \item{lower, upper}{
 the theoretical lower and upper bounds on the data outcomes known ex-ante before gathering the data.
 }
-  \item{variance}{
-the value of the variance to be tested as \eqn{H_0: Var(x) >= w}.
+  \item{v}{
+the value of the variance to be tested as \eqn{H_0: Var(x) >= v}.
 }
   \item{alternative}{
 a character string describing the alternative hypothesis, can take values "greater", "less" or "two.sided"
@@ -35,29 +38,19 @@ a character string describing the alternative hypothesis, can take values "great
 the type I error.
 }
   \item{iterations}{
-the number of iterations.
+the number of iterations used, should not be changed if the exact solution should be derived.
 }
   \item{epsilon}{
-    the tolerance in terms of probability of the monte carlo simulations.
+    the tolerance in terms of probability of the Monte Carlo simulations.
 }
 \item{ignoreNA}{
   if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}
 }
 }
 \details{
-  This function does the following steps in each iteration: First, it
-  permutes the data vector. Then it calculates pairwise
-  differences and squares them: \eqn{(x_{1:(n/2)} - x_{(n/2 +
-      1):n})^2}. These values all lie in [0, 1] and are then randomly
-  transformed into {0, 1}. A binomial test with \eqn{p = 2 *
-    \textrm{variance} / (\textrm{upper} - \textrm{lower})^2} is then
-  performed on the data. If the fraction of recorded rejections lies
-  above the value \code{theta}, the null hypothesis can be rejected.
-
-  \code{theta} (and a \code{w} in the set of the alternative hypothesis)
-is found in an optimization procedure. \code{theta} and the
-alternative \code{w} are chosen as to bring the type II error to
-0.5. Please see the cited paper below for further information.
+  This test randomly matches the data into pairs, then computes for each
+  pair the square of the difference and continues with the resulting sequence with half as many observations as npMeanSingle. See the cited paper
+for more information. 
 }
 \value{
 A list with class "nphtest" containing the following components:
@@ -77,7 +70,8 @@ A list with class "nphtest" containing the following components:
     whether it was a one-sample test or a two-sample test.
   }
   \item{probrej}{
-    the probability with which the null hypothesis can be rejected.
+numerical estimate of the rejection probability of the randomized
+    test, derived by taking an average of \code{iterations} realizations of the rejection probability. 
   }
   \item{bounds}{
     the lower and upper bounds of the variables.
@@ -92,10 +86,12 @@ A list with class "nphtest" containing the following components:
     the parameter that minimizes the type II error.
   }
   \item{pseudoalpha}{
-    \code{theta} * \code{alpha}, this is the alpha that is used during the iterations.
+    \code{theta}*\code{alpha}, this is the level used when calculating
+    the average rejection probability during the iterations.
   }
   \item{rejection}{
-    Logical. Given \code{alpha}, the type I error, and \code{theta}, can a rejection be achieved?
+    logical indicator for whether or not the null hypothesis can be
+    rejected.
   }
   \item{iterations}{
     the number of iterations that were performed.
@@ -120,7 +116,7 @@ Karl Schlag and Oliver Reiter
 data(mshscores)
 
 scores <- as.vector(as.matrix(mshscores))
-npVarianceSingle(scores, lower = 0, upper = 1, var = 0.05, ignoreNA = TRUE)
+npVarianceSingle(scores, lower = 0, upper = 1, v = 0.05, ignoreNA = TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
