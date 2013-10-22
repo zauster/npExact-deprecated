@@ -63,12 +63,6 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, v,
   if (v > 0.25*(upper - lower)^2)
     stop("Hypothesized variance v is too large.")
 
-  ## if (alt.variance >= variance & alternative == "less")
-  ##   stop("A 'alt.variance' < 'variance' is needed when alternative is 'less'.")
-
-  ## if (alt.variance <= variance & alternative == "greater")
-  ##   stop("A 'alt.variance' > 'variance' is needed when alternative is 'greater'.")
-
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
 
@@ -88,9 +82,9 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, v,
     {
         optimaltypeII <- uniroot(minTypeIIErrorWrapper,
                                  c(0, 1), p = p, N = m,
-                                 alpha = alpha)
+                                 alpha = alpha - epsilon)
         theta <- minTypeIIError(optimaltypeII[[1]],
-                                p = p, N = m, alpha = alpha)
+                                p = p, N = m, alpha = alpha - epsilon)
         pseudoalpha <- alpha * theta$theta / 2
         while(error > epsilon & i <= 20)
           {
@@ -106,9 +100,9 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, v,
 
         optimaltypeII <- uniroot(minTypeIIErrorWrapper,
                                  c(0, 1), p = 1 - p, N = m,
-                                 alpha = alpha)
+                                 alpha = alpha - epsilon)
         theta <- minTypeIIError(optimaltypeII[[1]],
-                                p = 1 - p, N = m, alpha = alpha)
+                                p = 1 - p, N = m, alpha = alpha - epsilon)
         pseudoalpha <- alpha * theta$theta / 2
 
         error <- i <- 1
@@ -134,11 +128,11 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, v,
                                      p = ifelse(alternative == "greater",
                                          p, 1 - p),
                                      N = m,
-                                     alpha = alpha)
+                                     alpha = alpha - epsilon)
             theta <- minTypeIIError(optimaltypeII[[1]],
                                     p = ifelse(alternative == "greater",
                                         p, 1 - p),
-                                    N = m, alpha = alpha)
+                                    N = m, alpha = alpha - epsilon)
             pseudoalpha <- alpha * theta$theta
 
             while(error > epsilon & i <= 20)
@@ -153,6 +147,9 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, v,
                   i <- i + 1
               }
         }
+
+  if(!is.null(iterations) & iterations * (i - 1) < 1000)
+    warning("Low number of iterations. Results may be inaccurate.")
 
   if(i == 21)
     warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")

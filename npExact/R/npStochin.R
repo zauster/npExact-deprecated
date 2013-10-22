@@ -90,9 +90,6 @@ npStochin <- function(x1, x2, d = 0,
       x2 <- x2[!is.na(x2)]
     }
 
-  if(iterations < 500)
-    warning("Low number of iterations. Results may be inaccurate.")
-
   if(alternative == "two.sided")
     stop("Not yet implemented. Please test for greater and less at alpha/2.")
 
@@ -129,9 +126,9 @@ npStochin <- function(x1, x2, d = 0,
 
   optimaltypeII <- uniroot(minTypeIIErrorWrapper,
                            c(0, 1), p = p, N = min.length,
-                           alpha = alpha)
+                           alpha = alpha - epsilon)
   theta <- minTypeIIError(optimaltypeII[[1]],
-                          p = p, N = min.length, alpha = alpha)
+                          p = p, N = min.length, alpha = alpha - epsilon)
   pseudoalpha <- alpha * theta$theta
 
   error <- i <- 1
@@ -147,6 +144,9 @@ npStochin <- function(x1, x2, d = 0,
         error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
         i <- i + 1
     }
+
+  if(!is.null(iterations) & iterations * (i - 1) < 1000)
+    warning("Low number of iterations. Results may be inaccurate.")
 
   if(i == 21)
     warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")

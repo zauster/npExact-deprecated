@@ -100,9 +100,6 @@ npMeanUnpaired <- function(x1, x2,
   if (min(x1, x2) < lower | max(x1, x2) > upper)
     stop("Some values are out of bounds (or NA)!")
 
-  if(iterations < 500)
-    warning("Low number of iterations. Results may be inaccurate.")
-
   if(alternative != "two.sided" & alternative != "greater" & alternative != "less")
     stop("Please specify which alternative hypothesis you want to test for: 'greater', 'less' or 'two.sided'")
 
@@ -126,9 +123,9 @@ npMeanUnpaired <- function(x1, x2,
   min.length <- min(n1, n2)
 
   optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
-                            c(0, 1), n1 = n1, n2 = n2, alpha = alpha,
+                            c(0, 1), n1 = n1, n2 = n2, alpha = alpha - epsilon,
                             tol = .Machine$double.eps^0.25)
-  theta <- optimizeTheta(n1, n2, optimaltypeII$minimum, alpha)
+  theta <- optimizeTheta(n1, n2, optimaltypeII$minimum, alpha - epsilon)
   pseudoalpha <- alpha * theta$theta
 
   error <- i <- 1
@@ -182,6 +179,9 @@ npMeanUnpaired <- function(x1, x2,
                   i <- i + 1
               }
         }
+
+  if(!is.null(iterations) & iterations * (i - 1) < 1000)
+    warning("Low number of iterations. Results may be inaccurate.")
 
   if(i == 21)
     warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")

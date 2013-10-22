@@ -10,7 +10,7 @@ such that the properties of the data generating process imply that all observati
 The data input consists of a sequence of independent observations for each random variable, the two sequences
 being generated independently. No further distributional assumptions are made.
 
-This is a test of the null hypothesis: \eqn{H_0: E(X_1) <= E(X_2)} against
+This is a test of the null hypothesis: \eqn{H_0: E(X_1) \le E(X_2)} against
 \eqn{H_1: E(X_1) > E(X_2)}.
 }
 \usage{

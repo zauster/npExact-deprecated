@@ -11,7 +11,7 @@ such that the properties of the data generating process imply that all observati
 The data input consists of a sequence of observations, each being an independent realization of the random variable.
 No further distributional assumptions are made.
 
-For any \eqn{mu} that lies between the two bounds, under alternative = "greater", it is a test of the null hypothesis \eqn{H_0 : E(X) <= \mu} against
+For any \eqn{\mu} that lies between the two bounds, under alternative = "greater", it is a test of the null hypothesis \eqn{H_0 : E(X) \le \mu} against
 the alternative hypothesis \eqn{H_1 : E(X) > \mu}. 
 }
 \usage{

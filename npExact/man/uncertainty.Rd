@@ -15,5 +15,9 @@
 }
 \usage{uncertainty}
 \format{A dataframe containing the 25 intervals in each round of the game.}
-\references{Karl Schlag}
+\references{
+  Galbiati, R., Schlag, K., & van der Weele, J. Sanctions that
+  Signal: an Experiment. Journal of Economic Behavior and Organization,
+  Forthcoming 
+  }
 \keyword{datasets}

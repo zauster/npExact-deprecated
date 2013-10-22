@@ -11,7 +11,7 @@ The data input consists of pairs of observations, each pair consisting of an obs
 different pairs being independently generated. No further distributional assumptions are made. 
 
 Under alternative = "greater", it is a test of the null hypothesis
-\eqn{H_0: E(x_1) <= E(x_2)} against the alternative hypothesis \eqn{H_1: E(x_1) > E(x_2)}.
+\eqn{H_0: E(x_1) \le E(x_2)} against the alternative hypothesis \eqn{H_1: E(x_1) > E(x_2)}.
 }
 \usage{
 npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
@@ -122,13 +122,8 @@ during the iterations.
   \url{http://www.econ.upf.edu/en/research/onepaper.php?id=1109}. 
 }
 \author{
-  Karl Schlag and Christian Pechhacker
+  Karl Schlag, Christian Pechhacker and Oliver Reiter
 }
-%% \note{
-%%   A note can also be included.
-%% }
-
-% %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
@@ -143,12 +138,10 @@ before_pc <- pain[pain$pc == 1, "before"]
 after_pc <- pain[pain$pc == 1, "after"]
 npMeanPaired(before_pc, after_pc, lower = 0, upper = 100)
 
-## when only hands were used
-before_hand <- pain[pain$pc == 0, "before"]
-after_hand <- pain[pain$pc == 0, "after"]
-npMeanPaired(before_hand, after_hand, lower = 0, upper = 100)
+## test whether uncertainty decreased from the first to the second round
+data(uncertainty)
+npMeanPaired(uncertainty$w1, uncertainty$w2, upper = 60) ## or
+with(uncertainty, npMeanPaired(w1, w2, upper = 60))
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
 \keyword{pairwise}
 \keyword{mean test}

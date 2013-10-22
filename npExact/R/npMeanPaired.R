@@ -98,9 +98,6 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
         if(length(x1) != length(x2))
             stop("Unequal length of input vectors!")
 
-        if(iterations < 500)
-            warning("Low number of iterations. Results may be inaccurate.")
-
         if(alpha >= 1 | alpha <= 0)
             stop("Please supply a sensible value for alpha.")
 
@@ -126,9 +123,9 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
 
         optimaltypeII <- uniroot(minTypeIIErrorWrapper,
                                  c(0, 1), p = 0.5, N = n,
-                                 alpha = alpha)
+                                 alpha = alpha - epsilon)
         theta <- minTypeIIError(optimaltypeII[[1]],
-                                p = 0.5, N = n, alpha = alpha)
+                                p = 0.5, N = n, alpha = alpha - epsilon)
 
         if(alternative == "two.sided")
             {
@@ -184,6 +181,9 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                         i <- i + 1
                     }
             }
+
+  if(!is.null(iterations) & iterations * (i - 1) < 1000)
+    warning("Low number of iterations. Results may be inaccurate.")
 
         if(i == 21)
             warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")

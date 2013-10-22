@@ -82,9 +82,9 @@ npMeanSingle <- function(x, mu,
       ## first the upper side
       optimaltypeII <- uniroot(minTypeIIErrorWrapper,
                                c(0, 1), p = p, N = n,
-                               alpha = alpha)
+                               alpha = alpha - epsilon)
       theta <- minTypeIIError(optimaltypeII[[1]],
-                              p = p, N = n, alpha = alpha)
+                              p = p, N = n, alpha = alpha - epsilon)
       pseudoalpha <- (alpha/2) * theta$theta
 
       while(error > epsilon & i <= 20)
@@ -104,9 +104,9 @@ npMeanSingle <- function(x, mu,
       xp <- x - p
       optimaltypeII <- uniroot(minTypeIIErrorWrapper,
                                c(0, 1), p = p, N = n,
-                               alpha = alpha)
+                               alpha = alpha - epsilon)
       theta <- minTypeIIError(optimaltypeII[[1]],
-                              p = p, N = n, alpha = alpha)
+                              p = p, N = n, alpha = alpha - epsilon)
       pseudoalpha <- (alpha/2) * theta$theta
 
       error <- 1
@@ -136,9 +136,9 @@ npMeanSingle <- function(x, mu,
 
       optimaltypeII <- uniroot(minTypeIIErrorWrapper,
                                c(0, 1), p = p, N = n,
-                               alpha = alpha)
+                               alpha = alpha - epsilon)
       theta <- minTypeIIError(optimaltypeII[[1]],
-                              p = p, N = n, alpha = alpha)
+                              p = p, N = n, alpha = alpha - epsilon)
       pseudoalpha <- alpha * theta$theta
 
       while(error > epsilon & (iterations * i <= 100000))
@@ -153,11 +153,11 @@ npMeanSingle <- function(x, mu,
         }
     }
 
-  if(!is.null(iterations) & iterations * (i - 1) < 500)
+  if(!is.null(iterations) & iterations * (i - 1) < 1000)
     warning("Low number of iterations. Results may be inaccurate.")
 
   if(iterations * i >= 100000)
-    warning("The maximum number of iterations was reached. Rejection may be very sensible to the choice of the parameters.")
+    warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
 
   method <- "Nonparametric Single Mean Test"
   names(sample.est) <- "mean"

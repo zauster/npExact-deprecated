@@ -1,6 +1,5 @@
 \name{npStochin}
 \alias{npStochin}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 A test of a stochastic inequality given two independent samples 
 }
@@ -9,7 +8,7 @@ The data input consists of a sequence of independent realizations observations
 of each random variable, observations of the different sequences also being independent.
 
 Given \eqn{-1 < d < 1} it is a test of the null hypothesis \eqn{H_0 :
-  P(X_2 > X_1) <= P(X_2 < X_1) + d} against the alternative hypothesis
+  P(X_2 > X_1) \le P(X_2 < X_1) + d} against the alternative hypothesis
   \eqn{H_1 : P(X_2 > X_1) > P(X_2 < X_1) + d}.
 
 }
@@ -111,7 +110,7 @@ II error probability lies below 0.5. For more details see the paper.
   
 }
 \author{
-  Karl Schlag and Peter Saffert
+  Karl Schlag, Peter Saffert and Oliver Reiter
 }
 % \note{
 % %%  ~~further notes~~
@@ -133,5 +132,4 @@ npStochin(x, y, ignoreNA = TRUE)
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{unpaired data}
-\keyword{stochastic inequality}% __ONLY ONE__ keyword per line
-Number of iterations.
+\keyword{stochastic inequality}

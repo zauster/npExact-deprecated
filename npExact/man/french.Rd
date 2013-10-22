@@ -13,5 +13,7 @@
 \usage{french}
 \format{A dataframe containing 32 observations of countries with french
   origin and 19 countries without french origin.}
-\references{Djankov et al. (2008), J. Financial Economics 88 (2008) 430-465.}
+\references{
+  Djankov, S., La Porta, R., Lopez-de-Silanes, F., & Shleifer, A. (2008). The law and economics of self-dealing. Journal of financial economics, 88(3), 430-465.
+}
 \keyword{datasets}

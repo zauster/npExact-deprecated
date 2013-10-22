@@ -10,7 +10,7 @@ such that the properties of the data generating process imply that all observati
 The data input consists of a sequence of observations, each being an independent realization of the random variable.
 No further distributional assumptions are made.
 
-This is a test of the null hypothesis \eqn{H_0: Var(X) <= v} against
+This is a test of the null hypothesis \eqn{H_0: Var(X) \le v} against
 \eqn{H_1 : Var(X) > v}. 
 }
 
@@ -29,7 +29,7 @@ a (non-empty) numeric vector of data values.
 the theoretical lower and upper bounds on the data outcomes known ex-ante before gathering the data.
 }
   \item{v}{
-the value of the variance to be tested as \eqn{H_0: Var(x) >= v}.
+the value of the variance to be tested as \eqn{H_0: Var(x) \le v}.
 }
   \item{alternative}{
 a character string describing the alternative hypothesis, can take values "greater", "less" or "two.sided"
@@ -105,8 +105,6 @@ Karl Schlag (2008).
 \author{
 Karl Schlag and Oliver Reiter
 }
-
-
 \seealso{
   \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
 }
@@ -118,7 +116,5 @@ data(mshscores)
 scores <- as.vector(as.matrix(mshscores))
 npVarianceSingle(scores, lower = 0, upper = 1, v = 0.05, ignoreNA = TRUE)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
 \keyword{variance test}
 \keyword{single sample}
