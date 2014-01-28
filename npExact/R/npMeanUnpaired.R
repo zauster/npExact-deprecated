@@ -96,9 +96,13 @@ npMeanUnpaired <- function(x1, x2,
       x1 <- x1[!is.na(x1)]
       x2 <- x2[!is.na(x2)]
     }
+  else if(any(is.na(c(x1, x2))) == TRUE)
+      {
+          stop("The data contains NA's!")
+      }
 
-  if (min(x1, x2) < lower | max(x1, x2) > upper)
-    stop("Some values are out of bounds (or NA)!")
+  if(min(x1, x2) < lower | max(x1, x2) > upper)
+    stop("Some values are out of bounds!")
 
   if(alternative != "two.sided" & alternative != "greater" & alternative != "less")
     stop("Please specify which alternative hypothesis you want to test for: 'greater', 'less' or 'two.sided'")

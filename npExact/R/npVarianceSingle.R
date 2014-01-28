@@ -38,7 +38,6 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, v,
 {
   DNAME <- deparse(substitute(x))
   x <- as.vector(x)
-  sample.est <- var(x)
 
   null.hypothesis <- paste("Var(", DNAME, ") ",
                            ifelse(alternative == "greater", "<= ",
@@ -54,8 +53,11 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, v,
   if(ignoreNA == TRUE)
     {
       x <- x[!is.na(x)]
-      sample.est <- var(x)
     }
+  else if(any(is.na(x)) == TRUE)
+      {
+          stop("The data contains NA's!")
+      }
 
   if (min(x) < lower | max(x) > upper)
     stop("Some values are out of bounds (or NA)!")
@@ -70,6 +72,7 @@ npVarianceSingle <- function(x, lower = 0, upper = 1, v,
     warning("Low number of iterations. Results may be inaccurate.")
 
   ## Computation of sample mean and variance for output
+  sample.est <- var(x)
   m <- floor(length(x) / 2)
   x <- (x - lower)/(upper - lower)  ## Normalization so that x in [0,1]
   p <- 2 * v / (upper - lower)^2  ## normalized threshold

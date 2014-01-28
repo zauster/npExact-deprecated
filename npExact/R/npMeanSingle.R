@@ -48,6 +48,10 @@ npMeanSingle <- function(x, mu,
     {
       x <- x[!is.na(x)]
     }
+  else if(any(is.na(x)) == TRUE)
+      {
+          stop("The data contains NA's!")
+      }
 
   ## warnings
   if (min(x) < lower | max(x) > upper)
@@ -89,7 +93,7 @@ npMeanSingle <- function(x, mu,
 
       while(error > epsilon & i <= 20)
         {
-          rejMatrix <- cbind(rejMatrix,
+          rejMatrix <- c(rejMatrix,
                               replicate(iterations,
                                         transBinomTest(x, p, xp, n,
                                                        pseudoalpha)))
@@ -114,7 +118,7 @@ npMeanSingle <- function(x, mu,
       rejMatrix <- NULL
       while(error > epsilon & i <= 20)
         {
-          rejMatrix <- cbind(rejMatrix,
+          rejMatrix <- c(rejMatrix,
                               replicate(iterations,
                                         transBinomTest(x, p, xp, n,
                                                        pseudoalpha)))
@@ -143,7 +147,7 @@ npMeanSingle <- function(x, mu,
 
       while(error > epsilon & (iterations * i <= 100000))
         {
-          rejMatrix <- cbind(rejMatrix,
+          rejMatrix <- c(rejMatrix,
                               replicate(iterations,
                                         transBinomTest(x, p, xp, n,
                                                        pseudoalpha)))

@@ -89,6 +89,10 @@ npStochin <- function(x1, x2, d = 0,
       x1 <- x1[!is.na(x1)]
       x2 <- x2[!is.na(x2)]
     }
+  else if(any(is.na(c(x1, x2))) == TRUE)
+      {
+          stop("The data contains NA's!")
+      }
 
   if(alternative == "two.sided")
     stop("Not yet implemented. Please test for greater and less at alpha/2.")
