@@ -59,7 +59,8 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                          alpha = 0.05,
                          alternative = "greater",
                          epsilon = 1 * 10^(-6),
-                         iterations = 5000)
+                         iterations = 5000,
+                         max.iterations = 100000)
     {
         names.x1 <- deparse(substitute(x1))
         names.x2 <- deparse(substitute(x2))
@@ -118,8 +119,10 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
         x2 <- (x2 - lower)/(upper - lower)
 
         error <- 1
-        i <- 1
-        rejMatrix <- NULL
+
+        ## rejMatrix will store the results of the McNemarTest Monte
+        ## Carlo replications
+        rejMatrix <- vector(mode = "numeric", length = 0)
 
         optimaltypeII <- uniroot(minTypeIIErrorWrapper,
                                  c(0, 1), p = 0.5, N = n,
@@ -130,32 +133,30 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
         if(alternative == "two.sided")
             {
                 pseudoalpha <- (alpha/2) * theta$theta
-                while(error > epsilon & i <= 20)
+                while(error > epsilon & length(rejMatrix) <= max.iterations)
                     {
-                        rejMatrix <- cbind(rejMatrix,
+                        rejMatrix <- c(rejMatrix,
                                            replicate(iterations,
                                                      McNemarTestRandom(runif(n) < x1,
                                                                        runif(n) < x2,
                                                                        pseudoalpha)))
                         rejUpper <- mean(rejMatrix)
-                        error <- exp(-2 * (iterations * i) * (rejUpper - theta$theta)^2)
-                        i <- i + 1
+                        error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
                     }
-                error <- i <- 1
-                rejMatrix <- NULL
+                error <- 1
+                rejMatrix <- vector(mode = "numeric", length = 0)
 
                 x1 <- 1 - x1
                 x2 <- 1 - x2
-                while(error > epsilon & i <= 20)
+                while(error > epsilon & length(rejMatrix) <= max.iterations)
                     {
-                        rejMatrix <- cbind(rejMatrix,
+                        rejMatrix <- c(rejMatrix,
                                            replicate(iterations,
                                                      McNemarTestRandom(runif(n) < x1,
                                                                        runif(n) < x2,
                                                                        pseudoalpha)))
                         rejLess <- mean(rejMatrix)
-                        error <- exp(-2 * (iterations * i) * (rejLess - theta$theta)^2)
-                        i <- i + 1
+                        error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
                     }
 
 
@@ -169,24 +170,25 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                         x2 <- 1 - x2
                     }
                 pseudoalpha <- alpha * theta$theta
-                while(error > epsilon & i <= 20)
+                while(error > epsilon & length(rejMatrix) <= max.iterations)
                     {
-                        rejMatrix <- cbind(rejMatrix,
+                        rejMatrix <- c(rejMatrix,
                                            replicate(iterations,
                                                      McNemarTestRandom(runif(n) < x1,
                                                                        runif(n) < x2,
                                                                        pseudoalpha)))
                         rej <- mean(rejMatrix)
-                        error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
-                        i <- i + 1
+                        error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
                     }
             }
 
-  if(!is.null(iterations) & iterations * (i - 1) < 1000)
+  if(!is.null(iterations) & length(rejMatrix) < 1000)
     warning("Low number of iterations. Results may be inaccurate.")
 
-        if(i == 21)
-            warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
+        if(length(rejMatrix) >= max.iterations)
+            warning(paste("The maximum number of iterations (",
+                          format(max.iterations, scientific = FALSE),
+                          ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
         names(sample.est) <- c(paste("mean(", names.x1, ")", sep = ""),
                                paste("mean(", names.x2, ")", sep = ""))
@@ -206,9 +208,9 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                        rejection = rejection,
                        alpha = alpha,
                        theta = theta$theta,
-                       d.alternative = (optimaltypeII$root - 0.5)*2*(upper - lower),
+                       d.alternative = (optimaltypeII$root - 0.5) * 2 * (upper - lower),
                        typeIIerror = theta$typeII,
-                       iterations = iterations * (i - 1),
+                       iterations = length(rejMatrix),
                        pseudoalpha = pseudoalpha,
                        bounds = bounds,
                        null.value = null.value),
@@ -239,8 +241,8 @@ McNemarTestRandom <- function(x1, x2, alpha)
             }
         else
             {
-                h <- choose(n10 + n01, n01)
-                if(prob <= alpha)
+                h <- choose(n10 + n01, n01)/(2^(n10 + n01))
+                if(prob <= (alpha + h))
                     {
                         res <- (alpha - prob + h)/h
                     }

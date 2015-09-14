@@ -14,7 +14,7 @@ Given \eqn{-1 < d < 1} it is a test of the null hypothesis \eqn{H_0 :
 }
 \usage{
 npStochin(x1, x2, d = 0, alternative = "greater", iterations = 5000,
-          alpha = 0.05, epsilon = 1 * 10^(-6), ignoreNA = FALSE)
+          alpha = 0.05, epsilon = 1 * 10^(-6), ignoreNA = FALSE, max.iterations = 1e+05)
 }
 \arguments{
   \item{x1, x2}{
@@ -39,7 +39,13 @@ the number of iterations used, should not be changed if the exact solution shoul
 }
 \item{ignoreNA}{
   if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}
-}  
+}
+\item{max.iterations}{
+  the maximum number of iterations that should be carried out. This
+  number could be increased to achieve greater accuracy in cases where
+  the difference between the threshold probability and theta is
+  small. Default: \code{10000}}
+
 }
 \details{
 

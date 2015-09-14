@@ -69,7 +69,8 @@ npMeanUnpaired <- function(x1, x2,
                            alpha = 0.05,
                            alternative = "greater",
                            epsilon = 1 * 10^(-6),
-                           ignoreNA = FALSE)
+                           ignoreNA = FALSE,
+                           max.iterations = 100000)
 {
   names.x1 <- deparse(substitute(x1))
   names.x2 <- deparse(substitute(x2))
@@ -132,36 +133,33 @@ npMeanUnpaired <- function(x1, x2,
   theta <- optimizeTheta(n1, n2, optimaltypeII$minimum, alpha - epsilon)
   pseudoalpha <- alpha * theta$theta
 
-  error <- i <- 1
-  rejMatrix <- NULL
+  error <- 1
+  rejMatrix <- vector(mode = "numeric", length = 0)
 
   if(alternative == "two.sided")
     {
         pseudoalpha <- pseudoalpha/2
-        while(error > epsilon & i <= 20)
+        while(error > epsilon & length(rejMatrix) <= max.iterations)
           {
-              rejMatrix <- cbind(rejMatrix,
+              rejMatrix <- c(rejMatrix,
                                  replicate(iterations,
                                            randomTest(x1, x2, n1, n2, pseudoalpha)))
               rejUpper <- mean(rejMatrix)
-              error <- exp(-2 * (iterations * i) * (rejUpper - theta$theta)^2)
-              i <- i + 1
+              error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
           }
         x1 <- 1 - x1
         x2 <- 1 - x2
 
-        error <- i <- 1
-        rejMatrix <- NULL
-        while(error > epsilon & i <= 20)
+        error <- 1
+        rejMatrix <- vector(mode = "numeric", length = 0)
+        while(error > epsilon & length(rejMatrix) <= max.iterations)
           {
-              rejMatrix <- cbind(rejMatrix,
+              rejMatrix <- c(rejMatrix,
                                  replicate(iterations,
                                            randomTest(x1, x2, n1, n2, pseudoalpha)))
               rejLess <- mean(rejMatrix)
-              error <- exp(-2 * (iterations * i) * (rejLess - theta$theta)^2)
-              i <- i + 1
+              error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
           }
-
         rej <- rejUpper + rejLess
     }
       else
@@ -171,24 +169,25 @@ npMeanUnpaired <- function(x1, x2,
                   x1 <- 1 - x1
                   x2 <- 1 - x2
               }
-            while(error > epsilon & i <= 20)
+            while(error > epsilon & length(rejMatrix) <= max.iterations)
               {
-                  rejMatrix <- cbind(rejMatrix,
+                  rejMatrix <- c(rejMatrix,
                                      replicate(iterations,
                                                randomTest(x1, x2,
                                                           n1, n2,
                                                           pseudoalpha)))
                   rej <- mean(rejMatrix)
-                  error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
-                  i <- i + 1
+                  error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
               }
         }
 
-  if(!is.null(iterations) & iterations * (i - 1) < 1000)
+  if(!is.null(iterations) & length(rejMatrix) < 1000)
     warning("Low number of iterations. Results may be inaccurate.")
 
-  if(i == 21)
-    warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
+  if(length(rejMatrix) >= max.iterations)
+            warning(paste("The maximum number of iterations (",
+                          format(max.iterations, scientific = FALSE),
+                          ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
   method <- "Nonparametric Mean Test for unpaired variables"
   names(sample.est) <- c(paste("mean(", names.x1, ")", sep = ""),
@@ -210,7 +209,7 @@ npMeanUnpaired <- function(x1, x2,
                  theta = theta$theta,
                  d.alternative = optimaltypeII$minimum,
                  typeIIerror = theta$typeII,
-                 iterations = iterations * (i - 1),
+                 iterations = length(rejMatrix),
                  pseudoalpha = pseudoalpha,
                  bounds = bounds,
                  null.value = null.value),
@@ -226,7 +225,7 @@ randomTest <- function(x1, x2, n1, n2, alpha)
     s2 <- sum(x2 >= runif(n2))
     s3 <- s2 + s1
     k <- max(0, s3 - n2):(s1 - 1)
-    prob <- 0 ## was 1. Why?
+    prob <- 0
     if (s1 >= (1 + k[1]))
       {
         prob <- sum(choose(n1,
@@ -248,7 +247,7 @@ randomTest <- function(x1, x2, n1, n2, alpha)
           }
         else
           {
-            res <- ((alpha - prob)/((h2 - prob)))
+            res <- ((alpha - prob)/(h2 - prob))
           }
       }
     return(res)
@@ -346,8 +345,6 @@ maxTypeII <- function(y1, d, n1, n2, y2 = y1 + d,
     type2 <- (1 - res)/(1 - theta)
     return(min(type2, 1))
 }
-
-## mean(system.time(maxTypeII))
 
 ## same as function typeII error,  only order of inputs changed,
 ## so that function "optimize" can be used

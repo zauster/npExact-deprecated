@@ -107,21 +107,40 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
     invisible(x)
 }
 
-## Example:
 
-##      Nonparametric Test on the Correlation
+print.npConfInt <- function(x, ..., verbose = NULL,
+                      digits = max(3L, getOption("digits") - 3L))
+    {
+        cat("\n")
+        cat(strwrap(x$method, prefix = "\t"), sep="\n")
+        cat("\n")
+        cat("data:", x$data.name, "in", x$bounds, "\n")
+        cat("n = ", x$n, "\n")
 
-## data: Y1 and Y2
-## Probability of rejection: ... is greater/lower than theta = ...
-## (P-Value, where applicable)
-## alternative hypothesis: true correlation is greater/lower than 0
+        CI <- format(round(x$CI, digits = digits), digits = digits)
 
-## Given parameters:
-##   Y1 in [lower, upper]
-##   Y2 in [lower, upper]
-##   alpha: ...
-##   theta: ...
-##   pseudoalpha: ...
+        names(CI) <- c("lower", "upper", "Level")
 
-## Sample estimate:
-##   Covariance: ...
+        cat("\n")
+        print(CI, quote = FALSE, right = TRUE)
+        ## cat("\nparameters:\n")
+        ## if(!is.null(x$parameter$bounds))
+        ##     {
+        ##         cat(paste("   ", x$yname, " in ", x$parameter$bounds, "\n", sep = ""))
+        ##     }
+        ## cat("   alpha:", x$parameter$alpha)
+        ## if(!is.null(x$parameter$iterations))
+        ##     {
+        ##         cat("\n   iterations:", x$parameter$iterations)
+        ##     }
+        cat("\n")
+
+    }
+
+##     Confidence Interval with npMeanSingle
+
+## data: x and y
+## n = 50
+
+##       lower    upper          test
+##        0.65     0.98  npMeanSingle

@@ -16,7 +16,7 @@ Under alternative = "greater", it is a test of the null hypothesis
 \usage{
 npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
              alternative = "greater", epsilon = 1 * 10^(-6),
-             iterations = 5000)
+             iterations = 5000, max.iterations = 1e+05)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -41,11 +41,11 @@ npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
   \item{epsilon}{
     the tolerance in terms of probability of the Monte Carlo simulations.
 }
-%% \item{completeCases}{
-%%   if \code{TRUE}, only pairs of the two data vectors which are
-%%   complete are being used for the computation. Default \code{FALSE}.
-%% }
-
+\item{max.iterations}{
+  the maximum number of iterations that should be carried out. This
+  number could be increased to achieve greater accuracy in cases where
+  the difference between the threshold probability and theta is
+  small. Default: \code{10000}}
 } 
 
 \details{

@@ -15,9 +15,9 @@ For any \eqn{\mu} that lies between the two bounds, under alternative = "greater
 the alternative hypothesis \eqn{H_1 : E(X) > \mu}. 
 }
 \usage{
-npMeanSingle(x, mu, lower = 0, upper = 1, iterations = 5000,
-             alpha = 0.05, alternative = "greater",
-             epsilon = 1 * 10^(-6), ignoreNA = FALSE)
+npMeanSingle(x, mu, lower = 0, upper = 1, alternative = "greater",
+             iterations = 5000, alpha = 0.05, 
+             epsilon = 1 * 10^(-6), ignoreNA = FALSE, max.iterations = 1e+05)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -45,6 +45,11 @@ the number of iterations used, should not be changed if the exact solution shoul
 \item{ignoreNA}{
   if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}
 }
+\item{max.iterations}{
+  the maximum number of iterations that should be carried out. This
+  number could be increased to achieve greater accuracy in cases where
+  the difference between the threshold probability and theta is
+  small. Default: \code{10000}}
 }
 \details{
   Using the known bounds, the data is transformed to lie in [0, 1] using an affine transformation. Then the data is randomly

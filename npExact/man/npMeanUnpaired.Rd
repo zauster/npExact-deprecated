@@ -15,7 +15,8 @@ This is a test of the null hypothesis: \eqn{H_0: E(X_1) \le E(X_2)} against
 }
 \usage{
 npMeanUnpaired(x1, x2, lower = 0, upper = 1, iterations = 5000, alpha = 0.05,
-               alternative = "greater", epsilon = 1 * 10^(-6), ignoreNA = FALSE)
+               alternative = "greater", epsilon = 1 * 10^(-6), ignoreNA
+= FALSE, max.iterations = 1e+05)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -41,6 +42,11 @@ the number of iterations used, should not be changed if the exact solution shoul
 \item{ignoreNA}{
   if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}
 }
+\item{max.iterations}{
+  the maximum number of iterations that should be carried out. This
+  number could be increased to achieve greater accuracy in cases where
+  the difference between the threshold probability and theta is
+  small. Default: \code{10000}}
 }
 \details{
 This test uses the known bounds of the variables to transform the data into [0, 1]. Then a random

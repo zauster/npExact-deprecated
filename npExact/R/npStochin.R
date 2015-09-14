@@ -51,7 +51,8 @@ npStochin <- function(x1, x2, d = 0,
                       alternative = "greater",
                       iterations = 5000, alpha = 0.05,
                       epsilon = 1 * 10^(-6),
-                      ignoreNA = FALSE)
+                      ignoreNA = FALSE,
+                      max.iterations = 100000)
 {
   names.x1 <- deparse(substitute(x1))
   names.x2 <- deparse(substitute(x2))
@@ -135,25 +136,27 @@ npStochin <- function(x1, x2, d = 0,
                           p = p, N = min.length, alpha = alpha - epsilon)
   pseudoalpha <- alpha * theta$theta
 
-  error <- i <- 1
-  rejMatrix <- NULL
+  error <- 1
+  rejMatrix <- vector(mode = "numeric", length = 0)
 
-  while(error > epsilon & i <= 20)
+  while(error > epsilon & length(rejMatrix) <= max.iterations)
     {
-        rejMatrix <- cbind(rejMatrix,
+        rejMatrix <- c(rejMatrix,
                            replicate(iterations,
                                      sampleBinomTest(x1, x2, min.length,
                                                      p, d, pseudoalpha)))
         rej <- mean(rejMatrix)
-        error <- exp(-2 * (iterations * i) * (rej - theta$theta)^2)
-        i <- i + 1
+        error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
     }
 
-  if(!is.null(iterations) & iterations * (i - 1) < 1000)
+  if(!is.null(iterations) & length(rejMatrix) < 1000)
     warning("Low number of iterations. Results may be inaccurate.")
 
-  if(i == 21)
-    warning("The maximum number of iterations (100,000) was reached. Rejection may be very sensible to the choice of the parameters.")
+  if(length(rejMatrix) >= max.iterations)
+            warning(paste("The maximum number of iterations (",
+                          format(max.iterations, scientific = FALSE),
+                          ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
+
 
 ## H0: P(x2 > x1) <= P(x2 < x1), or: P(x2 > x1) - P(x2 < x1) <= d
 ## H1: P(x2 > x1) > P(x2 < x1), or: P(x2 > x1) - P(x2 < x1) > d
@@ -173,7 +176,7 @@ npStochin <- function(x1, x2, d = 0,
                  theta = theta$theta,
                  d.alternative = (optimaltypeII$root*2 - 1),
                  typeIIerror = theta$typeII,
-                 iterations = iterations * (i - 1),
+                 iterations = length(rejMatrix),
                  pseudoalpha = pseudoalpha,
                  bounds = NULL,
                  null.value = d),

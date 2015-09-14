@@ -15,9 +15,9 @@ This is a test of the null hypothesis \eqn{H_0: Var(X) \le v} against
 }
 
 \usage{
-npVarianceSingle(x, lower = 0, upper = 1, v,
+npVarianceSingle(x, v, lower = 0, upper = 1,
       alternative = "greater", alpha = 0.05, iterations = 5000,
-      epsilon = 1 * 10^(-6), ignoreNA = FALSE)
+      epsilon = 1 * 10^(-6), ignoreNA = FALSE, max.iterations = 1e+05)
 }
 
 %- maybe also 'usage' for other objects documented here.
@@ -25,11 +25,11 @@ npVarianceSingle(x, lower = 0, upper = 1, v,
   \item{x}{
 a (non-empty) numeric vector of data values.
 }
-  \item{lower, upper}{
-the theoretical lower and upper bounds on the data outcomes known ex-ante before gathering the data.
-}
   \item{v}{
 the value of the variance to be tested as \eqn{H_0: Var(x) \le v}.
+}
+  \item{lower, upper}{
+the theoretical lower and upper bounds on the data outcomes known ex-ante before gathering the data.
 }
   \item{alternative}{
 a character string describing the alternative hypothesis, can take values "greater", "less" or "two.sided"
@@ -46,6 +46,11 @@ the number of iterations used, should not be changed if the exact solution shoul
 \item{ignoreNA}{
   if \code{TRUE}, NA values will be omitted. Default: \code{FALSE}
 }
+\item{max.iterations}{
+  the maximum number of iterations that should be carried out. This
+  number could be increased to achieve greater accuracy in cases where
+  the difference between the threshold probability and theta is
+  small. Default: \code{10000}}
 }
 \details{
   This test randomly matches the data into pairs, then computes for each

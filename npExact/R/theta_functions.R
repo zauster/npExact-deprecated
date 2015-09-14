@@ -89,37 +89,42 @@ possibleTheta <- function(N, p, alpha)
 }
 
 
-minTypeIIError <- function(p.alt, p, N, alpha, alternative)
-{
-    ## Calculates minimum value, for given difference d
-    ## uses possibleTheta, g2
-    theta <- possibleTheta(N, p, alpha)
-    ## f <- function(x)
-    ##   {
-    ##     g2(p.alt, n, p, alpha*x[2])
-    ##   }
-    ## typeIIerrors <- apply(theta, 2,
-    ##              function(x)(1 - f(x))/(1 - x[2]))
+minTypeIIError <- function(p.alt, p, N, alpha)
+    {
+        ## Calculates minimum value, for given difference d
+        ## uses possibleTheta, g2
+        theta <- possibleTheta(N, p, alpha)
+        ## f <- function(x)
+        ##   {
+        ##     g2(p.alt, n, p, alpha*x[2])
+        ##   }
+        ## typeIIerrors <- apply(theta, 2,
+        ##              function(x)(1 - f(x))/(1 - x[2]))
 
-    f <- function(x)
-        {
-            (1 - g2(p.alt, N, p, alpha*x))/(1 - x)
-        }
-    typeIIerrors <- sapply(theta[2,], f)
+        cat(p.alt, "\t", p, "\t", N, "\t", alpha, "\n")
 
-    if(!is.numeric(typeIIerrors))
-        {
-            stop("The null will not be rejected as the value of the mean under the null is too large or too small.")
-        }
+        f <- function(x)
+            {
+                (1 - g2(p.alt, N, p, alpha * x))/(1 - x)
+            }
+        typeIIerrors <- sapply(theta[2,], f)
 
-    mintypeII <- min(typeIIerrors, 1)
+        print(typeIIerrors)
+        print(str(typeIIerrors))
 
-    righttheta <- theta[2, which(typeIIerrors == mintypeII)]
-    righttheta <- ifelse(length(righttheta) == 0, NA, righttheta)
+        if(!is.numeric(typeIIerrors))
+            {
+                stop("The null will not be rejected as the value of the mean under the null is too large or too small.")
+            }
 
-    list(theta = righttheta,
-         typeII = mintypeII)
-}
+        mintypeII <- min(typeIIerrors, 1)
+
+        righttheta <- theta[2, which(typeIIerrors == mintypeII)]
+        righttheta <- ifelse(length(righttheta) == 0, NA, righttheta)
+
+        list(theta = righttheta,
+             typeII = mintypeII)
+    }
 
 minTypeIIErrorWrapper <- function(p.alt, p, N, alpha,
                                   typeIIgoal = .5)
