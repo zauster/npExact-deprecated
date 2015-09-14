@@ -2,7 +2,7 @@ Package: npExact
 Type: Package
 Title: Nonparametric (or distribution-free) hypothesis tests
 Version: 0.2
-Date: 2013-09-26
+Date: 2015-09-14
 Authors@R: c(person(given = "Karl", family = "Schlag", 
                     role = c("aut"),
            email = "karl.schlag@univie.ac.at"), 
