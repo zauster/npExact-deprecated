@@ -5,6 +5,6 @@ export("npMeanPaired",
        "npMeanUnpaired",
        "npVarianceSingle",
        ## "npCorr",
-       "npStochin")
+       "npStochinUnpaired")
 
 S3method("print", "nphtest")

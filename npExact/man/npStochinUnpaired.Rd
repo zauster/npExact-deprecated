@@ -1,5 +1,5 @@
-\name{npStochin}
-\alias{npStochin}
+\name{npStochinUnpaired}
+\alias{npStochinUnpaired}
 \title{
 A test of a stochastic inequality given two independent samples 
 }
@@ -13,7 +13,7 @@ Given \eqn{-1 < d < 1} it is a test of the null hypothesis \eqn{H_0 :
 
 }
 \usage{
-npStochin(x1, x2, d = 0, alternative = "greater", iterations = 5000,
+npStochinUnpaired(x1, x2, d = 0, alternative = "greater", iterations = 5000,
           alpha = 0.05, epsilon = 1 * 10^(-6), ignoreNA = FALSE, max.iterations = 1e+05)
 }
 \arguments{
@@ -133,7 +133,7 @@ II error probability lies below 0.5. For more details see the paper.
 data(french)
 x <- french[, 1]
 y <- french[, 2]
-npStochin(x, y, ignoreNA = TRUE)
+npStochinUnpaired(x, y, ignoreNA = TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

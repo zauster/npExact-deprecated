@@ -68,7 +68,7 @@ TRUE)
 data(french)
 x <- french[, 1]
 y <- french[, 2]
-npStochin(x, y, ignoreNA = TRUE)
+npStochinUnpaired(x, y, ignoreNA = TRUE)
 
 ## npVarianceSingle
 ## see if the minority share holder shores have a variance greater

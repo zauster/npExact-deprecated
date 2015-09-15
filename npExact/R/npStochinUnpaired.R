@@ -4,22 +4,6 @@
 #               based on two independent samples (Schlag, 2008)          #
 #               to test of H0: P(Y_2>Y_1)-P(Y2<Y1)<=d    for -1 < d < 1  #
 #                                                                        #
-# Input variables                                                        #
-#        required:       data_vector1                                    #
-#                        data_vector2                                    #
-#        optional        d      (0) threshold value in null              #
-#                        d1     (0.3) test designed to minimize typeII   #
-#                               error when H1: P(Y_2>Y_1)-P(Y2<Y1)>=d1   #
-#                               so d<d1<1                                #
-#                        iterations  (30000) number of Monte Carlo iterations #
-#                        alpha  (0.05) significance level of test        #
-# Return Values                                                          #
-#                        obs1   number of observations in sample1        #
-#                        obs2   number of observations in sample2        #
-#                        theta  cutoff level theta                       #
-#                        alpha  significance level alpha                 #
-#                        rj     probability of rejection                 #
-#                        sg1    P(Y2>Y1)-P(Y2<Y1)                        #
 #                                                                        #
 # Author            Karl Schlag                                          #
 # Date              04.03.2012                                           #
@@ -48,11 +32,11 @@
 ## alternative = "greater" -> x1 >> x2
 
 npStochinUnpaired <- function(x1, x2, d = 0,
-                      alternative = "greater",
-                      iterations = 5000, alpha = 0.05,
-                      epsilon = 1 * 10^(-6),
-                      ignoreNA = FALSE,
-                      max.iterations = 100000)
+                              alternative = "greater",
+                              iterations = 5000, alpha = 0.05,
+                              epsilon = 1 * 10^(-6),
+                              ignoreNA = FALSE,
+                              max.iterations = 100000)
 {
   names.x1 <- deparse(substitute(x1))
   names.x2 <- deparse(substitute(x2))
@@ -72,14 +56,14 @@ npStochinUnpaired <- function(x1, x2, d = 0,
       x1 <- x1.new
     }
 
-  null.hypothesis <- paste("P(", names.x2, " > ", names.x1, ") - P(",
-                           names.x2, " < ", names.x1, ") <= ",
+  null.hypothesis <- paste("P(", names.x1, " > ", names.x2, ") - P(",
+                           names.x1, " < ", names.x2, ") <= ",
                            ## ifelse(alternative == "greater", " <= ",
                            ##        ifelse(alternative == "less", " >= ",
                            ##               " = ")),
                            d, sep = "")
-  alt.hypothesis <- paste("P(", names.x2, " > ", names.x1, ") - P(",
-                           names.x2, " < ", names.x1, ") > ",
+  alt.hypothesis <- paste("P(", names.x1, " > ", names.x2, ") - P(",
+                           names.x1, " < ", names.x2, ") > ",
                            ## ifelse(alternative == "greater", " > ",
                            ##        ifelse(alternative == "less", " < ",
                            ##               " != ")),
@@ -115,18 +99,18 @@ npStochinUnpaired <- function(x1, x2, d = 0,
       count.x1 <- count.x1 + sum(x1[i] > x2)
       count.x2 <- count.x2 + sum(x1[i] < x2)
     }
-  sample.est <- (count.x2 - count.x1)/(N1 * N2)
+  sample.est <- (count.x1 - count.x2)/(N1 * N2)
   names(sample.est) <- paste("stochastic inequality: P(",
-                             names.x2,
+                             names.x1,
                              ifelse(alternative == "greater", " > ",
                                     ifelse(alternative == "less", " < ",
                                            " > ")),
-                             names.x1, ") - P(",
-                             names.x2,
+                             names.x2, ") - P(",
+                             names.x1,
                              ifelse(alternative == "greater", " < ",
                                     ifelse(alternative == "less", " > ",
                                            " < ")),
-                             names.x1, ")",
+                             names.x2, ")",
                              sep = "")
 
   optimaltypeII <- uniroot(minTypeIIErrorWrapper,
@@ -143,7 +127,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
     {
         rejMatrix <- c(rejMatrix,
                            replicate(iterations,
-                                     sampleBinomTest(x1, x2, min.length,
+                                     sampleBinomTest(x2, x1, min.length,
                                                      p, d, pseudoalpha)))
         rej <- mean(rejMatrix)
         error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
@@ -158,10 +142,10 @@ npStochinUnpaired <- function(x1, x2, d = 0,
                           ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
 
-## H0: P(x2 > x1) <= P(x2 < x1), or: P(x2 > x1) - P(x2 < x1) <= d
-## H1: P(x2 > x1) > P(x2 < x1), or: P(x2 > x1) - P(x2 < x1) > d
+## H0: P(x1 > x2) <= P(x1 < x2), or: P(x1 > x2) - P(x1 < x2) <= d
+## H1: P(x1 > x2) > P(x1 < x2), or: P(x1 > x2) - P(x1 < x2) > d
   ## names(d) <- "difference in 'greater-than'-Probabilities"
-  names(d) <- "relation P(x2 > x1) - P(x2 < x1)"
+  names(d) <- "relation P(x1 > x2) - P(x1 < x2)"
   rejection <- ifelse(rej > theta$theta, TRUE, FALSE)
 
   structure(list(method = "Nonparametric Test for Stochastic Inequality",
