@@ -16,7 +16,7 @@ This is a test of the null hypothesis \eqn{H_0: Var(X) \le v} against
 
 \usage{
 npVarianceSingle(x, v, lower = 0, upper = 1,
-      alternative = "greater", alpha = 0.05, iterations = 5000,
+      alternative = "two.sided", alpha = 0.05, iterations = 5000,
       epsilon = 1 * 10^(-6), ignoreNA = FALSE, max.iterations = 1e+05)
 }
 

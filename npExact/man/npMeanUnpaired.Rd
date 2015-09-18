@@ -15,7 +15,7 @@ This is a test of the null hypothesis: \eqn{H_0: E(X_1) \le E(X_2)} against
 }
 \usage{
 npMeanUnpaired(x1, x2, lower = 0, upper = 1, iterations = 5000, alpha = 0.05,
-               alternative = "greater", epsilon = 1 * 10^(-6), ignoreNA
+               alternative = "two.sided", epsilon = 1 * 10^(-6), ignoreNA
 = FALSE, max.iterations = 1e+05)
 }
 %- maybe also 'usage' for other objects documented here.

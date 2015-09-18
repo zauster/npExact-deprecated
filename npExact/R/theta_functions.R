@@ -109,7 +109,7 @@ minTypeIIError <- function(p.alt, p, N, alpha, alternative)
 
     if(!is.numeric(typeIIerrors))
         {
-            stop("The null will not be rejected as the value of the mean under the null is too large or too small. Please increase alpha.")
+            stop("The null will not be rejected as the test value under the null is too large or too small. Please increase alpha.")
         }
 
     mintypeII <- min(typeIIerrors, 1)

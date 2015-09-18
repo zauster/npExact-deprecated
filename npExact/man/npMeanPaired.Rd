@@ -15,7 +15,7 @@ Under alternative = "greater", it is a test of the null hypothesis
 }
 \usage{
 npMeanPaired(x1, x2, lower = 0, upper = 1, alpha = 0.05,
-             alternative = "greater", epsilon = 1 * 10^(-6),
+             alternative = "two.sided", epsilon = 1 * 10^(-6),
              iterations = 5000, max.iterations = 1e+05)
 }
 %- maybe also 'usage' for other objects documented here.

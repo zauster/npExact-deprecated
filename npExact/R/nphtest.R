@@ -37,13 +37,7 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
         cat("as threshold probability:", x$probrej, "is", alt.char,
             "than theta:", x$theta, "\n") # "\n\tthus", thus, "\n")
       }
-    ## out <- character()
-    ## if(!is.null(x$statistic))
-    ##     out <- c(out, paste(names(x$statistic), "=",
-    ##                      format(round(x$statistic, 4))))
-    ## if(!is.null(x$parameter))
-    ##     out <- c(out, paste(names(x$parameter), "=",
-    ##                      format(round(x$parameter, 3))))
+
     if(!is.null(x$p.value))
       {
         fp <- format.pval(x$p.value, digits = digits)
@@ -52,26 +46,6 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
                          else paste("=",fp))
         cat(fp, "\n")
     }
-
-    ## if(!is.null(x$alternative)) {
-    ##     cat("alternative hypothesis: ")
-    ##     if(!is.null(x$null.value)) {
-    ##         if(length(x$null.value) == 1L) {
-    ##             alt.char <-
-    ##                 switch(x$alternative,
-    ##                        two.sided = "not equal to",
-    ##                        less = "less than",
-    ##                        greater = "greater than")
-    ##             cat("true", names(x$null.value), "is", alt.char,
-    ##                 x$null.value, "\n")
-    ##         }
-    ##         else {
-    ##             cat(x$alternative, "\nnull values:\n")
-    ##             print(x$null.value, ...)
-    ##         }
-    ##     }
-    ##     else cat(x$alternative, "\n")
-    ## }
 
     cat("\ngiven parameters:\n")
     if(!is.null(x$bounds))

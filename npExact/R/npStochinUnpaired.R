@@ -32,7 +32,7 @@
 ## alternative = "greater" -> x1 >> x2
 
 npStochinUnpaired <- function(x1, x2, d = 0,
-                              alternative = "greater",
+                              alternative = "two.sided",
                               iterations = 5000, alpha = 0.05,
                               epsilon = 1 * 10^(-6),
                               ignoreNA = FALSE,
@@ -57,16 +57,16 @@ npStochinUnpaired <- function(x1, x2, d = 0,
     }
 
   null.hypothesis <- paste("P(", names.x1, " > ", names.x2, ") - P(",
-                           names.x1, " < ", names.x2, ") <= ",
-                           ## ifelse(alternative == "greater", " <= ",
-                           ##        ifelse(alternative == "less", " >= ",
-                           ##               " = ")),
+                           names.x1, " < ", names.x2, ")",
+                           ifelse(alternative == "greater", " <= ",
+                                  ifelse(alternative == "less", " >= ",
+                                         " = ")),
                            d, sep = "")
   alt.hypothesis <- paste("P(", names.x1, " > ", names.x2, ") - P(",
-                           names.x1, " < ", names.x2, ") > ",
-                           ## ifelse(alternative == "greater", " > ",
-                           ##        ifelse(alternative == "less", " < ",
-                           ##               " != ")),
+                           names.x1, " < ", names.x2, ")",
+                           ifelse(alternative == "greater", " > ",
+                                  ifelse(alternative == "less", " < ",
+                                         " != ")),
                            d, sep = "")
 
   if(ignoreNA == TRUE)
@@ -79,8 +79,8 @@ npStochinUnpaired <- function(x1, x2, d = 0,
           stop("The data contains NA's!")
       }
 
-  if(alternative == "two.sided")
-    stop("Not yet implemented. Please test for greater and less at alpha/2.")
+  ## if(alternative == "two.sided")
+  ##   stop("Not yet implemented. Please test for greater and less at alpha/2.")
 
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
@@ -123,15 +123,49 @@ npStochinUnpaired <- function(x1, x2, d = 0,
   error <- 1
   rejMatrix <- vector(mode = "numeric", length = 0)
 
-  while(error > epsilon & length(rejMatrix) <= max.iterations)
-    {
-        rejMatrix <- c(rejMatrix,
-                           replicate(iterations,
-                                     sampleBinomTest(x2, x1, min.length,
-                                                     p, d, pseudoalpha)))
-        rej <- mean(rejMatrix)
-        error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
-    }
+  if(alternative == "two.sided")
+  {
+      while(error > epsilon & length(rejMatrix) <= max.iterations)
+      {
+          rejMatrix <- c(rejMatrix,
+                         replicate(iterations,
+                                   sampleBinomTest(x2, x1, min.length,
+                                                   p, d, pseudoalpha)))
+          rejUpper <- mean(rejMatrix)
+          error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
+      }
+      error <- 1
+      rejMatrix <- vector(mode = "numeric", length = 0)
+      ## names.x1.new <- names.x2
+      ## names.x2 <- names.x1
+      ## names.x1 <- names.x1.new
+      x1.new <- x2
+      x2 <- x1
+      x1 <- x1.new
+      while(error > epsilon & length(rejMatrix) <= max.iterations)
+      {
+          rejMatrix <- c(rejMatrix,
+                         replicate(iterations,
+                                   sampleBinomTest(x2, x1, min.length,
+                                                   p, d, pseudoalpha)))
+          rejLess <- mean(rejMatrix)
+          error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
+      }
+      rej <- rejUpper + rejLess
+
+  }
+  else
+  {
+      while(error > epsilon & length(rejMatrix) <= max.iterations)
+      {
+          rejMatrix <- c(rejMatrix,
+                         replicate(iterations,
+                                   sampleBinomTest(x2, x1, min.length,
+                                                   p, d, pseudoalpha)))
+          rej <- mean(rejMatrix)
+          error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
+      }
+  }
 
   if(!is.null(iterations) & length(rejMatrix) < 1000)
     warning("Low number of iterations. Results may be inaccurate.")
@@ -147,6 +181,16 @@ npStochinUnpaired <- function(x1, x2, d = 0,
   ## names(d) <- "difference in 'greater-than'-Probabilities"
   names(d) <- "relation P(x1 > x2) - P(x1 < x2)"
   rejection <- ifelse(rej > theta$theta, TRUE, FALSE)
+
+    ## if rejection in a two.sided setting, we inform the user of the
+    ## side of rejection
+    if(rejection == TRUE & alternative == "two.sided")
+    {
+        alt.hypothesis <- paste("P(", names.x1, " > ", names.x2, ") - P(",
+                                names.x1, " < ", names.x2, ")",
+                                ifelse(rejUpper >= theta$theta, " > ", " < "),
+                                d, sep = "")
+    }
 
   structure(list(method = "Nonparametric Test for Stochastic Inequality",
                  data.name = DNAME,

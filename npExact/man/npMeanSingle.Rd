@@ -15,7 +15,7 @@ For any \eqn{\mu} that lies between the two bounds, under alternative = "greater
 the alternative hypothesis \eqn{H_1 : E(X) > \mu}. 
 }
 \usage{
-npMeanSingle(x, mu, lower = 0, upper = 1, alternative = "greater",
+npMeanSingle(x, mu, lower = 0, upper = 1, alternative = "two.sided",
              iterations = 5000, alpha = 0.05, 
              epsilon = 1 * 10^(-6), ignoreNA = FALSE, max.iterations = 1e+05)
 }

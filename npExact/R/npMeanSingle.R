@@ -15,7 +15,7 @@
 
 npMeanSingle <- function(x, mu,
                          lower = 0, upper = 1,
-                         alternative = "greater",
+                         alternative = "two.sided",
                          iterations = 5000, alpha = 0.05,
                          epsilon = 1 * 10^(-6),
                          ignoreNA = FALSE,
@@ -97,8 +97,8 @@ npMeanSingle <- function(x, mu,
                               replicate(iterations,
                                         transBinomTest(x, p, xp, n,
                                                        pseudoalpha)))
-          rejGreater <- mean(rejMatrix)
-          error <- exp(-2 * length(rejMatrix) * (rejGreater - theta$theta)^2)
+          rejUpper <- mean(rejMatrix)
+          error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
         }
 
       ## secondly the lower side
@@ -124,7 +124,7 @@ npMeanSingle <- function(x, mu,
           error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
         }
 
-      rej <- rejGreater + rejLess
+      rej <- rejUpper + rejLess
     }
   else ## alternative == "greater" => default
     {
@@ -166,6 +166,16 @@ npMeanSingle <- function(x, mu,
   null.value <- mu
   names(null.value) <- "mean"
   rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
+
+    ## if rejection in a two.sided setting, we inform the user of the
+    ## side of rejection
+    if(rejection == TRUE & alternative == "two.sided")
+    {
+        alt.hypothesis <- paste("E(", DNAME, ")",
+                                ifelse(rejUpper >= theta$theta, " > ", " < "),
+                                mu, sep = "")
+    }
+
   bounds <- paste("[", round(lower, digits = 3), ", ",
                   round(upper, digits = 3), "]", sep = "")
 

@@ -6,42 +6,6 @@
 ##                     for H0: E(Y1) >= E(Y2)  if Y1,Y2 in
 ##                     [lower,upper]
 ##                                                                       #
-##   Input variables                                                     #
-##        required:      y1       independent sample of Y1               #
-##                       y2       independent sample of Y2               #
-##                       lower      exogenously known lower              #
-##                                bound for any outcome that can         #
-##                                be generated in either sample          #
-##                       upper       exogenously known upper             #
-##                                bound for any outcome that can         #
-##                                be generated in either sample          #
-##                       d        difference (d= EY2 - EY1)              #
-##                                s.t. type II is minimized              #
-##                                when H1: E(Y1)+d <= E(Y2)              #
-##                                                                       #
-##        optional (default value):
-##                  iterations    (30000) number of Monte Carlo          #
-##                                iterations                             #
-##                  alpha    (0.05) significance level of test           #
-##                  plotif   (F) if true then plots typeII error         #
-##                           when E(Y2) = E(Y1) + d and minimal          #
-##                           typeII error across different values        #
-##                           of theta                                    #
-##                  helppoints (100)  number of points the               #
-##                           graphic uses when plotif=T                  #
-##                                                                       #
-##   Return Values                                                       #
-##                       obs1   number of observations in sample1        #
-##                       obs2   number of observations in sample2        #
-##                       lower    lower bound for data values            #
-##                       upper     upper bound for data values           #
-##                       theta  cutoff level theta                       #
-##                       alpha  significance level alpha                 #
-##                       avg1   average of values in data1               #
-##                       avg2   average of values in data2               #
-##                       P(rej)  probability of rejection in the under   #
-##                              lying randomdomized test                 #
-##                                                                       #
 ##   Author            Christian Pechhacker                              #
 ##   Date              18.02.2012                                        #
 ##                                                                       #
@@ -67,191 +31,200 @@ npMeanUnpaired <- function(x1, x2,
                            lower = 0, upper = 1,
                            iterations = 5000,
                            alpha = 0.05,
-                           alternative = "greater",
+                           alternative = "two.sided",
                            epsilon = 1 * 10^(-6),
                            ignoreNA = FALSE,
                            max.iterations = 100000)
 {
-  names.x1 <- deparse(substitute(x1))
-  names.x2 <- deparse(substitute(x2))
+    names.x1 <- deparse(substitute(x1))
+    names.x2 <- deparse(substitute(x2))
 
-  DNAME <- paste(names.x1, "and", names.x2)
+    DNAME <- paste(names.x1, "and", names.x2)
 
-  null.hypothesis <- paste("E(", names.x1, ")",
-                           ifelse(alternative == "less", " >= ",
-                                  ifelse(alternative == "greater", " <= ",
-                                         " = ")),
-                           "E(", names.x2, ")", sep = "")
+    null.hypothesis <- paste("E(", names.x1, ")",
+                             ifelse(alternative == "less", " >= ",
+                             ifelse(alternative == "greater", " <= ",
+                                    " = ")),
+                             "E(", names.x2, ")", sep = "")
 
-  alt.hypothesis <- paste("E(", names.x1, ")",
-                          ifelse(alternative == "less", " < ",
-                                 ifelse(alternative == "greater", " > ",
-                                        " != ")),
-                          "E(", names.x2, ")", sep = "")
+    alt.hypothesis <- paste("E(", names.x1, ")",
+                            ifelse(alternative == "less", " < ",
+                            ifelse(alternative == "greater", " > ",
+                                   " != ")),
+                            "E(", names.x2, ")", sep = "")
 
-  x1 <- as.vector(x1)
-  x2 <- as.vector(x2)
+    x1 <- as.vector(x1)
+    x2 <- as.vector(x2)
 
-  if(ignoreNA == TRUE)
+    if(ignoreNA == TRUE)
     {
-      x1 <- x1[!is.na(x1)]
-      x2 <- x2[!is.na(x2)]
+        x1 <- x1[!is.na(x1)]
+        x2 <- x2[!is.na(x2)]
     }
-  else if(any(is.na(c(x1, x2))) == TRUE)
-      {
-          stop("The data contains NA's!")
-      }
+    else if(any(is.na(c(x1, x2))) == TRUE)
+    {
+        stop("The data contains NA's!")
+    }
 
-  if(min(x1, x2) < lower | max(x1, x2) > upper)
-    stop("Some values are out of bounds!")
+    if(min(x1, x2) < lower | max(x1, x2) > upper)
+        stop("Some values are out of bounds!")
 
-  if(alternative != "two.sided" & alternative != "greater" & alternative != "less")
-    stop("Please specify which alternative hypothesis you want to test for: 'greater', 'less' or 'two.sided'")
+    if(alternative != "two.sided" & alternative != "greater" & alternative != "less")
+        stop("Please specify which alternative hypothesis you want to test for: 'greater', 'less' or 'two.sided'")
 
-  if(alpha >= 1 | alpha <= 0)
-    stop("Please supply a sensible value for alpha.")
+    if(alpha >= 1 | alpha <= 0)
+        stop("Please supply a sensible value for alpha.")
 
 
-  sample.est <- c(mean(x1), mean(x2))
+    sample.est <- c(mean(x1), mean(x2))
 
-  ## standardize variables
-  ## d <- d/(upper - lower)
-  x1 <- (x1 - lower)/(upper - lower)
-  x2 <- (x2 - lower)/(upper - lower)
+    ## standardize variables
+    ## d <- d/(upper - lower)
+    x1 <- (x1 - lower)/(upper - lower)
+    x2 <- (x2 - lower)/(upper - lower)
 
-  ## x1 <- as.matrix(x1)
-  ## x2 <- as.matrix(x2)
+    ## x1 <- as.matrix(x1)
+    ## x2 <- as.matrix(x2)
 
-  ## define local variables
-  n1 <- length(x1)
-  n2 <- length(x2)
-  min.length <- min(n1, n2)
+    ## define local variables
+    n1 <- length(x1)
+    n2 <- length(x2)
+    min.length <- min(n1, n2)
 
-  optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
-                            c(0, 1), n1 = n1, n2 = n2, alpha = alpha - epsilon,
-                            tol = .Machine$double.eps^0.25)
-  theta <- optimizeTheta(n1, n2, optimaltypeII$minimum, alpha - epsilon)
-  pseudoalpha <- alpha * theta$theta
+    optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
+                              c(0, 1), n1 = n1, n2 = n2, alpha = alpha - epsilon,
+                              tol = .Machine$double.eps^0.25)
+    theta <- optimizeTheta(n1, n2, optimaltypeII$minimum, alpha - epsilon)
+    pseudoalpha <- alpha * theta$theta
 
-  error <- 1
-  rejMatrix <- vector(mode = "numeric", length = 0)
+    error <- 1
+    rejMatrix <- vector(mode = "numeric", length = 0)
 
-  if(alternative == "two.sided")
+    if(alternative == "two.sided")
     {
         pseudoalpha <- pseudoalpha/2
         while(error > epsilon & length(rejMatrix) <= max.iterations)
-          {
-              rejMatrix <- c(rejMatrix,
-                                 replicate(iterations,
-                                           randomTest(x1, x2, n1, n2, pseudoalpha)))
-              rejUpper <- mean(rejMatrix)
-              error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
-          }
+        {
+            rejMatrix <- c(rejMatrix,
+                           replicate(iterations,
+                                     randomTest(x1, x2, n1, n2, pseudoalpha)))
+            rejUpper <- mean(rejMatrix)
+            error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
+        }
         x1 <- 1 - x1
         x2 <- 1 - x2
 
         error <- 1
         rejMatrix <- vector(mode = "numeric", length = 0)
         while(error > epsilon & length(rejMatrix) <= max.iterations)
-          {
-              rejMatrix <- c(rejMatrix,
-                                 replicate(iterations,
-                                           randomTest(x1, x2, n1, n2, pseudoalpha)))
-              rejLess <- mean(rejMatrix)
-              error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
-          }
+        {
+            rejMatrix <- c(rejMatrix,
+                           replicate(iterations,
+                                     randomTest(x1, x2, n1, n2, pseudoalpha)))
+            rejLess <- mean(rejMatrix)
+            error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
+        }
         rej <- rejUpper + rejLess
     }
-      else
+    else
+    {
+        if(alternative == "greater")
         {
-            if(alternative == "greater")
-              {
-                  x1 <- 1 - x1
-                  x2 <- 1 - x2
-              }
-            while(error > epsilon & length(rejMatrix) <= max.iterations)
-              {
-                  rejMatrix <- c(rejMatrix,
-                                     replicate(iterations,
-                                               randomTest(x1, x2,
-                                                          n1, n2,
-                                                          pseudoalpha)))
-                  rej <- mean(rejMatrix)
-                  error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
-              }
+            x1 <- 1 - x1
+            x2 <- 1 - x2
         }
+        while(error > epsilon & length(rejMatrix) <= max.iterations)
+        {
+            rejMatrix <- c(rejMatrix,
+                           replicate(iterations,
+                                     randomTest(x1, x2,
+                                                n1, n2,
+                                                pseudoalpha)))
+            rej <- mean(rejMatrix)
+            error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
+        }
+    }
 
-  if(!is.null(iterations) & length(rejMatrix) < 1000)
-    warning("Low number of iterations. Results may be inaccurate.")
+    if(!is.null(iterations) & length(rejMatrix) < 1000)
+        warning("Low number of iterations. Results may be inaccurate.")
 
-  if(length(rejMatrix) >= max.iterations)
-            warning(paste("The maximum number of iterations (",
-                          format(max.iterations, scientific = FALSE),
-                          ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
+    if(length(rejMatrix) >= max.iterations)
+        warning(paste("The maximum number of iterations (",
+                      format(max.iterations, scientific = FALSE),
+                      ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
-  method <- "Nonparametric Mean Test for unpaired variables"
-  names(sample.est) <- c(paste("mean(", names.x1, ")", sep = ""),
-                         paste("mean(", names.x2, ")", sep = ""))
-  null.value <- 0
-  names(null.value) <- "E[x2] - E[x1]" ## "mean difference"
-  rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
-  bounds <- paste("[", lower, ", ", upper, "]", sep = "")
+    method <- "Nonparametric Mean Test for unpaired variables"
+    names(sample.est) <- c(paste("mean(", names.x1, ")", sep = ""),
+                           paste("mean(", names.x2, ")", sep = ""))
+    null.value <- 0
+    names(null.value) <- "E[x2] - E[x1]" ## "mean difference"
+    rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
+    ## if rejection in a two.sided setting, we inform the user of the
+    ## side of rejection
+    if(rejection == TRUE & alternative == "two.sided")
+    {
+        alt.hypothesis <- paste("E(", names.x1, ")",
+                                ifelse(rejUpper >= theta$theta, " < ", " > "),
+                                "E(", names.x2, ")", sep = "")
+    }
 
-  structure(list(method = method,
-                 data.name = DNAME,
-                 alternative = alternative,
-                 null.hypothesis = null.hypothesis,
-                 alt.hypothesis = alt.hypothesis,
-                 estimate = sample.est,
-                 probrej = rej,
-                 rejection = rejection,
-                 alpha = alpha,
-                 theta = theta$theta,
-                 d.alternative = optimaltypeII$minimum,
-                 typeIIerror = theta$typeII,
-                 iterations = length(rejMatrix),
-                 pseudoalpha = pseudoalpha,
-                 bounds = bounds,
-                 null.value = null.value),
-            class = "nphtest")
+    bounds <- paste("[", lower, ", ", upper, "]", sep = "")
+
+    structure(list(method = method,
+                   data.name = DNAME,
+                   alternative = alternative,
+                   null.hypothesis = null.hypothesis,
+                   alt.hypothesis = alt.hypothesis,
+                   estimate = sample.est,
+                   probrej = rej,
+                   rejection = rejection,
+                   alpha = alpha,
+                   theta = theta$theta,
+                   d.alternative = optimaltypeII$minimum,
+                   typeIIerror = theta$typeII,
+                   iterations = length(rejMatrix),
+                   pseudoalpha = pseudoalpha,
+                   bounds = bounds,
+                   null.value = null.value),
+              class = "nphtest")
 } ## end of npMeanUnpaired
 
 ## example
 ## npMeanUnpaired(runif(20), runif(20))
 
 randomTest <- function(x1, x2, n1, n2, alpha)
-  {
+{
     s1 <- sum(x1 >= runif(n1))
     s2 <- sum(x2 >= runif(n2))
     s3 <- s2 + s1
     k <- max(0, s3 - n2):(s1 - 1)
     prob <- 0
     if (s1 >= (1 + k[1]))
-      {
+    {
         prob <- sum(choose(n1,
                            k) * choose(n2,
                                        s3 - k)/choose(n1 + n2,
                                                       s3))
         ## h.alt <- phyper(s1 - 1, n1, n2, A)
-      }
+    }
 
     res <- 0
     if (prob <= alpha)
-      {
+    {
         ## h2 <- prob + choose(n1, s1) * choose(n2, s3 - s1)/choose(n1 +
         ## n2, s3)
         h2 <- prob + dhyper(s1, n1, n2, s3)
         if (h2 <= alpha)
-          {
+        {
             res <- 1
-          }
+        }
         else
-          {
+        {
             res <- ((alpha - prob)/(h2 - prob))
-          }
-      }
+        }
+    }
     return(res)
-  }
+}
 
 
 ########################################
@@ -261,7 +234,7 @@ randomTest <- function(x1, x2, n1, n2, alpha)
 
 ## calculates pvalue of Fisher's test
 pvalueFisher <- function(n1, n2, s1, s2)
-  {
+{
     ## if( s1 == -1 | s2 > n2)
     ##   return(0)
     ## else
@@ -270,10 +243,10 @@ pvalueFisher <- function(n1, n2, s1, s2)
     ##                  lower.tail = FALSE)
     ##   }
 
-      ## try to vectorize it -> seems to work
+    ## try to vectorize it -> seems to work
     ifelse(s1 == -1 | s2 > n2, 0, phyper(s2 - 1, n2, n1, s1 + s2,
-                     lower.tail = FALSE))
-  }
+                                         lower.tail = FALSE))
+}
 
 ## ## calculates typeII error for given y1, y2 (and of course n1,n2, alpha)
 ## maxTypeII <- function(y1, d, n1, n2, y2 = y1 + d,
@@ -326,20 +299,20 @@ pvalueFisher <- function(n1, n2, s1, s2)
 ## }
 
 maxTypeII <- function(y1, d, n1, n2, y2 = y1 + d,
-                       alpha = 0.05, theta = 0.2)
+                      alpha = 0.05, theta = 0.2)
 {
     pseudoalpha <- theta * alpha
     res <- 0
     f <- function(s1, n1, n2, y1, y2)
-        {
-            t1 <- pvalueFisher(n1, n2, s1, 0:n2)
-            t2 <- pvalueFisher(n1, n2, s1 - 1, 1:(n2 + 1))
-            res <- sum(ifelse(t2 >= pseudoalpha, 0,
-                              ifelse(t1 > pseudoalpha & pseudoalpha > t2,
-                                     dbinom(s1, n1, y1) * dbinom(0:n2, n2, y2) * (pseudoalpha - t2) / dhyper(s1, n1, n2, s1 + 0:n2),
-                                     dbinom(s1, n1, y1) * dbinom(0:n2, n2, y2) * 1)))
-            res
-        }
+    {
+        t1 <- pvalueFisher(n1, n2, s1, 0:n2)
+        t2 <- pvalueFisher(n1, n2, s1 - 1, 1:(n2 + 1))
+        res <- sum(ifelse(t2 >= pseudoalpha, 0,
+                   ifelse(t1 > pseudoalpha & pseudoalpha > t2,
+                          dbinom(s1, n1, y1) * dbinom(0:n2, n2, y2) * (pseudoalpha - t2) / dhyper(s1, n1, n2, s1 + 0:n2),
+                          dbinom(s1, n1, y1) * dbinom(0:n2, n2, y2) * 1)))
+        res
+    }
     res <- sum(sapply(0:n1,
                       f, n1, n2, y1, y2))
     type2 <- (1 - res)/(1 - theta)
@@ -350,39 +323,39 @@ maxTypeII <- function(y1, d, n1, n2, y2 = y1 + d,
 ## so that function "optimize" can be used
 minTypeII <- function(theta, y1, y2, n1, n2, alpha)
 {
-  maxTypeII(y1, d = y2 - y1, n1, n2, y2,
-         alpha = alpha, theta = theta)
+    maxTypeII(y1, d = y2 - y1, n1, n2, y2,
+              alpha = alpha, theta = theta)
 }
 
 ### calculate theta
 optimizeTheta <- function(n1, n2, diff, alpha = alpha)
 {
-  ## STEP 1)  maximize typeII error over y1, y2
-  maxexpect <- optimize(maxTypeII, c(0, 1 - diff),
-                        ## tol = .Machine$double.eps^0.5,
-                        d = diff, n1 = n1, n2 = n2,
-                        alpha = alpha, maximum = T)
-  e1opt <- maxexpect$maximum
-  e2opt <- e1opt + diff
+    ## STEP 1)  maximize typeII error over y1, y2
+    maxexpect <- optimize(maxTypeII, c(0, 1 - diff),
+                          ## tol = .Machine$double.eps^0.5,
+                          d = diff, n1 = n1, n2 = n2,
+                          alpha = alpha, maximum = T)
+    e1opt <- maxexpect$maximum
+    e2opt <- e1opt + diff
 
-  ## STEP 2)  minimize typeII error over theta
-  thetaval <- optimize(minTypeII, c(0,1),
-                       ## tol = .Machine$double.eps^0.5,
-                       n1 = n1, n2 = n2,
-                       y1 = e1opt, y2 = e2opt, alpha = alpha)
+    ## STEP 2)  minimize typeII error over theta
+    thetaval <- optimize(minTypeII, c(0,1),
+                         ## tol = .Machine$double.eps^0.5,
+                         n1 = n1, n2 = n2,
+                         y1 = e1opt, y2 = e2opt, alpha = alpha)
 
-  ## if(thetaval$objective == 1)
-  ##   stop("TypeII error = 1. Increase difference d")
+    ## if(thetaval$objective == 1)
+    ##   stop("TypeII error = 1. Increase difference d")
 
-  return(list(typeII = thetaval$objective,
-              theta = thetaval$minimum ))
+    return(list(typeII = thetaval$objective,
+                theta = thetaval$minimum ))
 }
 
 npMeanUnpairedminTypeIIErrorWrapper <- function(d, n1, n2, alpha,
-                                               typeIIgoal = 0.5)
-  {
+                                                typeIIgoal = 0.5)
+{
     (optimizeTheta(n1, n2, d, alpha)$typeII - typeIIgoal)^2
-  }
+}
 
 ## optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
 ##                           c(0, 1), n1 = 25, n2 = 29, alpha = .05)

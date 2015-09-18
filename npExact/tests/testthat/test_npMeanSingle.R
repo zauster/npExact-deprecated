@@ -13,8 +13,8 @@ test_that("correct rejection 2",
 test_that("correct not rejection 1",
           expect_false(npMeanSingle(dta, mu = 0.8)$rejection))
 
-test_that("more iterations",
-          expect_true(npMeanSingle(dta, mu = 0.675)$iterations > 5000))
+## test_that("more iterations",
+##           expect_true(npMeanSingle(dta, mu = 0.675)$iterations > 5000))
 
 
 lower <- 0

@@ -28,10 +28,13 @@
 ## variance of orginal process and then applies the A test.
 
 ## example
-## npVar(runif(50), low = 0, up = 1, var = 0.1, alt.var = 0.15)
+## npVarianceSingle(runif(50), v = 0.1)
+
+## no rejection?
+## npVarianceSingle(runif(50, max = 4), upper = 4, v = .91, alternative = "two.sided")
 
 npVarianceSingle <- function(x, v, lower = 0, upper = 1,
-                             alternative = "greater",
+                             alternative = "two.sided",
                              alpha = 0.05, iterations = 5000,
                              epsilon = 1 * 10^(-6),
                              ignoreNA = FALSE,
@@ -60,10 +63,10 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
             stop("The data contains NA's!")
         }
 
-    if (min(x) < lower | max(x) > upper)
+    if(min(x) < lower | max(x) > upper)
         stop("Some values are out of bounds (or NA)!")
 
-    if (v > 0.25*(upper - lower)^2)
+    if(v > 0.25*(upper - lower)^2)
         stop("Hypothesized variance v is too large.")
 
     if(alpha >= 1 | alpha <= 0)
@@ -162,8 +165,15 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
     names(null.value) <- "variance"
     bounds <- paste("[", lower, ", ", upper, "]", sep = "")
     rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
-    ## alternative <- ifelse(alternative == "greater", "less",
-    ## "greater")
+
+    ## if rejection in a two.sided setting, we inform the user of the
+    ## side of rejection
+    if(rejection == TRUE & alternative == "two.sided")
+    {
+        alt.hypothesis <- paste("Var(", DNAME, ")",
+                                ifelse(rejUpper >= theta$theta, " > ", " < "),
+                            v, sep = "")
+    }
 
     structure(list(method = "Nonparametric Variance Test",
                    data.name = DNAME,
