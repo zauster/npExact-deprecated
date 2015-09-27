@@ -113,18 +113,21 @@ npStochinUnpaired <- function(x1, x2, d = 0,
                              names.x2, ")",
                              sep = "")
 
-  optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                           c(0, 1), p = p, N = min.length,
-                           alpha = alpha - epsilon)
-  theta <- minTypeIIError(optimaltypeII[[1]],
-                          p = p, N = min.length, alpha = alpha - epsilon)
-  pseudoalpha <- alpha * theta$theta
 
   error <- 1
   rejMatrix <- vector(mode = "numeric", length = 0)
 
   if(alternative == "two.sided")
   {
+      ##
+      ## first alternative at alpha / 2
+      ##
+      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                               c(0, 1), p = p, N = min.length,
+                               alpha = alpha / 2 - epsilon)
+      theta <- minTypeIIError(optimaltypeII[[1]],
+                              p = p, N = min.length, alpha = alpha / 2 - epsilon)
+      pseudoalpha <- alpha / 2 * theta$theta
       while(error > epsilon & length(rejMatrix) <= max.iterations)
       {
           rejMatrix <- c(rejMatrix,
@@ -134,11 +137,14 @@ npStochinUnpaired <- function(x1, x2, d = 0,
           rejUpper <- mean(rejMatrix)
           error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
       }
+      rejectionUpper <- ifelse(rejUpper > theta$theta, TRUE, FALSE)
+
+
+      ##
+      ## other alternative
+      ##
       error <- 1
       rejMatrix <- vector(mode = "numeric", length = 0)
-      ## names.x1.new <- names.x2
-      ## names.x2 <- names.x1
-      ## names.x1 <- names.x1.new
       x1.new <- x2
       x2 <- x1
       x1 <- x1.new
@@ -151,11 +157,19 @@ npStochinUnpaired <- function(x1, x2, d = 0,
           rejLess <- mean(rejMatrix)
           error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
       }
+      rejectionLess <- ifelse(rejLess > theta$theta, TRUE, FALSE)
       rej <- rejUpper + rejLess
+      rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
 
   }
   else
   {
+      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                               c(0, 1), p = p, N = min.length,
+                               alpha = alpha - epsilon)
+      theta <- minTypeIIError(optimaltypeII[[1]],
+                              p = p, N = min.length, alpha = alpha - epsilon)
+      pseudoalpha <- alpha * theta$theta
       while(error > epsilon & length(rejMatrix) <= max.iterations)
       {
           rejMatrix <- c(rejMatrix,
@@ -165,6 +179,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
           rej <- mean(rejMatrix)
           error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
       }
+      rejection <- ifelse(rej > theta$theta, TRUE, FALSE)
   }
 
   if(!is.null(iterations) & length(rejMatrix) < 1000)
@@ -180,7 +195,6 @@ npStochinUnpaired <- function(x1, x2, d = 0,
 ## H1: P(x1 > x2) > P(x1 < x2), or: P(x1 > x2) - P(x1 < x2) > d
   ## names(d) <- "difference in 'greater-than'-Probabilities"
   names(d) <- "relation P(x1 > x2) - P(x1 < x2)"
-  rejection <- ifelse(rej > theta$theta, TRUE, FALSE)
 
     ## if rejection in a two.sided setting, we inform the user of the
     ## side of rejection
@@ -188,7 +202,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
     {
         alt.hypothesis <- paste("P(", names.x1, " > ", names.x2, ") - P(",
                                 names.x1, " < ", names.x2, ")",
-                                ifelse(rejUpper >= theta$theta, " > ", " < "),
+                                ifelse(rejectionUpper == TRUE, " > ", " < "),
                                 d, sep = "")
     }
 

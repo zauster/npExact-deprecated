@@ -91,18 +91,24 @@ npMeanUnpaired <- function(x1, x2,
     n2 <- length(x2)
     min.length <- min(n1, n2)
 
-    optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
-                              c(0, 1), n1 = n1, n2 = n2, alpha = alpha - epsilon,
-                              tol = .Machine$double.eps^0.25)
-    theta <- optimizeTheta(n1, n2, optimaltypeII$minimum, alpha - epsilon)
-    pseudoalpha <- alpha * theta$theta
-
     error <- 1
     rejMatrix <- vector(mode = "numeric", length = 0)
 
     if(alternative == "two.sided")
     {
-        pseudoalpha <- pseudoalpha/2
+        ##
+        ## first alternative at alpha / 2
+        ##
+
+        ## find optimal theta
+        optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
+                                  c(0, 1), n1 = n1, n2 = n2,
+                                  alpha = alpha / 2 - epsilon,
+                                  tol = .Machine$double.eps^0.25)
+        theta <- optimizeTheta(n1, n2, optimaltypeII$minimum,
+                               alpha = alpha / 2 - epsilon)
+        pseudoalpha <- alpha / 2 * theta$theta
+
         while(error > epsilon & length(rejMatrix) <= max.iterations)
         {
             rejMatrix <- c(rejMatrix,
@@ -111,9 +117,14 @@ npMeanUnpaired <- function(x1, x2,
             rejUpper <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
         }
+        rejectionUpper <- ifelse(rejUpper > theta$theta, TRUE, FALSE)
+
+
+        ##
+        ## other alternative
+        ##
         x1 <- 1 - x1
         x2 <- 1 - x2
-
         error <- 1
         rejMatrix <- vector(mode = "numeric", length = 0)
         while(error > epsilon & length(rejMatrix) <= max.iterations)
@@ -124,7 +135,11 @@ npMeanUnpaired <- function(x1, x2,
             rejLess <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
         }
+        rejectionLess <- ifelse(rejLess > theta$theta, TRUE, FALSE)
+
+
         rej <- rejUpper + rejLess
+        rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
     }
     else
     {
@@ -133,6 +148,14 @@ npMeanUnpaired <- function(x1, x2,
             x1 <- 1 - x1
             x2 <- 1 - x2
         }
+
+        ## find optimal theta
+        optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
+                                  c(0, 1), n1 = n1, n2 = n2, alpha = alpha - epsilon,
+                                  tol = .Machine$double.eps^0.25)
+        theta <- optimizeTheta(n1, n2, optimaltypeII$minimum, alpha - epsilon)
+        pseudoalpha <- alpha * theta$theta
+
         while(error > epsilon & length(rejMatrix) <= max.iterations)
         {
             rejMatrix <- c(rejMatrix,
@@ -143,6 +166,7 @@ npMeanUnpaired <- function(x1, x2,
             rej <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
         }
+        rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
     }
 
     if(!is.null(iterations) & length(rejMatrix) < 1000)
@@ -158,13 +182,12 @@ npMeanUnpaired <- function(x1, x2,
                            paste("mean(", names.x2, ")", sep = ""))
     null.value <- 0
     names(null.value) <- "E[x2] - E[x1]" ## "mean difference"
-    rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
     ## if rejection in a two.sided setting, we inform the user of the
     ## side of rejection
     if(rejection == TRUE & alternative == "two.sided")
     {
         alt.hypothesis <- paste("E(", names.x1, ")",
-                                ifelse(rejUpper >= theta$theta, " < ", " > "),
+                                ifelse(rejectionUpper == TRUE, " < ", " > "),
                                 "E(", names.x2, ")", sep = "")
     }
 

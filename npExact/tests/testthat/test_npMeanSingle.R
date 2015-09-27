@@ -2,20 +2,33 @@
 source("/home/reitero/Arbeit/Rprogramming/npExact/npExact/R/npMeanSingle.R")
 context("npMeanSingle")
 
+ones <- rep(1, 20)
+zeros <- rep(0, 20)
+
+res <- npMeanSingle(ones, mu = .5)
+theta.1 <- res$theta
 test_that("correct rejection 1",
-          expect_true(npMeanSingle(rep(1, 20), mu = 0.5)$rejection))
+          expect_true(res$rejection))
+
+res <- npMeanSingle(zeros, mu = .5)
+test_that("correct rejection 1",
+          expect_true(res$rejection))
+
+res <- npMeanSingle(ones, mu = .5, alternative = "greater", alpha = 0.025)
+test_that("theta equal in two.sided and greater alternative with alpha / 2",
+          expect_equal(theta.1, res$theta))
+
+res <- npMeanSingle(ones, mu = .5, alternative = "greater")
+test_that("theta unequal in two.sided and greater alternative",
+          expect_true(theta.1 != res$theta))
+
 
 dta <- c(rep(1, 20), rep(.5, 13))
-
 test_that("correct rejection 2",
           expect_true(npMeanSingle(dta, mu = 0.6)$rejection))
 
 test_that("correct not rejection 1",
           expect_false(npMeanSingle(dta, mu = 0.8)$rejection))
-
-## test_that("more iterations",
-##           expect_true(npMeanSingle(dta, mu = 0.675)$iterations > 5000))
-
 
 lower <- 0
 upper <- 1

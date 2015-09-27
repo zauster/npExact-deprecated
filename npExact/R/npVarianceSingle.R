@@ -31,7 +31,9 @@
 ## npVarianceSingle(runif(50), v = 0.1)
 
 ## no rejection?
-## npVarianceSingle(runif(50, max = 4), upper = 4, v = .91, alternative = "two.sided")
+## npVarianceSingle(runif(50, max = 4), upper = 4, v = 1.5, alternative = "two.sided")
+## npVarianceSingle(runif(50, max = 4), upper = 4, v = 1.5, alternative = "less")
+## npVarianceSingle(runif(50, max = 4), upper = 4, v = 1.5, alternative = "greater")
 
 npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                              alternative = "two.sided",
@@ -45,23 +47,23 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
 
     null.hypothesis <- paste("Var(", DNAME, ") ",
                              ifelse(alternative == "greater", "<= ",
-                                    ifelse(alternative == "less", ">= ",
-                                           "= ")),
+                             ifelse(alternative == "less", ">= ",
+                                    "= ")),
                              v, sep = "")
     alt.hypothesis <- paste("Var(", DNAME, ") ",
                             ifelse(alternative == "greater", "> ",
-                                   ifelse(alternative == "less", "< ",
-                                          "!= ")),
+                            ifelse(alternative == "less", "< ",
+                                   "!= ")),
                             v, sep = "")
 
     if(ignoreNA == TRUE)
-        {
-            x <- x[!is.na(x)]
-        }
+    {
+        x <- x[!is.na(x)]
+    }
     else if(any(is.na(x)) == TRUE)
-        {
-            stop("The data contains NA's!")
-        }
+    {
+        stop("The data contains NA's!")
+    }
 
     if(min(x) < lower | max(x) > upper)
         stop("Some values are out of bounds (or NA)!")
@@ -86,71 +88,81 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
 
     ## deterministic test
     if(alternative == "two.sided")
+    {
+        ##
+        ## first alternative
+        ##
+        optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                 c(0, 1), p = p, N = m,
+                                 alpha = alpha / 2 - epsilon)
+        thetaUpper <- minTypeIIError(optimaltypeII[[1]],
+                                p = p, N = m, alpha = alpha / 2 - epsilon)
+        pseudoalpha <- alpha * thetaUpper$theta / 2
+        while(error > epsilon & length(rejMatrix) <= max.iterations)
         {
-            optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                     c(0, 1), p = p, N = m,
-                                     alpha = alpha - epsilon)
-            theta <- minTypeIIError(optimaltypeII[[1]],
-                                    p = p, N = m, alpha = alpha - epsilon)
-            pseudoalpha <- alpha * theta$theta / 2
-            while(error > epsilon & length(rejMatrix) <= max.iterations)
-                {
-                    rejMatrix <- c(rejMatrix,
-                                   replicate(iterations,
-                                             sampleBinomTestnpVar(x, m, p,
-                                                                  alternative = "greater",
-                                                                  alpha = pseudoalpha)))
-                    rejUpper <- mean(rejMatrix)
-                    error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
-                }
-
-            optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                     c(0, 1), p = 1 - p, N = m,
-                                     alpha = alpha - epsilon)
-            theta <- minTypeIIError(optimaltypeII[[1]],
-                                    p = 1 - p, N = m, alpha = alpha - epsilon)
-            pseudoalpha <- alpha * theta$theta / 2
-
-            error <- 1
-            rejMatrix <- vector(mode = "numeric", length = 0)
-
-            while(error > epsilon & length(rejMatrix) <= max.iterations)
-                {
-                    rejMatrix <- c(rejMatrix,
-                                   replicate(iterations,
-                                             sampleBinomTestnpVar(x, m, p,
-                                                                  alternative = "less",
-                                                                  alpha = pseudoalpha)))
-                    rejLess <- mean(rejMatrix)
-                    error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
-                }
-            rej <- rejUpper + rejLess
+            rejMatrix <- c(rejMatrix,
+                           replicate(iterations,
+                                     sampleBinomTestnpVar(x, m, p,
+                                                          alternative = "greater",
+                                                          alpha = pseudoalpha)))
+            rejUpper <- mean(rejMatrix)
+            error <- exp(-2 * length(rejMatrix) * (rejUpper - thetaUpper$theta)^2)
         }
+        rejectionUpper <- ifelse(rejUpper > thetaUpper$theta, TRUE, FALSE)
+
+        ##
+        ## other alternative
+        ##
+        optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                 c(0, 1), p = 1 - p, N = m,
+                                 alpha = alpha / 2 - epsilon)
+        thetaLess <- minTypeIIError(optimaltypeII[[1]],
+                                    p = 1 - p, N = m,
+                                    alpha = alpha / 2 - epsilon)
+        pseudoalpha <- alpha * thetaLess$theta / 2
+        error <- 1
+        rejMatrix <- vector(mode = "numeric", length = 0)
+
+        while(error > epsilon & length(rejMatrix) <= max.iterations)
+        {
+            rejMatrix <- c(rejMatrix,
+                           replicate(iterations,
+                                     sampleBinomTestnpVar(x, m, p,
+                                                          alternative = "less",
+                                                          alpha = pseudoalpha)))
+            rejLess <- mean(rejMatrix)
+            error <- exp(-2 * length(rejMatrix) * (rejLess - thetaLess$theta)^2)
+        }
+        rejectionLess <- ifelse(rejLess > thetaLess$theta, TRUE, FALSE)
+        rej <- rejUpper + rejLess
+        rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
+    }
     else
-        {
-            optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                     c(0, 1),
-                                     p = ifelse(alternative == "greater",
-                                         p, 1 - p),
-                                     N = m,
-                                     alpha = alpha - epsilon)
-            theta <- minTypeIIError(optimaltypeII[[1]],
-                                    p = ifelse(alternative == "greater",
-                                        p, 1 - p),
-                                    N = m, alpha = alpha - epsilon)
-            pseudoalpha <- alpha * theta$theta
+    {
+        optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                 c(0, 1),
+                                 p = ifelse(alternative == "greater",
+                                            p, 1 - p),
+                                 N = m,
+                                 alpha = alpha - epsilon)
+        theta <- minTypeIIError(optimaltypeII[[1]],
+                                p = ifelse(alternative == "greater",
+                                           p, 1 - p),
+                                N = m, alpha = alpha - epsilon)
+        pseudoalpha <- alpha * theta$theta
 
-            while(error > epsilon & length(rejMatrix) <= max.iterations)
-                {
-                    rejMatrix <- c(rejMatrix,
-                                   replicate(iterations,
-                                             sampleBinomTestnpVar(x, m, p,
-                                                                  alternative = alternative,
-                                                                  alpha = pseudoalpha)))
-                    rej <- mean(rejMatrix)
-                    error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
-                }
+        while(error > epsilon & length(rejMatrix) <= max.iterations)
+        {
+            rejMatrix <- c(rejMatrix,
+                           replicate(iterations,
+                                     sampleBinomTestnpVar(x, m, p,
+                                                          alternative = alternative,
+                                                          alpha = pseudoalpha)))
+            rej <- mean(rejMatrix)
+            error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
         }
+        rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
+    }
 
     if(!is.null(iterations) & length(rejMatrix) < 1000)
         warning("Low number of iterations. Results may be inaccurate.")
@@ -164,15 +176,22 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
     null.value <- v
     names(null.value) <- "variance"
     bounds <- paste("[", lower, ", ", upper, "]", sep = "")
-    rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
 
     ## if rejection in a two.sided setting, we inform the user of the
     ## side of rejection
-    if(rejection == TRUE & alternative == "two.sided")
+    if(alternative == "two.sided")
     {
-        alt.hypothesis <- paste("Var(", DNAME, ")",
-                                ifelse(rejUpper >= theta$theta, " > ", " < "),
-                            v, sep = "")
+        if(rejection == TRUE)
+        {
+            alt.hypothesis <- paste("Var(", DNAME, ")",
+                                    ifelse(rejectionUpper == TRUE, " > ", " < "),
+                                    v, sep = "")
+        }
+        if(rejectionUpper == TRUE) {
+            theta <- thetaUpper
+        } else {
+            theta <- thetaLess
+        }
     }
 
     structure(list(method = "Nonparametric Variance Test",
@@ -196,52 +215,52 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
 
 
 sampleBinomTestnpVar <- function(x, m, p, alternative, alpha)
+{
+    x <- sample(x)
+
+    ## transformation into sample in [0,1] that has mean equal to 1/2 +
+    ## Var(X)
+    ## subtract the odd from the even indexed values, to the power 2
+    x.folded <- (x[c(1:m)*2] - x[(c(1:m)*2 - 1)])^2
+
+    ## Random transformation of [0,1] data into {0,p,1} data,
+    ## later only use {0,1}
+    q <- runif(m)
+
+    ## number of 0 values in transformed data
+    zeros <- sum(x.folded - p > (q*(1 - p)))
+    ## number of 1 values in transformed data
+    ones <- sum(x.folded < q*p)
+
+    ## Evaluation of randomized binomial test, see if the number of zeros
+    ## relative to (ones+zeros) is significantly below p
+
+    k <- switch(alternative,
+                less = 0:zeros,
+                greater = zeros:(ones+zeros))
+
+    ## prob <- sum((p^k)*((1-p)^(ones + zeros - k))*choose((ones +
+    ## zeros), k)) ## inefficient
+    prob <- sum(dbinom(k, ones + zeros, p))
+    ## prob <- pbinom(zeros, ones + zeros, p,
+    ##                lower.tail = ifelse(alternative == "greater",
+    ##                  TRUE, FALSE)) ## not exact
+
+    if(prob <= alpha) ## reject with probability 1
     {
-        x <- sample(x)
-
-        ## transformation into sample in [0,1] that has mean equal to 1/2 +
-        ## Var(X)
-        ## subtract the odd from the even indexed values, to the power 2
-        x.folded <- (x[c(1:m)*2] - x[(c(1:m)*2 - 1)])^2
-
-        ## Random transformation of [0,1] data into {0,p,1} data,
-        ## later only use {0,1}
-        q <- runif(m)
-
-        ## number of 0 values in transformed data
-        zeros <- sum(x.folded - p > (q*(1 - p)))
-        ## number of 1 values in transformed data
-        ones <- sum(x.folded < q*p)
-
-        ## Evaluation of randomized binomial test, see if the number of zeros
-        ## relative to (ones+zeros) is significantly below p
-
-        k <- switch(alternative,
-                    less = 0:zeros,
-                    greater = zeros:(ones+zeros))
-
-        ## prob <- sum((p^k)*((1-p)^(ones + zeros - k))*choose((ones +
-        ## zeros), k)) ## inefficient
-        prob <- sum(dbinom(k, ones + zeros, p))
-        ## prob <- pbinom(zeros, ones + zeros, p,
-        ##                lower.tail = ifelse(alternative == "greater",
-        ##                  TRUE, FALSE)) ## not exact
-
-        if(prob <= alpha) ## reject with probability 1
-            {
-                res <- 1
-            }
-        else
-            {
-                h <- dbinom(zeros, zeros + ones, p) ## more efficient
-                if (prob <= alpha + h) ##(reject with positive probability)
-                    {
-                        res <- ((alpha - prob + h) / h)
-                    }
-                else
-                    {
-                        res <- 0
-                    }
-            }
-        return(res)
+        res <- 1
     }
+    else
+    {
+        h <- dbinom(zeros, zeros + ones, p) ## more efficient
+        if (prob <= alpha + h) ##(reject with positive probability)
+        {
+            res <- ((alpha - prob + h) / h)
+        }
+        else
+        {
+            res <- 0
+        }
+    }
+    return(res)
+}

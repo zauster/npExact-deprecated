@@ -21,6 +21,7 @@
 ## y1 <- sample(c(1,2), size = 100, replace = TRUE)
 ## y2 <- sample(c(1,2,3,4), size = 100, replace = TRUE)
 ## npMeanPaired(y1, y2, low = 0, up = 5, alpha = 0.05)
+## npMeanPaired(y1, y2, low = 0, up = 5, alpha = 0.05, alternative = "less")
 ## npMeanPaired(runif(20), runif(20), low = 0, up = 1,
 ##              alternative = "greater", iterations = 2000)
 
@@ -76,10 +77,6 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
        "two.sided")
         stop("Please specify the alternative you want to test. Possible value are: 'greater' (default), 'less' or 'two.sided'")
 
-    ## d <- d/(upper - lower)
-    ## if(d > 1 | d < 0)
-    ##   stop("Please supply a sensible value for d.")
-
     n <- length(x1)
 
     sample.est <- c(mean(x1), mean(x2))
@@ -94,15 +91,18 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
     ## Carlo replications
     rejMatrix <- vector(mode = "numeric", length = 0)
 
-    ## compute the theta that optimizes the type II error
-    optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                             c(0, 1), p = 0.5, N = n,
-                             alpha = alpha - epsilon)
-    theta <- minTypeIIError(optimaltypeII[[1]],
-                            p = 0.5, N = n, alpha = alpha - epsilon)
-
     if(alternative == "two.sided")
     {
+        ##
+        ## first alternative at alpha / 2
+        ##
+
+        ## compute the theta that optimizes the type II error
+        optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                 c(0, 1), p = 0.5, N = n,
+                                 alpha = alpha / 2 - epsilon)
+        theta <- minTypeIIError(optimaltypeII[[1]],
+                                p = 0.5, N = n, alpha = alpha / 2 - epsilon)
         pseudoalpha <- (alpha/2) * theta$theta
         while(error > epsilon & length(rejMatrix) <= max.iterations)
         {
@@ -114,9 +114,13 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
             rejUpper <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
         }
+        rejectionUpper <- ifelse(rejUpper > theta$theta, TRUE, FALSE)
+
+        ##
+        ## other alternative at alpha / 2
+        ##
         error <- 1
         rejMatrix <- vector(mode = "numeric", length = 0)
-
         x1 <- 1 - x1
         x2 <- 1 - x2
         while(error > epsilon & length(rejMatrix) <= max.iterations)
@@ -129,8 +133,10 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
             rejLess <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
         }
+        rejectionLess <- ifelse(rejLess > theta$theta, TRUE, FALSE)
 
         rej <- rejUpper + rejLess
+        rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
     }
     else
     {
@@ -139,7 +145,15 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
             x1 <- 1 - x1
             x2 <- 1 - x2
         }
+
+        ## compute the theta that optimizes the type II error
+        optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                 c(0, 1), p = 0.5, N = n,
+                                 alpha = alpha - epsilon)
+        theta <- minTypeIIError(optimaltypeII[[1]],
+                                p = 0.5, N = n, alpha = alpha - epsilon)
         pseudoalpha <- alpha * theta$theta
+
         while(error > epsilon & length(rejMatrix) <= max.iterations)
         {
             rejMatrix <- c(rejMatrix,
@@ -150,6 +164,8 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
             rej <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
         }
+
+        rejection <- ifelse(rej > theta$theta, TRUE, FALSE)
     }
 
     if(!is.null(iterations) & length(rejMatrix) < 1000)
@@ -165,14 +181,13 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
 
     null.value <- 0
     names(null.value) <- "E[x2] - E[x1]" ##"mean difference"
-    rejection <- ifelse(rej > theta$theta, TRUE, FALSE)
 
     ## if rejection in a two.sided setting, we inform the user of the
     ## side of rejection
     if(rejection == TRUE & alternative == "two.sided")
     {
         alt.hypothesis <- paste("E(", names.x1, ")",
-                                ifelse(rejUpper >= theta$theta, " < ", " > "),
+                                ifelse(rejectionUpper == TRUE, " < ", " > "),
                                 "E(", names.x2, ")", sep = "")
     }
 
