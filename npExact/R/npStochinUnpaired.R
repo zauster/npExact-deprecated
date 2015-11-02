@@ -137,7 +137,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
           rejUpper <- mean(rejMatrix)
           error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
       }
-      rejectionUpper <- ifelse(rejUpper > theta$theta, TRUE, FALSE)
+      rejectionUpper <- ifelse(rejUpper >= theta$theta, TRUE, FALSE)
 
 
       ##
@@ -157,7 +157,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
           rejLess <- mean(rejMatrix)
           error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
       }
-      rejectionLess <- ifelse(rejLess > theta$theta, TRUE, FALSE)
+      rejectionLess <- ifelse(rejLess >= theta$theta, TRUE, FALSE)
       rej <- rejUpper + rejLess
       rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
 
@@ -179,7 +179,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
           rej <- mean(rejMatrix)
           error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
       }
-      rejection <- ifelse(rej > theta$theta, TRUE, FALSE)
+      rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
   }
 
   if(!is.null(iterations) & length(rejMatrix) < 1000)

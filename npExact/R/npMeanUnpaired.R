@@ -117,7 +117,7 @@ npMeanUnpaired <- function(x1, x2,
             rejUpper <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
         }
-        rejectionUpper <- ifelse(rejUpper > theta$theta, TRUE, FALSE)
+        rejectionUpper <- ifelse(rejUpper >= theta$theta, TRUE, FALSE)
 
 
         ##
@@ -135,7 +135,7 @@ npMeanUnpaired <- function(x1, x2,
             rejLess <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
         }
-        rejectionLess <- ifelse(rejLess > theta$theta, TRUE, FALSE)
+        rejectionLess <- ifelse(rejLess >= theta$theta, TRUE, FALSE)
 
 
         rej <- rejUpper + rejLess

@@ -106,7 +106,7 @@ npMeanSingle <- function(x, mu,
             rejUpper <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rejUpper - thetaUpper$theta)^2)
         }
-        rejectionUpper <- ifelse(rejUpper > thetaUpper$theta, TRUE, FALSE)
+        rejectionUpper <- ifelse(rejUpper >= thetaUpper$theta, TRUE, FALSE)
 
 
         ##
@@ -134,7 +134,7 @@ npMeanSingle <- function(x, mu,
             rejLess <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rejLess - thetaLess$theta)^2)
         }
-        rejectionLess <- ifelse(rejLess > thetaLess$theta, TRUE, FALSE)
+        rejectionLess <- ifelse(rejLess >= thetaLess$theta, TRUE, FALSE)
 
 
         rej <- rejUpper + rejLess

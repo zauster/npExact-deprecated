@@ -108,7 +108,7 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
             rejUpper <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rejUpper - thetaUpper$theta)^2)
         }
-        rejectionUpper <- ifelse(rejUpper > thetaUpper$theta, TRUE, FALSE)
+        rejectionUpper <- ifelse(rejUpper >= thetaUpper$theta, TRUE, FALSE)
 
         ##
         ## other alternative
@@ -133,7 +133,7 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
             rejLess <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rejLess - thetaLess$theta)^2)
         }
-        rejectionLess <- ifelse(rejLess > thetaLess$theta, TRUE, FALSE)
+        rejectionLess <- ifelse(rejLess >= thetaLess$theta, TRUE, FALSE)
         rej <- rejUpper + rejLess
         rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
     }
