@@ -27,6 +27,9 @@
 ## Test for H0: E(x1) >= E(x2), or: E(x1) - E(x2) >= 0 against
 ## H1: E(x1) < E(x2), or E(x1) - E(x2) < 0
 
+## x1 <- runif(20); x2 <- runif(20)
+## npMeanUnpaired(x1, x2)
+
 npMeanUnpaired <- function(x1, x2,
                            lower = 0, upper = 1,
                            iterations = 5000,

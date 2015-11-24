@@ -31,6 +31,9 @@
 ## iterations ... number of iterations
 ## alternative = "greater" -> x1 >> x2
 
+## x1 <- rnorm(20); x2 <- rnorm(20);
+## npStochinUnpaired(x1, x2 + 5, d = .66)
+
 npStochinUnpaired <- function(x1, x2, d = 0,
                               alternative = "two.sided",
                               iterations = 5000, alpha = 0.05,
@@ -79,9 +82,6 @@ npStochinUnpaired <- function(x1, x2, d = 0,
           stop("The data contains NA's!")
       }
 
-  ## if(alternative == "two.sided")
-  ##   stop("Not yet implemented. Please test for greater and less at alpha/2.")
-
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
 
@@ -120,7 +120,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
   if(alternative == "two.sided")
   {
       ##
-      ## first alternative at alpha / 2
+      ## alternative = "greater" at alpha / 2
       ##
       optimaltypeII <- uniroot(minTypeIIErrorWrapper,
                                c(0, 1), p = p, N = min.length,
@@ -141,18 +141,18 @@ npStochinUnpaired <- function(x1, x2, d = 0,
 
 
       ##
-      ## other alternative
+      ## alternative = "less" at alpha / 2
       ##
       error <- 1
       rejMatrix <- vector(mode = "numeric", length = 0)
-      x1.new <- x2
-      x2 <- x1
-      x1 <- x1.new
+      ## x1.new <- x2
+      ## x2 <- x1
+      ## x1 <- x1.new
       while(error > epsilon & length(rejMatrix) <= max.iterations)
       {
           rejMatrix <- c(rejMatrix,
                          replicate(iterations,
-                                   sampleBinomTest(x2, x1, min.length,
+                                   sampleBinomTest(x1, x2, min.length,
                                                    p, d, pseudoalpha)))
           rejLess <- mean(rejMatrix)
           error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)

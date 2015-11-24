@@ -94,28 +94,30 @@ minTypeIIError <- function(p.alt, p, N, alpha, alternative)
     ## Calculates minimum value, for given difference d
     ## uses possibleTheta, g2
     theta <- possibleTheta(N, p, alpha)
-    ## f <- function(x)
-    ##   {
-    ##     g2(p.alt, n, p, alpha*x[2])
-    ##   }
-    ## typeIIerrors <- apply(theta, 2,
-    ##              function(x)(1 - f(x))/(1 - x[2]))
 
     f <- function(x)
+    {
+        (1 - g2(p.alt, N, p, alpha*x))/(1 - x)
+    }
+
+    if(length(theta[2, ]) > 0) {
+        
+        ## calculate the type II errors for the thetas
+        typeIIerrors <- sapply(theta[2,], f)
+
+        ## if no sensible theta was found, set the type II error to 1
+        if(!is.numeric(typeIIerrors))
         {
-            (1 - g2(p.alt, N, p, alpha*x))/(1 - x)
-        }
-    typeIIerrors <- sapply(theta[2,], f)
-
-    if(!is.numeric(typeIIerrors))
-        {
-            stop("The null will not be rejected as the test value under the null is too large or too small. Please increase alpha.")
+            typeIIerrors <- 1
         }
 
-    mintypeII <- min(typeIIerrors, 1)
-
-    righttheta <- theta[2, which(typeIIerrors == mintypeII)]
-    righttheta <- ifelse(length(righttheta) == 0, NA, righttheta)
+        ## the right theta is the one that minimizes the type II error
+        mintypeII <- min(typeIIerrors, 1)
+        righttheta <- theta[2, which(typeIIerrors == mintypeII)]
+        righttheta <- ifelse(length(righttheta) == 0, NA, righttheta)
+    } else {
+            stop("It was not possible to find a valid theta (i.e., one that minimizes the type II error). Please adjust the test value under the null hypothesis to a less (extreme) value.")        
+    }
 
     list(theta = righttheta,
          typeII = mintypeII)
