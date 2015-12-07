@@ -30,6 +30,17 @@ set.seed(123)
 high <- rnorm(50) + 2
 low <- rnorm(50)
 
+## df <- NULL
+## for(dtemp in seq(-0.8, .85, by = 0.02)) {
+##     res <- npStochinUnpaired(high, low, d = dtemp,
+##                              alternative = "greater")
+##     df <- rbind(df, c(dtemp, res$theta, res$probrej))
+## }
+## colnames(df) <- c("d", "theta", "rej")
+## df1 <- melt(as.data.frame(df), id.vars = "d")
+## qplot(x = d, y = value, geom = "line", colour = variable, data = df1)
+
+
 ##
 ## high and low
 ##
@@ -100,5 +111,50 @@ res <- npStochinUnpaired(low, high, d = 0.6,
 test_that("correct rejection 8",
           expect_true(res$rejection))
 test_that("sample estimate 8",
+          expect_true(res$stochin.estimate < -0.8))
+
+
+##
+## two-sided tests
+## 
+
+##
+## high and low
+##
+
+## should reject: high > low?
+res <- npStochinUnpaired(high, low, d = 0.6,
+                          alternative = "two.sided")
+test_that("correct rejection 10",
+          expect_true(res$rejection))
+test_that("sample estimate 10",
+          expect_true(res$stochin.estimate > 0.8))
+
+## should reject: high > low?
+res <- npStochinUnpaired(high, low, d = -0.6,
+                         alternative = "two.sided")
+test_that("correct rejection 11",
+          expect_true(res$rejection))
+test_that("sample estimate 11",
+          expect_true(res$stochin.estimate > 0.8))
+
+##
+## low and high
+##
+
+## should reject: low < high?
+res <- npStochinUnpaired(low, high, d = -0.6,
+                         alternative = "two.sided")
+test_that("correct rejection 12",
+          expect_true(res$rejection))
+test_that("sample estimate 12",
+          expect_true(res$stochin.estimate < -0.8))
+
+## should reject: low < high?
+res <- npStochinUnpaired(low, high, d = 0.6,
+                         alternative = "two.sided")
+test_that("correct rejection 13",
+          expect_true(res$rejection))
+test_that("sample estimate 13",
           expect_true(res$stochin.estimate < -0.8))
 

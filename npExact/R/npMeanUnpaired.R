@@ -1,35 +1,3 @@
-##########################################################################
-##   Program Name      npMeanUnpaired                                    #
-##   Purpose           Exact nonparametric test of Schlag (2008)         #
-##                     for comparing expected values given               #
-##                     two independent samples                           #
-##                     for H0: E(Y1) >= E(Y2)  if Y1,Y2 in
-##                     [lower,upper]
-##                                                                       #
-##   Author            Christian Pechhacker                              #
-##   Date              18.02.2012                                        #
-##                                                                       #
-##   using program written by                                            #
-##                                                                       #
-##   Author            Peter Saffert                                     #
-##   Date              19.11.2009                                        #
-##                                                                       #
-## For documentation see                                                 #
-##           (Schlag, Karl H. 2008, A New Method for Constructing Exact  #
-##           Tests without Making any Assumptions, Department of         #
-##           Economics and Business Working Paper 1109, Universitat      #
-##           Pompeu Fabra)                                               #
-##                                                                       #
-##########################################################################
-
-## Exact test for H0: E(Y1) >= E(Y2) based on Schlag (2008)
-
-## Test for H0: E(x1) >= E(x2), or: E(x1) - E(x2) >= 0 against
-## H1: E(x1) < E(x2), or E(x1) - E(x2) < 0
-
-## x1 <- runif(20); x2 <- runif(20)
-## npMeanUnpaired(x1, x2)
-
 npMeanUnpaired <- function(x1, x2,
                            lower = 0, upper = 1,
                            iterations = 5000,

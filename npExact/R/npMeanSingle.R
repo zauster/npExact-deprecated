@@ -1,22 +1,3 @@
-## npMeanSingle
-## a function to test the mean of a variable
-
-## x ... the data vector
-## mu ... the value to be tested, the supposed true value of the mean
-## lower, upper ... logical bounds of x, thus x in [lower, upper]
-## iterations ... number of iterations
-## alpha ... the level of the test
-## alternative ... a character string specifying the alternative
-## hypothesis, must be one of 'two.sided', 'greater' or 'less'.
-
-## example
-## x <- runif(20)
-## npMeanSingle(x, mu = 0.3)
-
-## npMeanSingle(x, mu = .9, alternative = "two.sided")
-## npMeanSingle(x, mu = .9, alternative = "greater")
-## npMeanSingle(x, mu = .9, alternative = "less")
-
 npMeanSingle <- function(x, mu,
                          lower = 0, upper = 1,
                          alternative = "two.sided",

@@ -1,39 +1,3 @@
-##########################################################################
-# Program Name  stochin_exact                                            #
-# Purpose       nonparametric test for stochastic inequality             #
-#               based on two independent samples (Schlag, 2008)          #
-#               to test of H0: P(Y_2>Y_1)-P(Y2<Y1)<=d    for -1 < d < 1  #
-#                                                                        #
-#                                                                        #
-# Author            Karl Schlag                                          #
-# Date              04.03.2012                                           #
-#                                                                        #
-# based on version of                                                    #
-#                                                                        #
-# Author            Peter Saffert                                        #
-# Date              22.11.2009                                           #
-#                                                                        #
-#For documentation see                                                   #
-#           (Schlag, Karl H. 2008, A New Method for Constructing Exact   #
-#           Tests without Making any Assumptions, Department of          #
-#           Economics and Business Working Paper 1109, Universitat       #
-#           Pompeu Fabra)                                                #
-#                                                                        #
-##########################################################################
-
-## npStochin
-## a function to test for stochastic inequality, i.e.
-## H0: P(x2 > x1) <= P(x2 < x1), or: P(x2 > x1) - P(x2 < x1) <= d
-## H1: P(x2 > x1) > P(x2 < x1), or: P(x2 > x1) - P(x2 < x1) > d
-
-## x1, x2 ... two data vectors
-## alpha ... level of the test
-## iterations ... number of iterations
-## alternative = "greater" -> x1 >> x2
-
-## x1 <- rnorm(20); x2 <- rnorm(20);
-## npStochinUnpaired(x1, x2 + 5, d = .66)
-
 npStochinUnpaired <- function(x1, x2, d = 0,
                               alternative = "two.sided",
                               iterations = 5000, alpha = 0.05,
@@ -83,10 +47,10 @@ npStochinUnpaired <- function(x1, x2, d = 0,
   if(alternative == "less") {
       count.x1 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i < x2)))
       count.x2 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i > x2)))
-  stochin.estimate <- (count.x1 - count.x2)/(N1 * N2)
-  stochin.parameter <- paste("P(", names.x1, " < ", names.x2, ") - P(",
-                             names.x1, " > ", names.x2, ")",
-                             sep = "")
+      stochin.estimate <- (count.x1 - count.x2)/(N1 * N2)
+      stochin.parameter <- paste("P(", names.x1, " < ", names.x2, ") - P(",
+                                 names.x1, " > ", names.x2, ")",
+                                 sep = "")
   } else {
       count.x1 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i > x2)))
       count.x2 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i < x2)))
@@ -96,8 +60,10 @@ npStochinUnpaired <- function(x1, x2, d = 0,
                                  sep = "")
   }
 
+  ## set name of estimate
   names(stochin.estimate) <- stochin.parameter 
-  
+
+  ## null and alternative hypothesis
   null.hypothesis <- paste("SI",
                            ifelse(alternative == "greater", " <= ",
                                   ifelse(alternative == "less", " >= ",
@@ -120,8 +86,11 @@ npStochinUnpaired <- function(x1, x2, d = 0,
                                c(0, 1), p = p, N = min.length,
                                alpha = alpha / 2 - epsilon)
       theta <- minTypeIIError(optimaltypeII[[1]],
-                              p = p, N = min.length, alpha = alpha / 2 - epsilon)
+                              p = p, N = min.length,
+                              alpha = alpha / 2 - epsilon)
       pseudoalpha <- alpha / 2 * theta$theta
+
+      ## calculate the probability of rejection
       while(error > epsilon & length(rejMatrix) <= max.iterations)
       {
           rejMatrix <- c(rejMatrix,
@@ -139,9 +108,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
       ##
       error <- 1
       rejMatrix <- vector(mode = "numeric", length = 0)
-      ## x1.new <- x2
-      ## x2 <- x1
-      ## x1 <- x1.new
+
       while(error > epsilon & length(rejMatrix) <= max.iterations)
       {
           rejMatrix <- c(rejMatrix,
@@ -152,7 +119,11 @@ npStochinUnpaired <- function(x1, x2, d = 0,
           error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
       }
       rejectionLess <- ifelse(rejLess >= theta$theta, TRUE, FALSE)
+
+      ## rejection of the test is the sum of the two tests at alpha / 2
       rej <- min(rejUpper + rejLess, 1)
+
+      ## if one of them rejects, the two-sided test can reject as well
       rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
 
   }
@@ -162,7 +133,8 @@ npStochinUnpaired <- function(x1, x2, d = 0,
                                c(0, 1), p = p, N = min.length,
                                alpha = alpha - epsilon)
       theta <- minTypeIIError(optimaltypeII[[1]],
-                              p = p, N = min.length, alpha = alpha - epsilon)
+                              p = p, N = min.length,
+                              alpha = alpha - epsilon)
       pseudoalpha <- alpha * theta$theta
       while(error > epsilon & length(rejMatrix) <= max.iterations)
       {
@@ -185,19 +157,16 @@ npStochinUnpaired <- function(x1, x2, d = 0,
                           ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
 
-## H0: P(x1 > x2) <= P(x1 < x2), or: P(x1 > x2) - P(x1 < x2) <= d
-## H1: P(x1 > x2) > P(x1 < x2), or: P(x1 > x2) - P(x1 < x2) > d
-  ## names(d) <- "difference in 'greater-than'-Probabilities"
   names(d) <- "relation P(x1 > x2) - P(x1 < x2)"
 
-    ## if rejection in a two.sided setting, we inform the user of the
-    ## side of rejection
-    if(rejection == TRUE & alternative == "two.sided")
-    {
-        alt.hypothesis <- paste("SI",
-                                ifelse(rejectionUpper == TRUE, " > ", " < "),
-                                d, sep = "")
-    }
+  ## if rejection in a two.sided setting, we inform the user of the
+  ## side of rejection
+  if(rejection == TRUE & alternative == "two.sided")
+  {
+      alt.hypothesis <- paste("SI",
+                              ifelse(rejectionUpper == TRUE, " > ", " < "),
+                              d, sep = "")
+  }
 
   structure(list(method = "Nonparametric Test for Stochastic Inequality",
                  data.name = DNAME,
@@ -235,8 +204,6 @@ sampleBinomTest <- function(x1, x2, n, p, d, pseudoalpha)
     s1 <- sum(c1 > c2) #counts how often c1 > c2
     s2 <- sum(c1 < c2) #counts how often c1 < c2
 
-    ## print(s1)
-    ## print(s2)
     if((s1 + s2) != n)
       {
         if(d > 0)
@@ -254,11 +221,11 @@ sampleBinomTest <- function(x1, x2, n, p, d, pseudoalpha)
                                         #uniform distribution of
                                         #length=number of times
                                         #elements of c1=c2
-                s1 <- s1 + sum(q < (-1)*(d/(1 - d))) ## right?
+                s1 <- s1 + sum(q < (-1) * (d/(1 - d))) ## right?
               }
           }
       }
-    prob <- sum(dbinom(s2:(s1+s2), (s1+s2), p)) ## or
+    prob <- sum(dbinom(s2:(s1 + s2), (s1 + s2), p)) ## or
     ## prob <- 1 - pbinom(s2 - 1, s1 + s2, p) ## less exact than above?
 
     res <- 0
@@ -268,7 +235,7 @@ sampleBinomTest <- function(x1, x2, n, p, d, pseudoalpha)
       }
     else
       {
-        h2 <- (p^s2)*((1-p)^s1)*choose(s1+s2,s2)
+        h2 <- (p^s2) * ((1 - p)^s1) * choose(s1 + s2, s2)
         if(prob <= (pseudoalpha + h2))
           {
             res <- ((pseudoalpha - prob + h2)/h2)

@@ -1,31 +1,3 @@
-#######################################################################
-##   Program Name   npMeanPaired                                      #
-##   Purpose        Exact nonparametric test of Schlag (2008)         #
-##                  for comparing expected values given matched pairs #
-##                  for H0: E(Y1) >= E(Y2)  if Y1,Y2 in [low,up]      #
-##                                                                    #
-##   Authors           Christian Pechhacker and Karl Schlag           #
-##   Date              04.03.2012                                     #
-##                                                                    #
-## For documentation see                                              #
-##   (Schlag, Karl H. 2008, A New Method for Constructing Exact       #
-##   Tests without Making any Assumptions, Department of              #
-##   Economics and Business Working Paper 1109, Universitat           #
-##   Pompeu Fabra)                                                    #
-##                                                                    #
-#######################################################################
-
-
-## Examples:
-
-## y1 <- sample(c(1,2), size = 100, replace = TRUE)
-## y2 <- sample(c(1,2,3,4), size = 100, replace = TRUE)
-## npMeanPaired(y1, y2, low = 0, up = 5, alpha = 0.05)
-## npMeanPaired(y1, y2, low = 0, up = 5, alpha = 0.05, alternative = "less")
-## npMeanPaired(runif(20), runif(20), low = 0, up = 1,
-##              alternative = "greater", iterations = 2000)
-
-
 npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                          alpha = 0.05,
                          alternative = "two.sided",
