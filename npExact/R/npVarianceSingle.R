@@ -1,3 +1,73 @@
+##' A test for the variance of a bounded random variable based on a single
+##' sample of iid observations.
+##' 
+##' This test requires that the user knows upper and lower bounds before
+##' gathering the data such that the properties of the data generating process
+##' imply that all observations will be within these bounds. The data input
+##' consists of a sequence of observations, each being an independent
+##' realization of the random variable. No further distributional assumptions
+##' are made.
+##' 
+##' This is a test of the null hypothesis \eqn{H_0: Var(X) \le v} against
+##' \eqn{H_1 : Var(X) > v}.
+##' 
+##' This test randomly matches the data into pairs, then computes for each pair
+##' the square of the difference and continues with the resulting sequence with
+##' half as many observations as npMeanSingle. See the cited paper for more
+##' information.
+##' 
+##' @param x a (non-empty) numeric vector of data values.
+##' @param v the value of the variance to be tested as \eqn{H_0: Var(x) \le v}.
+##' @param lower,upper the theoretical lower and upper bounds on the data
+##' outcomes known ex-ante before gathering the data.
+##' @param alternative a character string describing the alternative
+##' hypothesis, can take values "greater", "less" or "two.sided"
+##' @param alpha the type I error.
+##' @param iterations the number of iterations used, should not be changed if
+##' the exact solution should be derived.
+##' @param epsilon the tolerance in terms of probability of the Monte Carlo
+##' simulations.
+##' @param ignoreNA if \code{TRUE}, NA values will be omitted. Default:
+##' \code{FALSE}
+##' @param max.iterations the maximum number of iterations that should be
+##' carried out. This number could be increased to achieve greater accuracy in
+##' cases where the difference between the threshold probability and theta is
+##' small. Default: \code{10000}
+##' @return A list with class "nphtest" containing the following components:
+##' 
+##' \item{method}{ a character string indicating the name and type of the test
+##' that was performed.  } \item{data.name}{ a character string giving the
+##' name(s) of the data.  } \item{alternative}{ a character string describing
+##' the alternative hypothesis.  } \item{estimate}{ the estimated mean or
+##' difference in means depending on whether it was a one-sample test or a
+##' two-sample test.  } \item{probrej}{ numerical estimate of the rejection
+##' probability of the randomized test, derived by taking an average of
+##' \code{iterations} realizations of the rejection probability.  }
+##' \item{bounds}{ the lower and upper bounds of the variables.  }
+##' \item{null.value}{ the specified hypothesized value of the correlation
+##' between the variables.  } \item{alpha}{ the type I error.  } \item{theta}{
+##' the parameter that minimizes the type II error.  } \item{pseudoalpha}{
+##' \code{theta}*\code{alpha}, this is the level used when calculating the
+##' average rejection probability during the iterations.  } \item{rejection}{
+##' logical indicator for whether or not the null hypothesis can be rejected.
+##' } \item{iterations}{ the number of iterations that were performed.  }
+##' @author Karl Schlag and Oliver Reiter
+##' @seealso
+##' \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
+##' @references Karl Schlag (2008).  Exact tests for correlation and for the
+##' slope in simple linear regressions without making assumptions. Available at
+##' \url{http://www.econ.upf.edu/en/research/onepaper.php?id=1097}.
+##' @keywords variance test single sample
+##' @examples
+##' 
+##' ## see if the minority share holder shores have a variance greater
+##' ## than 0.05
+##' data(mshscores)
+##' 
+##' scores <- as.vector(as.matrix(mshscores))
+##' npVarianceSingle(scores, lower = 0, upper = 1, v = 0.05, ignoreNA = TRUE)
+##' 
+##' @export npVarianceSingle
 npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                              alternative = "two.sided",
                              alpha = 0.05, iterations = 5000,

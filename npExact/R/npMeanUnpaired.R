@@ -1,3 +1,89 @@
+##' A test for comparing the means of two bounded random variables given two
+##' independent samples
+##' 
+##' This test requires that the user knows upper and lower bounds before
+##' gathering the data such that the properties of the data generating process
+##' imply that all observations will be within these bounds. The data input
+##' consists of a sequence of independent observations for each random
+##' variable, the two sequences being generated independently. No further
+##' distributional assumptions are made.
+##' 
+##' This is a test of the null hypothesis: \eqn{H_0: E(X_1) \le E(X_2)} against
+##' \eqn{H_1: E(X_1) > E(X_2)}.
+##' 
+##' This test uses the known bounds of the variables to transform the data into
+##' [0, 1]. Then a random transformation is used to turn the data into
+##' binary-valued variables. On this variables the exact Fischer-Tocher Test
+##' with level \code{pseudoalpha} is performed and the result recorded. The
+##' random transformation and the test are then repeated \code{iterations}
+##' times. If the average rejection probability \code{probrej} of the
+##' iterations is at least \code{theta}, then the null hypothesis is rejected.
+##' If however \code{probrej} is too close to the threshold \code{theta} then
+##' the number of iterations is increased. The algorithm keeps increasing the
+##' number of iterations until the bound on the mistake involved by running
+##' these iterations is below \code{epsilon}. This error epsilon is
+##' incorporated into the overall level \code{alpha} in order to maintain that
+##' the test is exact.
+##' 
+##' \code{theta} is found in an optimization procedure. \code{theta} is chosen
+##' as to bring the type II error to 0.5. Please see the cited paper below for
+##' further information.
+##' 
+##' @param x1,x2 the (non-empty) numerical data vectors which contain the
+##' variables to be tested.
+##' @param lower,upper the theoretical lower and upper bounds on the data
+##' outcomes known ex-ante before gathering the data.
+##' @param iterations the number of iterations used, should not be changed if
+##' the exact solution should be derived.
+##' @param alpha the type I error.
+##' @param alternative a character string describing the alternative
+##' hypothesis, can take values "greater", "less" or "two.sided".
+##' @param epsilon the tolerance in terms of probability of the Monte Carlo
+##' simulations.
+##' @param ignoreNA if \code{TRUE}, NA values will be omitted. Default:
+##' \code{FALSE}
+##' @param max.iterations the maximum number of iterations that should be
+##' carried out. This number could be increased to achieve greater accuracy in
+##' cases where the difference between the threshold probability and theta is
+##' small. Default: \code{10000}
+##' @return A list with class "nphtest" containing the following components:
+##' 
+##' \item{method}{ a character string indicating the name and type of the test
+##' that was performed.  } \item{data.name}{ a character string giving the
+##' name(s) of the data.  } \item{alternative}{ a character string describing
+##' the alternative hypothesis.  } \item{estimate}{ the sample means of the two
+##' variables.  } \item{probrej}{ numerical estimate of the rejection
+##' probability of the randomized test, derived by taking an average of
+##' \code{iterations} realizations of the rejection probability.  }
+##' \item{bounds}{ the lower and upper bounds of the variables.  }
+##' \item{null.value}{ the specified hypothesized value of the correlation
+##' between the variables.  } \item{alpha}{ the type I error.  } \item{theta}{
+##' the parameter that minimizes the type II error.  } \item{pseudoalpha}{
+##' \code{theta}*\code{alpha}, this is the level used when calculating the
+##' average rejection probability during the iterations } \item{rejection}{
+##' logical indicator for whether or not the null hypothesis can be rejected }
+##' \item{iterations}{ the number of iterations that were performed.  }
+##' @author Karl Schlag, Christian Pechhacker, Peter Saffert and Oliver Reiter
+##' @seealso
+##' \url{http://homepage.univie.ac.at/karl.schlag/research/statistics.html}
+##' @references Karl Schlag (2008), A New Method for Constructing Exact Tests
+##' without Making any Assumptions. Available at
+##' \url{http://www.econ.upf.edu/en/research/onepaper.php?id=1109}.
+##' @keywords unpaired data mean test
+##' @examples
+##' 
+##' ## test whether countries with french origin score lower than
+##' ## countries with no french origin
+##' data(french)
+##' npMeanUnpaired(french[,1], french[,2], alternative = "less", ignoreNA =
+##' TRUE)
+##' 
+##' ## test whether American tend to be more generous than Isrealis
+##' ## in a round of the Ultimatum game
+##' data(bargaining)
+##' npMeanUnpaired(bargaining$US, bargaining$IS, lower = 0, upper = 10, ignoreNA = TRUE)
+##' 
+##' @export npMeanUnpaired
 npMeanUnpaired <- function(x1, x2,
                            lower = 0, upper = 1,
                            iterations = 5000,
