@@ -26,16 +26,23 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
     cat("data: ", x$data.name, "\n")
 
     if(!is.null(x$alternative) && !is.null(x$null.hypothesis) && !is.null(x$alt.hypothesis))
-      {
+    {
+        ## stochin extra
+        if(!is.null(x$stochin.parameter)) {
+            cat("parameter: SI =", x$stochin.parameter, "\n")
+            cat("\t   estimated value of SI:", x$stochin.estimate, "\n")
+            cat("\n")
+        }
         alt.char <- ifelse(x$rejection == TRUE,
                            "greater", "less")
         thus <- ifelse(x$rejection == TRUE,
                        "REJECTED", "NOT rejected")
-        cat("Null hypothesis H0: ", x$null.hypothesis, "\n", "\t",
-            thus, "in favour of", "\n")
-        cat("alternative hypothesis H1: ", x$alt.hypothesis, "\n\n")
+        cat("null hypothesis H0: ", x$null.hypothesis, "\n", "\t",
+            thus, " in favour of", "\n", sep = "")
+        cat("alternative hypothesis H1: ", x$alt.hypothesis, "\n\n",
+            sep = "")
         cat("as threshold probability:", x$probrej, "is", alt.char,
-            "than theta:", x$theta, "\n") # "\n\tthus", thus, "\n")
+            "than theta:", x$theta, "\n")
       }
 
     if(!is.null(x$p.value))
@@ -82,34 +89,34 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
 }
 
 
-print.npConfInt <- function(x, ..., verbose = NULL,
-                      digits = max(3L, getOption("digits") - 3L))
-    {
-        cat("\n")
-        cat(strwrap(x$method, prefix = "\t"), sep="\n")
-        cat("\n")
-        cat("data:", x$data.name, "in", x$bounds, "\n")
-        cat("n = ", x$n, "\n")
+## print.npConfInt <- function(x, ..., verbose = NULL,
+##                       digits = max(3L, getOption("digits") - 3L))
+##     {
+##         cat("\n")
+##         cat(strwrap(x$method, prefix = "\t"), sep="\n")
+##         cat("\n")
+##         cat("data:", x$data.name, "in", x$bounds, "\n")
+##         cat("n = ", x$n, "\n")
 
-        CI <- format(round(x$CI, digits = digits), digits = digits)
+##         CI <- format(round(x$CI, digits = digits), digits = digits)
 
-        names(CI) <- c("lower", "upper", "Level")
+##         names(CI) <- c("lower", "upper", "Level")
 
-        cat("\n")
-        print(CI, quote = FALSE, right = TRUE)
-        ## cat("\nparameters:\n")
-        ## if(!is.null(x$parameter$bounds))
-        ##     {
-        ##         cat(paste("   ", x$yname, " in ", x$parameter$bounds, "\n", sep = ""))
-        ##     }
-        ## cat("   alpha:", x$parameter$alpha)
-        ## if(!is.null(x$parameter$iterations))
-        ##     {
-        ##         cat("\n   iterations:", x$parameter$iterations)
-        ##     }
-        cat("\n")
+##         cat("\n")
+##         print(CI, quote = FALSE, right = TRUE)
+##         ## cat("\nparameters:\n")
+##         ## if(!is.null(x$parameter$bounds))
+##         ##     {
+##         ##         cat(paste("   ", x$yname, " in ", x$parameter$bounds, "\n", sep = ""))
+##         ##     }
+##         ## cat("   alpha:", x$parameter$alpha)
+##         ## if(!is.null(x$parameter$iterations))
+##         ##     {
+##         ##         cat("\n   iterations:", x$parameter$iterations)
+##         ##     }
+##         cat("\n")
 
-    }
+##     }
 
 ##     Confidence Interval with npMeanSingle
 

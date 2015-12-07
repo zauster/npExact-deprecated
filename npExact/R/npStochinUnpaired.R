@@ -49,29 +49,6 @@ npStochinUnpaired <- function(x1, x2, d = 0,
   x1 <- as.vector(x1)
   x2 <- as.vector(x2)
 
-  if(alternative == "less")
-    {
-      names.x1.new <- names.x2
-      names.x2 <- names.x1
-      names.x1 <- names.x1.new
-      x1.new <- x2
-      x2 <- x1
-      x1 <- x1.new
-    }
-
-  null.hypothesis <- paste("P(", names.x1, " > ", names.x2, ") - P(",
-                           names.x1, " < ", names.x2, ")",
-                           ifelse(alternative == "greater", " <= ",
-                                  ifelse(alternative == "less", " >= ",
-                                         " = ")),
-                           d, sep = "")
-  alt.hypothesis <- paste("P(", names.x1, " > ", names.x2, ") - P(",
-                           names.x1, " < ", names.x2, ")",
-                           ifelse(alternative == "greater", " > ",
-                                  ifelse(alternative == "less", " < ",
-                                         " != ")),
-                           d, sep = "")
-
   if(ignoreNA == TRUE)
     {
       x1 <- x1[!is.na(x1)]
@@ -85,35 +62,52 @@ npStochinUnpaired <- function(x1, x2, d = 0,
   if(alpha >= 1 | alpha <= 0)
     stop("Please supply a sensible value for alpha.")
 
+  ## swap variable if alternative is "less"
+  if(alternative == "less")
+    {
+      names.x1.new <- names.x2
+      names.x2 <- names.x1
+      names.x1 <- names.x1.new
+      x1.new <- x2
+      x2 <- x1
+      x1 <- x1.new
+    }
+
   ## define local variables
   N1 <- length(x1)
   N2 <- length(x2)
   min.length <- min(N1, N2)
   p <- (1 + d)/2
 
-  ## sample estimate
-  count.x1 <- 0
-  count.x2 <- 0
-  for(i in 1:N1)
-    {
-      count.x1 <- count.x1 + sum(x1[i] > x2)
-      count.x2 <- count.x2 + sum(x1[i] < x2)
-    }
-  sample.est <- (count.x1 - count.x2)/(N1 * N2)
-  names(sample.est) <- paste("stochastic inequality: P(",
-                             names.x1,
-                             ifelse(alternative == "greater", " > ",
-                                    ifelse(alternative == "less", " < ",
-                                           " > ")),
-                             names.x2, ") - P(",
-                             names.x1,
-                             ifelse(alternative == "greater", " < ",
-                                    ifelse(alternative == "less", " > ",
-                                           " < ")),
-                             names.x2, ")",
+  ## compute the sample estimate
+  if(alternative == "less") {
+      count.x1 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i < x2)))
+      count.x2 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i > x2)))
+  stochin.estimate <- (count.x1 - count.x2)/(N1 * N2)
+  stochin.parameter <- paste("P(", names.x1, " < ", names.x2, ") - P(",
+                             names.x1, " > ", names.x2, ")",
                              sep = "")
+  } else {
+      count.x1 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i > x2)))
+      count.x2 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i < x2)))
+      stochin.estimate <- (count.x1 - count.x2)/(N1 * N2)
+      stochin.parameter <- paste("P(", names.x1, " > ", names.x2, ") - P(",
+                                 names.x1, " < ", names.x2, ")",
+                                 sep = "")
+  }
 
-
+  names(stochin.estimate) <- stochin.parameter 
+  
+  null.hypothesis <- paste("SI",
+                           ifelse(alternative == "greater", " <= ",
+                                  ifelse(alternative == "less", " >= ",
+                                         " = ")),
+                           d, sep = "")
+  alt.hypothesis <- paste("SI",
+                          ifelse(alternative == "greater", " > ",
+                          ifelse(alternative == "less", " < ", " != ")),
+                          d, sep = "")
+  
   error <- 1
   rejMatrix <- vector(mode = "numeric", length = 0)
 
@@ -158,7 +152,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
           error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
       }
       rejectionLess <- ifelse(rejLess >= theta$theta, TRUE, FALSE)
-      rej <- rejUpper + rejLess
+      rej <- min(rejUpper + rejLess, 1)
       rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
 
   }
@@ -200,8 +194,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
     ## side of rejection
     if(rejection == TRUE & alternative == "two.sided")
     {
-        alt.hypothesis <- paste("P(", names.x1, " > ", names.x2, ") - P(",
-                                names.x1, " < ", names.x2, ")",
+        alt.hypothesis <- paste("SI",
                                 ifelse(rejectionUpper == TRUE, " > ", " < "),
                                 d, sep = "")
     }
@@ -209,9 +202,11 @@ npStochinUnpaired <- function(x1, x2, d = 0,
   structure(list(method = "Nonparametric Test for Stochastic Inequality",
                  data.name = DNAME,
                  alternative = alternative,
+                 stochin.parameter = stochin.parameter,
+                 stochin.estimate = stochin.estimate,
                  null.hypothesis = null.hypothesis,
                  alt.hypothesis = alt.hypothesis,
-                 estimate = sample.est,
+                 estimate = NULL,
                  probrej = rej,
                  rejection = rejection,
                  alpha = alpha,
