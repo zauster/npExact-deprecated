@@ -89,6 +89,13 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                                    "!= ")),
                             v, sep = "")
 
+    ## if x is a 1-column data.frame, convert it to a vector
+    if(is.data.frame(x)) {
+        if(dim(x)[2] == 1) {
+            x <- x[, 1]
+        }
+    }
+
     if(ignoreNA == TRUE)
     {
         x <- x[!is.na(x)]
@@ -123,32 +130,53 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
     if(alternative == "two.sided")
     {
         ##
-        ## first alternative
+        ## alternative "greater"
         ##
-        optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                 c(0, 1), p = p, N = m,
-                                 alpha = alpha / 2 - epsilon)
+        res <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                            c(0, 1), p = p, N = m,
+                                            alpha = alpha / 2 - epsilon),
+                   silent = TRUE)
+        if(inherits(res, "try-error")) {
+            ## pick up an error in the theta calculation
+            cat("No rejection:\n")
+            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
+
+            ## and exit the function
+            return(invisible(NULL))
+        }
+        
         thetaUpper <- minTypeIIError(optimaltypeII[[1]],
-                                p = p, N = m, alpha = alpha / 2 - epsilon)
+                                     p = p, N = m, alpha = alpha / 2 - epsilon)
         pseudoalpha <- alpha * thetaUpper$theta / 2
         while(error > epsilon & length(rejMatrix) <= max.iterations)
-        {
-            rejMatrix <- c(rejMatrix,
-                           replicate(iterations,
-                                     sampleBinomTestnpVar(x, m, p,
-                                                          alternative = "greater",
-                                                          alpha = pseudoalpha)))
-            rejUpper <- mean(rejMatrix)
-            error <- exp(-2 * length(rejMatrix) * (rejUpper - thetaUpper$theta)^2)
-        }
+    {
+        rejMatrix <- c(rejMatrix,
+                       replicate(iterations,
+                                 sampleBinomTestnpVar(x, m, p,
+                                                      alternative = "greater",
+                                                      alpha = pseudoalpha)))
+        rejUpper <- mean(rejMatrix)
+        error <- exp(-2 * length(rejMatrix) * (rejUpper - thetaUpper$theta)^2)
+    }
         rejectionUpper <- ifelse(rejUpper >= thetaUpper$theta, TRUE, FALSE)
+        iterations.taken <- length(rejMatrix)
 
         ##
-        ## other alternative
+        ## alternative "less"
         ##
-        optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                 c(0, 1), p = 1 - p, N = m,
-                                 alpha = alpha / 2 - epsilon)
+        res <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                            c(0, 1), p = 1 - p, N = m,
+                                            alpha = alpha / 2 - epsilon),
+                   silent = TRUE)
+        if(inherits(res, "try-error")) {
+            ## pick up an error in the theta calculation
+            cat("No rejection:\n")
+            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
+
+            ## and exit the function
+            return(invisible(NULL))
+        }
+        
         thetaLess <- minTypeIIError(optimaltypeII[[1]],
                                     p = 1 - p, N = m,
                                     alpha = alpha / 2 - epsilon)
@@ -157,27 +185,38 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
         rejMatrix <- vector(mode = "numeric", length = 0)
 
         while(error > epsilon & length(rejMatrix) <= max.iterations)
-        {
-            rejMatrix <- c(rejMatrix,
-                           replicate(iterations,
-                                     sampleBinomTestnpVar(x, m, p,
-                                                          alternative = "less",
-                                                          alpha = pseudoalpha)))
-            rejLess <- mean(rejMatrix)
-            error <- exp(-2 * length(rejMatrix) * (rejLess - thetaLess$theta)^2)
-        }
+    {
+        rejMatrix <- c(rejMatrix,
+                       replicate(iterations,
+                                 sampleBinomTestnpVar(x, m, p,
+                                                      alternative = "less",
+                                                      alpha = pseudoalpha)))
+        rejLess <- mean(rejMatrix)
+        error <- exp(-2 * length(rejMatrix) * (rejLess - thetaLess$theta)^2)
+    }
         rejectionLess <- ifelse(rejLess >= thetaLess$theta, TRUE, FALSE)
         rej <- rejUpper + rejLess
         rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
+        iterations.taken <- max(length(rejMatrix), iterations.taken)
     }
     else
     {
-        optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                 c(0, 1),
-                                 p = ifelse(alternative == "greater",
-                                            p, 1 - p),
-                                 N = m,
-                                 alpha = alpha - epsilon)
+        res <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                            c(0, 1),
+                                            p = ifelse(alternative == "greater",
+                                                       p, 1 - p),
+                                            N = m,
+                                            alpha = alpha - epsilon),
+                   silent = TRUE)
+        if(inherits(res, "try-error")) {
+            ## pick up an error in the theta calculation
+            cat("No rejection:\n")
+            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
+
+            ## and exit the function
+            return(invisible(NULL))
+        }
+        
         theta <- minTypeIIError(optimaltypeII[[1]],
                                 p = ifelse(alternative == "greater",
                                            p, 1 - p),
@@ -195,12 +234,13 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
             error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
         }
         rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
+        iterations.taken <- length(rejMatrix)
     }
 
-    if(!is.null(iterations) & length(rejMatrix) < 1000)
+    if(!is.null(iterations) & iterations.taken < 1000)
         warning("Low number of iterations. Results may be inaccurate.")
 
-    if(length(rejMatrix) >= max.iterations)
+    if(iterations.taken >= max.iterations)
         warning(paste("The maximum number of iterations (",
                       format(max.iterations, scientific = FALSE),
                       ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
@@ -217,7 +257,8 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
         if(rejection == TRUE)
         {
             alt.hypothesis <- paste("Var(", DNAME, ")",
-                                    ifelse(rejectionUpper == TRUE, " > ", " < "),
+                                    ifelse(rejectionUpper == TRUE,
+                                           " > ", " < "),
                                     v, sep = "")
         }
         if(rejectionUpper == TRUE) {
@@ -239,7 +280,7 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                    theta = theta$theta,
                    d.alternative = 0.5 * optimaltypeII$root * (upper - lower)^2,
                    typeIIerror = theta$typeII,
-                   iterations = length(rejMatrix),
+                   iterations = iterations.taken,
                    pseudoalpha = pseudoalpha,
                    bounds = bounds,
                    null.value = null.value),

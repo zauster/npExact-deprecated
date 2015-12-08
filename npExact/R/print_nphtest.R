@@ -54,7 +54,7 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
       cat("\n   iterations:", x$iterations)
 
     if(!is.null(x$mc.error))
-      cat("\n   max error prob of MC:", x$mc.error)
+      cat("\n   max error prob of MC:", round(x$mc.error, digits = digits))
     
     if(!is.null(x$estimate)) {
         cat("\n\nsample estimates:\n")

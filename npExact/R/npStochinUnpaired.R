@@ -82,189 +82,230 @@ npStochinUnpaired <- function(x1, x2, d = 0,
                               ignoreNA = FALSE,
                               max.iterations = 100000)
 {
-  names.x1 <- deparse(substitute(x1))
-  names.x2 <- deparse(substitute(x2))
-  DNAME <- paste(names.x1, "and",
-                 names.x2)
+    names.x1 <- deparse(substitute(x1))
+    names.x2 <- deparse(substitute(x2))
+    DNAME <- paste(names.x1, "and",
+                   names.x2)
 
-  x1 <- as.vector(x1)
-  x2 <- as.vector(x2)
-
-  if(ignoreNA == TRUE)
-    {
-      x1 <- x1[!is.na(x1)]
-      x2 <- x2[!is.na(x2)]
+    ## if x1 (or x2) is a 1-column data.frame, convert it to a vector
+    if(is.data.frame(x1)) {
+        if(dim(x1)[2] == 1) {
+            x1 <- x1[, 1]
+        }
     }
-  else if(any(is.na(c(x1, x2))) == TRUE)
-      {
-          stop("The data contains NA's!")
-      }
+    if(is.data.frame(x2)) {
+        if(dim(x2)[2] == 1) {
+            x2 <- x2[, 1]
+        }
+    }
+    
+    x1 <- as.vector(x1)
+    x2 <- as.vector(x2)
 
-  if(alpha >= 1 | alpha <= 0)
-    stop("Please supply a sensible value for alpha.")
-
-  ## swap variable if alternative is "less"
-  if(alternative == "less")
+    if(ignoreNA == TRUE)
     {
-      names.x1.new <- names.x2
-      names.x2 <- names.x1
-      names.x1 <- names.x1.new
-      x1.new <- x2
-      x2 <- x1
-      x1 <- x1.new
+        x1 <- x1[!is.na(x1)]
+        x2 <- x2[!is.na(x2)]
+    }
+    else if(any(is.na(c(x1, x2))) == TRUE)
+    {
+        stop("The data contains NA's!")
     }
 
-  ## define local variables
-  N1 <- length(x1)
-  N2 <- length(x2)
-  min.length <- min(N1, N2)
-  p <- (1 + d)/2
+    if(alpha >= 1 | alpha <= 0)
+        stop("Please supply a sensible value for alpha.")
 
-  ## compute the sample estimate
-  if(alternative == "less") {
-      count.x1 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i < x2)))
-      count.x2 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i > x2)))
-      stochin.estimate <- (count.x1 - count.x2)/(N1 * N2)
-      stochin.parameter <- paste("P(", names.x1, " < ", names.x2, ") - P(",
-                                 names.x1, " > ", names.x2, ")",
-                                 sep = "")
-  } else {
-      count.x1 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i > x2)))
-      count.x2 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i < x2)))
-      stochin.estimate <- (count.x1 - count.x2)/(N1 * N2)
-      stochin.parameter <- paste("P(", names.x1, " > ", names.x2, ") - P(",
-                                 names.x1, " < ", names.x2, ")",
-                                 sep = "")
-  }
+    d.given <- d
+    
+    ## swap variable if alternative is "less"
+    if(alternative == "less")
+    {
+        names.x1.new <- names.x2
+        names.x2 <- names.x1
+        names.x1 <- names.x1.new
+        x1.new <- x2
+        x2 <- x1
+        x1 <- x1.new
 
-  ## set name of estimate
-  names(stochin.estimate) <- stochin.parameter 
+        d <- -d
+    }
 
-  ## null and alternative hypothesis
-  null.hypothesis <- paste("SI",
-                           ifelse(alternative == "greater", " <= ",
-                                  ifelse(alternative == "less", " >= ",
-                                         " = ")),
-                           d, sep = "")
-  alt.hypothesis <- paste("SI",
-                          ifelse(alternative == "greater", " > ",
-                          ifelse(alternative == "less", " < ", " != ")),
-                          d, sep = "")
-  
-  error <- 1
-  rejMatrix <- vector(mode = "numeric", length = 0)
+    ## define local variables
+    N1 <- length(x1)
+    N2 <- length(x2)
+    min.length <- min(N1, N2)
+    p <- (1 + d)/2
 
-  if(alternative == "two.sided")
-  {
-      ##
-      ## alternative = "greater" at alpha / 2
-      ##
-      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                               c(0, 1), p = p, N = min.length,
-                               alpha = alpha / 2 - epsilon)
-      theta <- minTypeIIError(optimaltypeII[[1]],
-                              p = p, N = min.length,
-                              alpha = alpha / 2 - epsilon)
-      pseudoalpha <- alpha / 2 * theta$theta
+    ## compute the sample estimate
+    if(alternative == "less") {
+        count.x1 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i < x2)))
+        count.x2 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i > x2)))
+        stochin.estimate <- (count.x1 - count.x2)/(N1 * N2)
+        stochin.parameter <- paste("P(", names.x1, " < ", names.x2, ") - P(",
+                                   names.x1, " > ", names.x2, ")",
+                                   sep = "")
+    } else {
+        count.x1 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i > x2)))
+        count.x2 <- sum(tapply(x1, 1:N1, function(x.i) sum(x.i < x2)))
+        stochin.estimate <- (count.x1 - count.x2)/(N1 * N2)
+        stochin.parameter <- paste("P(", names.x1, " > ", names.x2, ") - P(",
+                                   names.x1, " < ", names.x2, ")",
+                                   sep = "")
+    }
 
-      ## calculate the probability of rejection
-      while(error > epsilon & length(rejMatrix) <= max.iterations)
-      {
-          rejMatrix <- c(rejMatrix,
-                         replicate(iterations,
-                                   sampleBinomTest(x2, x1, min.length,
-                                                   p, d, pseudoalpha)))
-          rejUpper <- mean(rejMatrix)
-          error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
-      }
-      rejectionUpper <- ifelse(rejUpper >= theta$theta, TRUE, FALSE)
+    ## set name of estimate
+    names(stochin.estimate) <- stochin.parameter 
+
+    ## null and alternative hypothesis
+    null.hypothesis <- paste("SI",
+                             ifelse(alternative == "greater", " <= ",
+                             ifelse(alternative == "less", " >= ",
+                                    " = ")),
+                             d.given, sep = "")
+    alt.hypothesis <- paste("SI",
+                            ifelse(alternative == "greater", " > ",
+                            ifelse(alternative == "less", " < ", " != ")),
+                            d.given, sep = "")
+    
+    error <- 1
+    rejMatrix <- vector(mode = "numeric", length = 0)
+
+    if(alternative == "two.sided")
+    {
+        ##
+        ## alternative = "greater" at alpha / 2
+        ##
+        res <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                            c(0, 1), p = p, N = min.length,
+                                            alpha = alpha / 2 - epsilon),
+                   silent = TRUE)
+        if(inherits(res, "try-error")) {
+            ## pick up an error in the theta calculation
+            cat("No rejection:\n")
+            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
+
+            ## and exit the function
+            return(invisible(NULL))
+        }
+        
+        theta <- minTypeIIError(optimaltypeII[[1]],
+                                p = p, N = min.length,
+                                alpha = alpha / 2 - epsilon)
+        pseudoalpha <- alpha / 2 * theta$theta
+
+        ## calculate the probability of rejection
+        while(error > epsilon & length(rejMatrix) <= max.iterations)
+    {
+        rejMatrix <- c(rejMatrix,
+                       replicate(iterations,
+                                 sampleBinomTest(x2, x1, min.length,
+                                                 p, d, pseudoalpha)))
+        rejUpper <- mean(rejMatrix)
+        error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
+    }
+        rejectionUpper <- ifelse(rejUpper >= theta$theta, TRUE, FALSE)
+        iterations.taken <- length(rejMatrix)
+        
+        ##
+        ## alternative = "less" at alpha / 2
+        ##
+        error <- 1
+        rejMatrix <- vector(mode = "numeric", length = 0)
+        d <- -d
+        p <- (1 + d)/2
+        
+        while(error > epsilon & length(rejMatrix) <= max.iterations)
+    {
+        rejMatrix <- c(rejMatrix,
+                       replicate(iterations,
+                                 sampleBinomTest(x1, x2, min.length,
+                                                 p, d, pseudoalpha)))
+        rejLess <- mean(rejMatrix)
+        error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
+    }
+        rejectionLess <- ifelse(rejLess >= theta$theta, TRUE, FALSE)
+
+        ## rejection of the test is the sum of the two tests at alpha / 2
+        rej <- min(rejUpper + rejLess, 1)
+
+        ## if one of them rejects, the two-sided test can reject as well
+        rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
+
+        iterations.taken <- max(length(rejMatrix), iterations.taken)
+
+    }
+    else
+    {
+        res <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                            c(0, 1), p = p, N = min.length,
+                                            alpha = alpha - epsilon),
+                   silent = TRUE)
+        if(inherits(res, "try-error")) {
+            ## pick up an error in the theta calculation
+            cat("No rejection:\n")
+            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
+
+            ## and exit the function
+            return(invisible(NULL))
+        }
+
+        theta <- minTypeIIError(optimaltypeII[[1]],
+                                p = p, N = min.length,
+                                alpha = alpha - epsilon)
+        pseudoalpha <- alpha * theta$theta
+        while(error > epsilon & length(rejMatrix) <= max.iterations)
+        {
+            rejMatrix <- c(rejMatrix,
+                           replicate(iterations,
+                                     sampleBinomTest(x2, x1, min.length,
+                                                     p, d, pseudoalpha)))
+            rej <- mean(rejMatrix)
+            error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
+        }
+        rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
+        iterations.taken <- length(rejMatrix)
+    }
+
+    if(!is.null(iterations) & length(rejMatrix) < 1000)
+        warning("Low number of iterations. Results may be inaccurate.")
+
+    if(length(rejMatrix) >= max.iterations)
+        warning(paste("The maximum number of iterations (",
+                      format(max.iterations, scientific = FALSE),
+                      ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
 
-      ##
-      ## alternative = "less" at alpha / 2
-      ##
-      error <- 1
-      rejMatrix <- vector(mode = "numeric", length = 0)
+    names(d.given) <- "relation P(x1 > x2) - P(x1 < x2)"
 
-      while(error > epsilon & length(rejMatrix) <= max.iterations)
-      {
-          rejMatrix <- c(rejMatrix,
-                         replicate(iterations,
-                                   sampleBinomTest(x1, x2, min.length,
-                                                   p, d, pseudoalpha)))
-          rejLess <- mean(rejMatrix)
-          error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
-      }
-      rejectionLess <- ifelse(rejLess >= theta$theta, TRUE, FALSE)
+    ## if rejection in a two.sided setting, we inform the user of the
+    ## side of rejection
+    if(rejection == TRUE & alternative == "two.sided")
+    {
+        alt.hypothesis <- paste("SI",
+                                ifelse(rejectionUpper == TRUE, " > ", " < "),
+                                d.given, sep = "")
+    }
 
-      ## rejection of the test is the sum of the two tests at alpha / 2
-      rej <- min(rejUpper + rejLess, 1)
-
-      ## if one of them rejects, the two-sided test can reject as well
-      rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
-
-  }
-  else
-  {
-      optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                               c(0, 1), p = p, N = min.length,
-                               alpha = alpha - epsilon)
-      theta <- minTypeIIError(optimaltypeII[[1]],
-                              p = p, N = min.length,
-                              alpha = alpha - epsilon)
-      pseudoalpha <- alpha * theta$theta
-      while(error > epsilon & length(rejMatrix) <= max.iterations)
-      {
-          rejMatrix <- c(rejMatrix,
-                         replicate(iterations,
-                                   sampleBinomTest(x2, x1, min.length,
-                                                   p, d, pseudoalpha)))
-          rej <- mean(rejMatrix)
-          error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
-      }
-      rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
-  }
-
-  if(!is.null(iterations) & length(rejMatrix) < 1000)
-    warning("Low number of iterations. Results may be inaccurate.")
-
-  if(length(rejMatrix) >= max.iterations)
-            warning(paste("The maximum number of iterations (",
-                          format(max.iterations, scientific = FALSE),
-                          ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
-
-
-  names(d) <- "relation P(x1 > x2) - P(x1 < x2)"
-
-  ## if rejection in a two.sided setting, we inform the user of the
-  ## side of rejection
-  if(rejection == TRUE & alternative == "two.sided")
-  {
-      alt.hypothesis <- paste("SI",
-                              ifelse(rejectionUpper == TRUE, " > ", " < "),
-                              d, sep = "")
-  }
-
-  structure(list(method = "Nonparametric Test for Stochastic Inequality",
-                 data.name = DNAME,
-                 alternative = alternative,
-                 stochin.parameter = stochin.parameter,
-                 stochin.estimate = stochin.estimate,
-                 null.hypothesis = null.hypothesis,
-                 alt.hypothesis = alt.hypothesis,
-                 estimate = NULL,
-                 probrej = rej,
-                 mc.error = error,
-                 rejection = rejection,
-                 alpha = alpha,
-                 theta = theta$theta,
-                 d.alternative = (optimaltypeII$root*2 - 1),
-                 typeIIerror = theta$typeII,
-                 iterations = length(rejMatrix),
-                 pseudoalpha = pseudoalpha,
-                 bounds = NULL,
-                 null.value = d),
-            class = "nphtest")
+    structure(list(method = "Nonparametric Test for Stochastic Inequality",
+                   data.name = DNAME,
+                   alternative = alternative,
+                   stochin.parameter = stochin.parameter,
+                   stochin.estimate = stochin.estimate,
+                   null.hypothesis = null.hypothesis,
+                   alt.hypothesis = alt.hypothesis,
+                   estimate = NULL,
+                   probrej = rej,
+                   mc.error = error,
+                   rejection = rejection,
+                   alpha = alpha,
+                   theta = theta$theta,
+                   d.alternative = (optimaltypeII$root*2 - 1),
+                   typeIIerror = theta$typeII,
+                   iterations = iterations.taken,
+                   pseudoalpha = pseudoalpha,
+                   bounds = NULL,
+                   null.value = d.given),
+              class = "nphtest")
 }
 
 
@@ -275,7 +316,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
 ## n ... the minimum length of the data vectors
 
 sampleBinomTest <- function(x1, x2, n, p, d, pseudoalpha)
-  {
+{
     c1 <- sample(x1, n)
     c2 <- sample(x2, n)
 
@@ -283,41 +324,41 @@ sampleBinomTest <- function(x1, x2, n, p, d, pseudoalpha)
     s2 <- sum(c1 < c2) #counts how often c1 < c2
 
     if((s1 + s2) != n)
-      {
+    {
         if(d > 0)
-          {
+        {
             q <- runif(sum(c1 == c2)) #vector with draws from uniform
                                         #distribution of length=number of
                                         #times elements of c1=c2
             s1 <- s1 + sum(q < (d/(1 + d)))
-          }
+        }
         else
-          {
+        {
             if(d < 0)
-              {
+            {
                 q <- runif(sum(c1 == c2))  #vector with draws from
                                         #uniform distribution of
                                         #length=number of times
                                         #elements of c1=c2
                 s1 <- s1 + sum(q < (-1) * (d/(1 - d))) ## right?
-              }
-          }
-      }
+            }
+        }
+    }
     prob <- sum(dbinom(s2:(s1 + s2), (s1 + s2), p)) ## or
     ## prob <- 1 - pbinom(s2 - 1, s1 + s2, p) ## less exact than above?
 
     res <- 0
     if(prob <= pseudoalpha)
-      {
+    {
         res <- 1
-      }
+    }
     else
-      {
+    {
         h2 <- (p^s2) * ((1 - p)^s1) * choose(s1 + s2, s2)
         if(prob <= (pseudoalpha + h2))
-          {
+        {
             res <- ((pseudoalpha - prob + h2)/h2)
-          }
-      }
+        }
+    }
     return(res)
-  }
+}

@@ -118,6 +118,18 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                                    " != ")),
                             "E(", names.x2, ")", sep = "")
 
+    ## if x1 (or x2) is a 1-column data.frame, convert it to a vector
+    if(is.data.frame(x1)) {
+        if(dim(x1)[2] == 1) {
+            x1 <- x1[, 1]
+        }
+    }
+    if(is.data.frame(x2)) {
+        if(dim(x2)[2] == 1) {
+            x2 <- x2[, 1]
+        }
+    }
+    
     x1 <- as.vector(x1)
     x2 <- as.vector(x2)
 
@@ -160,49 +172,61 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
     if(alternative == "two.sided")
     {
         ##
-        ## first alternative at alpha / 2
+        ## alternative "greater" at alpha / 2
         ##
 
         ## compute the theta that optimizes the type II error
-        optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                 c(0, 1), p = 0.5, N = n,
-                                 alpha = alpha / 2 - epsilon)
+        res <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                            c(0, 1), p = 0.5, N = n,
+                                            alpha = alpha / 2 - epsilon),
+                   silent = TRUE)
+        if(inherits(res, "try-error")) {
+            ## pick up an error in the theta calculation
+            cat("No rejection:\n")
+            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
+
+            ## and exit the function
+            return(invisible(NULL))
+        }
+        
         theta <- minTypeIIError(optimaltypeII[[1]],
                                 p = 0.5, N = n, alpha = alpha / 2 - epsilon)
         pseudoalpha <- (alpha/2) * theta$theta
         while(error > epsilon & length(rejMatrix) <= max.iterations)
-        {
-            rejMatrix <- c(rejMatrix,
-                           replicate(iterations,
-                                     McNemarTestRandom(runif(n) < x1,
-                                                       runif(n) < x2,
-                                                       pseudoalpha)))
-            rejUpper <- mean(rejMatrix)
-            error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
-        }
+    {
+        rejMatrix <- c(rejMatrix,
+                       replicate(iterations,
+                                 McNemarTestRandom(runif(n) < x1,
+                                                   runif(n) < x2,
+                                                   pseudoalpha)))
+        rejUpper <- mean(rejMatrix)
+        error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
+    }
         rejectionUpper <- ifelse(rejUpper >= theta$theta, TRUE, FALSE)
+        iterations.taken <- length(rejMatrix)
 
         ##
-        ## other alternative at alpha / 2
+        ## alternative "less" at alpha / 2
         ##
         error <- 1
         rejMatrix <- vector(mode = "numeric", length = 0)
         x1 <- 1 - x1
         x2 <- 1 - x2
         while(error > epsilon & length(rejMatrix) <= max.iterations)
-        {
-            rejMatrix <- c(rejMatrix,
-                           replicate(iterations,
-                                     McNemarTestRandom(runif(n) < x1,
-                                                       runif(n) < x2,
-                                                       pseudoalpha)))
-            rejLess <- mean(rejMatrix)
-            error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
-        }
+    {
+        rejMatrix <- c(rejMatrix,
+                       replicate(iterations,
+                                 McNemarTestRandom(runif(n) < x1,
+                                                   runif(n) < x2,
+                                                   pseudoalpha)))
+        rejLess <- mean(rejMatrix)
+        error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
+    }
         rejectionLess <- ifelse(rejLess >= theta$theta, TRUE, FALSE)
 
         rej <- rejUpper + rejLess
         rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
+        iterations.taken <- max(length(rejMatrix), iterations.taken)
     }
     else
     {
@@ -213,9 +237,19 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
         }
 
         ## compute the theta that optimizes the type II error
-        optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                 c(0, 1), p = 0.5, N = n,
-                                 alpha = alpha - epsilon)
+        res <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
+                                            c(0, 1), p = 0.5, N = n,
+                                            alpha = alpha - epsilon),
+                   silent = TRUE)
+        if(inherits(res, "try-error")) {
+            ## pick up an error in the theta calculation
+            cat("No rejection:\n")
+            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
+
+            ## and exit the function
+            return(invisible(NULL))
+        }
+        
         theta <- minTypeIIError(optimaltypeII[[1]],
                                 p = 0.5, N = n, alpha = alpha - epsilon)
         pseudoalpha <- alpha * theta$theta
@@ -230,14 +264,15 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
             rej <- mean(rejMatrix)
             error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
         }
-
         rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
+        iterations.taken <- length(rejMatrix)
+        
     }
 
-    if(!is.null(iterations) & length(rejMatrix) < 1000)
+    if(!is.null(iterations) & iterations.taken < 1000)
         warning("Low number of iterations. Results may be inaccurate.")
 
-    if(length(rejMatrix) >= max.iterations)
+    if(iterations.taken >= max.iterations)
         warning(paste("The maximum number of iterations (",
                       format(max.iterations, scientific = FALSE),
                       ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
@@ -271,7 +306,7 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                    theta = theta$theta,
                    d.alternative = (optimaltypeII$root - 0.5) * 2 * (upper - lower),
                    typeIIerror = theta$typeII,
-                   iterations = length(rejMatrix),
+                   iterations = iterations.taken,
                    pseudoalpha = pseudoalpha,
                    bounds = bounds,
                    null.value = null.value),

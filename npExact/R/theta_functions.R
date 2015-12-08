@@ -116,7 +116,7 @@ minTypeIIError <- function(p.alt, p, N, alpha, alternative)
         righttheta <- theta[2, which(typeIIerrors == mintypeII)]
         righttheta <- ifelse(length(righttheta) == 0, NA, righttheta)
     } else {
-            stop("It was not possible to find a valid theta (i.e., one that minimizes the type II error). Please adjust the test value under the null hypothesis to a less (extreme) value.")        
+        stop("It was not possible to find a valid theta (i.e., one that minimizes the type II error). Please adjust the test value under the null hypothesis to a less (extreme) value.")        
     }
 
     list(theta = righttheta,
