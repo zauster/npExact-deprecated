@@ -75,8 +75,15 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                              ignoreNA = FALSE,
                              max.iterations = 100000)
 {
+    method <- "Nonparametric Variance Test"
     DNAME <- deparse(substitute(x))
     x <- as.vector(x)
+
+    null.value <- v
+    names(null.value) <- "variance"
+    
+    bounds <- paste("[", lower, ", ", upper, "]", sep = "")
+
 
     null.hypothesis <- paste("Var(", DNAME, ") ",
                              ifelse(alternative == "greater", "<= ",
@@ -119,6 +126,8 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
 
     ## Computation of sample mean and variance for output
     sample.est <- var(x)
+    names(sample.est) <- "variance"
+
     m <- floor(length(x) / 2)
     x <- (x - lower)/(upper - lower)  ## Normalization so that x in [0,1]
     p <- 2 * v / (upper - lower)^2  ## normalized threshold
@@ -138,18 +147,29 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                    silent = TRUE)
         if(inherits(res, "try-error")) {
             ## pick up an error in the theta calculation
-            cat("No rejection:\n")
-            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
-
-            ## and exit the function
-            return(invisible(NULL))
+            return(structure(list(method = method,
+                                  data.name = DNAME,
+                                  alternative = alternative,
+                                  null.hypothesis = null.hypothesis,
+                                  alt.hypothesis = alt.hypothesis,
+                                  estimate = sample.est,
+                                  probrej = NULL,
+                                  rejection = FALSE,
+                                  alpha = NULL,
+                                  theta = NULL,
+                                  d.alternative = NULL,
+                                  typeIIerror = NULL,
+                                  iterations = NULL,
+                                  pseudoalpha = NULL,
+                                  bounds = NULL,
+                                  null.value = null.value),
+                             class = "nphtest"))
         }
         
         thetaUpper <- minTypeIIError(optimaltypeII[[1]],
                                      p = p, N = m, alpha = alpha / 2 - epsilon)
         pseudoalpha <- alpha * thetaUpper$theta / 2
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-    {
+        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
         rejMatrix <- c(rejMatrix,
                        replicate(iterations,
                                  sampleBinomTestnpVar(x, m, p,
@@ -157,7 +177,7 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                                                       alpha = pseudoalpha)))
         rejUpper <- mean(rejMatrix)
         error <- exp(-2 * length(rejMatrix) * (rejUpper - thetaUpper$theta)^2)
-    }
+        }
         rejectionUpper <- ifelse(rejUpper >= thetaUpper$theta, TRUE, FALSE)
         iterations.taken <- length(rejMatrix)
 
@@ -170,11 +190,23 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                    silent = TRUE)
         if(inherits(res, "try-error")) {
             ## pick up an error in the theta calculation
-            cat("No rejection:\n")
-            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
-
-            ## and exit the function
-            return(invisible(NULL))
+            return(structure(list(method = method,
+                                  data.name = DNAME,
+                                  alternative = alternative,
+                                  null.hypothesis = null.hypothesis,
+                                  alt.hypothesis = alt.hypothesis,
+                                  estimate = sample.est,
+                                  probrej = NULL,
+                                  rejection = FALSE,
+                                  alpha = NULL,
+                                  theta = NULL,
+                                  d.alternative = NULL,
+                                  typeIIerror = NULL,
+                                  iterations = NULL,
+                                  pseudoalpha = NULL,
+                                  bounds = NULL,
+                                  null.value = null.value),
+                             class = "nphtest"))
         }
         
         thetaLess <- minTypeIIError(optimaltypeII[[1]],
@@ -184,8 +216,7 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
         error <- 1
         rejMatrix <- vector(mode = "numeric", length = 0)
 
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-    {
+        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
         rejMatrix <- c(rejMatrix,
                        replicate(iterations,
                                  sampleBinomTestnpVar(x, m, p,
@@ -193,7 +224,8 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                                                       alpha = pseudoalpha)))
         rejLess <- mean(rejMatrix)
         error <- exp(-2 * length(rejMatrix) * (rejLess - thetaLess$theta)^2)
-    }
+        }
+        
         rejectionLess <- ifelse(rejLess >= thetaLess$theta, TRUE, FALSE)
         rej <- rejUpper + rejLess
         rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
@@ -210,11 +242,23 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                    silent = TRUE)
         if(inherits(res, "try-error")) {
             ## pick up an error in the theta calculation
-            cat("No rejection:\n")
-            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
-
-            ## and exit the function
-            return(invisible(NULL))
+            return(structure(list(method = method,
+                                  data.name = DNAME,
+                                  alternative = alternative,
+                                  null.hypothesis = null.hypothesis,
+                                  alt.hypothesis = alt.hypothesis,
+                                  estimate = sample.est,
+                                  probrej = NULL,
+                                  rejection = FALSE,
+                                  alpha = NULL,
+                                  theta = NULL,
+                                  d.alternative = NULL,
+                                  typeIIerror = NULL,
+                                  iterations = NULL,
+                                  pseudoalpha = NULL,
+                                  bounds = NULL,
+                                  null.value = null.value),
+                             class = "nphtest"))
         }
         
         theta <- minTypeIIError(optimaltypeII[[1]],
@@ -223,8 +267,7 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                                 N = m, alpha = alpha - epsilon)
         pseudoalpha <- alpha * theta$theta
 
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-        {
+        while(error > epsilon & length(rejMatrix) <= max.iterations) {
             rejMatrix <- c(rejMatrix,
                            replicate(iterations,
                                      sampleBinomTestnpVar(x, m, p,
@@ -245,10 +288,6 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                       format(max.iterations, scientific = FALSE),
                       ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
-    names(sample.est) <- "variance"
-    null.value <- v
-    names(null.value) <- "variance"
-    bounds <- paste("[", lower, ", ", upper, "]", sep = "")
 
     ## if rejection in a two.sided setting, we inform the user of the
     ## side of rejection
@@ -268,7 +307,7 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
         }
     }
 
-    structure(list(method = "Nonparametric Variance Test",
+    structure(list(method = method, 
                    data.name = DNAME,
                    alternative = alternative,
                    null.hypothesis = null.hypothesis,

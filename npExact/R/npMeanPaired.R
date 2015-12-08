@@ -99,6 +99,7 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                          iterations = 5000,
                          max.iterations = 100000)
 {
+    method <- "Nonparametric Mean Test for Matched Pairs"
     names.x1 <- deparse(substitute(x1))
     names.x2 <- deparse(substitute(x2))
 
@@ -157,7 +158,14 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
 
     n <- length(x1)
 
+    ## Sample estimates
     sample.est <- c(mean(x1), mean(x2))
+    names(sample.est) <- c(paste("mean(", names.x1, ")", sep = ""),
+                           paste("mean(", names.x2, ")", sep = ""))
+
+    ## Null value, for prettier output later
+    null.value <- 0
+    names(null.value) <- "E[x2] - E[x1]"
 
     ## Normalize vectors to [0,1]
     x1 <- (x1 - lower)/(upper - lower)
@@ -182,18 +190,30 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                    silent = TRUE)
         if(inherits(res, "try-error")) {
             ## pick up an error in the theta calculation
-            cat("No rejection:\n")
-            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
-
-            ## and exit the function
-            return(invisible(NULL))
+            return(structure(list(method = method,
+                                  data.name = DNAME,
+                                  alternative = alternative,
+                                  null.hypothesis = null.hypothesis,
+                                  alt.hypothesis = alt.hypothesis,
+                                  estimate = sample.est,
+                                  probrej = NULL,
+                                  rejection = FALSE,
+                                  alpha = NULL,
+                                  theta = NULL,
+                                  d.alternative = NULL,
+                                  typeIIerror = NULL,
+                                  iterations = NULL,
+                                  pseudoalpha = NULL,
+                                  bounds = NULL,
+                                  null.value = null.value),
+                             class = "nphtest"))
         }
         
         theta <- minTypeIIError(optimaltypeII[[1]],
                                 p = 0.5, N = n, alpha = alpha / 2 - epsilon)
         pseudoalpha <- (alpha/2) * theta$theta
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-    {
+        
+        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
         rejMatrix <- c(rejMatrix,
                        replicate(iterations,
                                  McNemarTestRandom(runif(n) < x1,
@@ -201,7 +221,7 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                                                    pseudoalpha)))
         rejUpper <- mean(rejMatrix)
         error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
-    }
+        }
         rejectionUpper <- ifelse(rejUpper >= theta$theta, TRUE, FALSE)
         iterations.taken <- length(rejMatrix)
 
@@ -212,8 +232,8 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
         rejMatrix <- vector(mode = "numeric", length = 0)
         x1 <- 1 - x1
         x2 <- 1 - x2
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-    {
+        
+        while(error > epsilon & length(rejMatrix) <= max.iterations) {
         rejMatrix <- c(rejMatrix,
                        replicate(iterations,
                                  McNemarTestRandom(runif(n) < x1,
@@ -221,7 +241,7 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                                                    pseudoalpha)))
         rejLess <- mean(rejMatrix)
         error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
-    }
+        }
         rejectionLess <- ifelse(rejLess >= theta$theta, TRUE, FALSE)
 
         rej <- rejUpper + rejLess
@@ -243,19 +263,30 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                    silent = TRUE)
         if(inherits(res, "try-error")) {
             ## pick up an error in the theta calculation
-            cat("No rejection:\n")
-            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
-
-            ## and exit the function
-            return(invisible(NULL))
+            return(structure(list(method = method,
+                                  data.name = DNAME,
+                                  alternative = alternative,
+                                  null.hypothesis = null.hypothesis,
+                                  alt.hypothesis = alt.hypothesis,
+                                  estimate = sample.est,
+                                  probrej = NULL,
+                                  rejection = FALSE,
+                                  alpha = NULL,
+                                  theta = NULL,
+                                  d.alternative = NULL,
+                                  typeIIerror = NULL,
+                                  iterations = NULL,
+                                  pseudoalpha = NULL,
+                                  bounds = NULL,
+                                  null.value = null.value),
+                             class = "nphtest"))
         }
         
         theta <- minTypeIIError(optimaltypeII[[1]],
                                 p = 0.5, N = n, alpha = alpha - epsilon)
         pseudoalpha <- alpha * theta$theta
 
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-        {
+        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
             rejMatrix <- c(rejMatrix,
                            replicate(iterations,
                                      McNemarTestRandom(runif(n) < x1,
@@ -277,11 +308,6 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                       format(max.iterations, scientific = FALSE),
                       ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
-    names(sample.est) <- c(paste("mean(", names.x1, ")", sep = ""),
-                           paste("mean(", names.x2, ")", sep = ""))
-
-    null.value <- 0
-    names(null.value) <- "E[x2] - E[x1]" ##"mean difference"
 
     ## if rejection in a two.sided setting, we inform the user of the
     ## side of rejection
@@ -294,7 +320,7 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
 
     bounds <- paste("[", lower, ", ", upper, "]", sep = "")
 
-    structure(list(method = "Nonparametric Mean Test for Matched Pairs",
+    structure(list(method = method,
                    data.name = DNAME,
                    alternative = alternative,
                    null.hypothesis = null.hypothesis,

@@ -96,6 +96,7 @@ npMeanSingle <- function(x, mu,
                          ignoreNA = FALSE,
                          max.iterations = 100000)
 {
+    method <- "Nonparametric Single Mean Test"
     DNAME <- deparse(substitute(x))
 
     ## if x is a 1-column data.frame, convert it to a vector
@@ -107,7 +108,11 @@ npMeanSingle <- function(x, mu,
 
     x <- as.vector(x)
     sample.est <- mean(x)
+    names(sample.est) <- "mean"
 
+    null.value <- mu
+    names(null.value) <- "mean"
+    
     null.hypothesis <- paste("E(", DNAME, ") ",
                              ifelse(alternative == "greater", "<= ",
                              ifelse(alternative == "less", ">= ",
@@ -166,26 +171,38 @@ npMeanSingle <- function(x, mu,
                    silent = TRUE)
         if(inherits(res, "try-error")) {
             ## pick up an error in the theta calculation
-            cat("No rejection:\n")
-            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
-
-            ## and exit the function
-            return(invisible(NULL))
+            return(structure(list(method = method,
+                                  data.name = DNAME,
+                                  alternative = alternative,
+                                  null.hypothesis = null.hypothesis,
+                                  alt.hypothesis = alt.hypothesis,
+                                  estimate = sample.est,
+                                  probrej = NULL,
+                                  rejection = FALSE,
+                                  alpha = NULL,
+                                  theta = NULL,
+                                  d.alternative = NULL,
+                                  typeIIerror = NULL,
+                                  iterations = NULL,
+                                  pseudoalpha = NULL,
+                                  bounds = NULL,
+                                  null.value = null.value),
+                             class = "nphtest"))
         }
 
         thetaUpper <- minTypeIIError(optimaltypeII[[1]],
                                      p = p, N = n, alpha = alpha / 2 - epsilon)
         pseudoalpha <- (alpha/2) * thetaUpper$theta
 
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-    {
+        while(error > epsilon & length(rejMatrix) <= max.iterations) {
         rejMatrix <- c(rejMatrix,
                        replicate(iterations,
                                  transBinomTest(x, p, xp, n,
                                                 pseudoalpha)))
         rejUpper <- mean(rejMatrix)
         error <- exp(-2 * length(rejMatrix) * (rejUpper - thetaUpper$theta)^2)
-    }
+        }
+        
         rejectionUpper <- ifelse(rejUpper >= thetaUpper$theta, TRUE, FALSE)
         iterations.taken <- length(rejMatrix)
 
@@ -203,11 +220,23 @@ npMeanSingle <- function(x, mu,
                    silent = TRUE)
         if(inherits(res, "try-error")) {
             ## pick up an error in the theta calculation
-            cat("No rejection:\n")
-            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
-
-            ## and exit the function
-            return(invisible(NULL))
+            return(structure(list(method = method,
+                                  data.name = DNAME,
+                                  alternative = alternative,
+                                  null.hypothesis = null.hypothesis,
+                                  alt.hypothesis = alt.hypothesis,
+                                  estimate = sample.est,
+                                  probrej = NULL,
+                                  rejection = FALSE,
+                                  alpha = NULL,
+                                  theta = NULL,
+                                  d.alternative = NULL,
+                                  typeIIerror = NULL,
+                                  iterations = NULL,
+                                  pseudoalpha = NULL,
+                                  bounds = NULL,
+                                  null.value = null.value),
+                             class = "nphtest"))
         }
         
         thetaLess <- minTypeIIError(optimaltypeII[[1]],
@@ -217,15 +246,15 @@ npMeanSingle <- function(x, mu,
 
         error <- 1
         rejMatrix <- vector(mode = "numeric", length = 0)
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-    {
+        while(error > epsilon & length(rejMatrix) <= max.iterations) {
         rejMatrix <- c(rejMatrix,
                        replicate(iterations,
                                  transBinomTest(x, p, xp, n,
                                                 pseudoalpha)))
         rejLess <- mean(rejMatrix)
         error <- exp(-2 * length(rejMatrix) * (rejLess - thetaLess$theta)^2)
-    }
+        }
+        
         rejectionLess <- ifelse(rejLess >= thetaLess$theta, TRUE, FALSE)
         iterations.taken <- max(length(rejMatrix), iterations.taken)
 
@@ -247,11 +276,23 @@ npMeanSingle <- function(x, mu,
                    silent = TRUE)
         if(inherits(res, "try-error")) {
             ## pick up an error in the theta calculation
-            cat("No rejection:\n")
-            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
-
-            ## and exit the function
-            return(invisible(NULL))
+            return(structure(list(method = method,
+                                  data.name = DNAME,
+                                  alternative = alternative,
+                                  null.hypothesis = null.hypothesis,
+                                  alt.hypothesis = alt.hypothesis,
+                                  estimate = sample.est,
+                                  probrej = NULL,
+                                  rejection = FALSE,
+                                  alpha = NULL,
+                                  theta = NULL,
+                                  d.alternative = NULL,
+                                  typeIIerror = NULL,
+                                  iterations = NULL,
+                                  pseudoalpha = NULL,
+                                  bounds = NULL,
+                                  null.value = null.value),
+                             class = "nphtest"))
         }
         
         theta <- minTypeIIError(optimaltypeII[[1]],
@@ -279,11 +320,6 @@ npMeanSingle <- function(x, mu,
                       format(max.iterations, scientific = FALSE),
                       ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
-    method <- "Nonparametric Single Mean Test"
-    names(sample.est) <- "mean"
-    null.value <- mu
-    names(null.value) <- "mean"
-
     ## if rejection in a two.sided setting, we inform the user of the
     ## side of rejection
     if(alternative == "two.sided")
@@ -291,7 +327,8 @@ npMeanSingle <- function(x, mu,
         if(rejection == TRUE)
         {
             alt.hypothesis <- paste("E(", DNAME, ")",
-                                    ifelse(rejectionUpper == TRUE, " > ", " < "),
+                                    ifelse(rejectionUpper == TRUE,
+                                           " > ", " < "),
                                     mu, sep = "")
         }
         if(rejectionUpper == TRUE) {

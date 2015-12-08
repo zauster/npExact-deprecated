@@ -82,6 +82,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
                               ignoreNA = FALSE,
                               max.iterations = 100000)
 {
+    method <- "Nonparametric Test for Stochastic Inequality"
     names.x1 <- deparse(substitute(x1))
     names.x2 <- deparse(substitute(x2))
     DNAME <- paste(names.x1, "and",
@@ -116,6 +117,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
         stop("Please supply a sensible value for alpha.")
 
     d.given <- d
+    names(d.given) <- "relation P(x1 > x2) - P(x1 < x2)"
     
     ## swap variable if alternative is "less"
     if(alternative == "less")
@@ -181,11 +183,25 @@ npStochinUnpaired <- function(x1, x2, d = 0,
                    silent = TRUE)
         if(inherits(res, "try-error")) {
             ## pick up an error in the theta calculation
-            cat("No rejection:\n")
-            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
-
-            ## and exit the function
-            return(invisible(NULL))
+            return(structure(list(method = method,
+                                  data.name = DNAME,
+                                  alternative = alternative,
+                   stochin.parameter = stochin.parameter,
+                   stochin.estimate = stochin.estimate,
+                                  null.hypothesis = null.hypothesis,
+                                  alt.hypothesis = alt.hypothesis,
+                                  estimate = NULL,
+                                  probrej = NULL,
+                                  rejection = FALSE,
+                                  alpha = NULL,
+                                  theta = NULL,
+                                  d.alternative = NULL,
+                                  typeIIerror = NULL,
+                                  iterations = NULL,
+                                  pseudoalpha = NULL,
+                                  bounds = NULL,
+                                  null.value = d.given),
+                             class = "nphtest"))
         }
         
         theta <- minTypeIIError(optimaltypeII[[1]],
@@ -194,15 +210,15 @@ npStochinUnpaired <- function(x1, x2, d = 0,
         pseudoalpha <- alpha / 2 * theta$theta
 
         ## calculate the probability of rejection
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-    {
+        while(error > epsilon & length(rejMatrix) <= max.iterations) {
         rejMatrix <- c(rejMatrix,
                        replicate(iterations,
                                  sampleBinomTest(x2, x1, min.length,
                                                  p, d, pseudoalpha)))
         rejUpper <- mean(rejMatrix)
         error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
-    }
+        }
+        
         rejectionUpper <- ifelse(rejUpper >= theta$theta, TRUE, FALSE)
         iterations.taken <- length(rejMatrix)
         
@@ -214,15 +230,14 @@ npStochinUnpaired <- function(x1, x2, d = 0,
         d <- -d
         p <- (1 + d)/2
         
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-    {
+        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
         rejMatrix <- c(rejMatrix,
                        replicate(iterations,
                                  sampleBinomTest(x1, x2, min.length,
                                                  p, d, pseudoalpha)))
         rejLess <- mean(rejMatrix)
         error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
-    }
+        }
         rejectionLess <- ifelse(rejLess >= theta$theta, TRUE, FALSE)
 
         ## rejection of the test is the sum of the two tests at alpha / 2
@@ -242,11 +257,25 @@ npStochinUnpaired <- function(x1, x2, d = 0,
                    silent = TRUE)
         if(inherits(res, "try-error")) {
             ## pick up an error in the theta calculation
-            cat("No rejection:\n")
-            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
-
-            ## and exit the function
-            return(invisible(NULL))
+            return(structure(list(method = method,
+                                  data.name = DNAME,
+                                  alternative = alternative,
+                   stochin.parameter = stochin.parameter,
+                   stochin.estimate = stochin.estimate,
+                                  null.hypothesis = null.hypothesis,
+                                  alt.hypothesis = alt.hypothesis,
+                                  estimate = NULL,
+                                  probrej = NULL,
+                                  rejection = FALSE,
+                                  alpha = NULL,
+                                  theta = NULL,
+                                  d.alternative = NULL,
+                                  typeIIerror = NULL,
+                                  iterations = NULL,
+                                  pseudoalpha = NULL,
+                                  bounds = NULL,
+                                  null.value = d.given),
+                             class = "nphtest"))
         }
 
         theta <- minTypeIIError(optimaltypeII[[1]],
@@ -266,6 +295,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
         iterations.taken <- length(rejMatrix)
     }
 
+    
     if(!is.null(iterations) & length(rejMatrix) < 1000)
         warning("Low number of iterations. Results may be inaccurate.")
 
@@ -274,8 +304,6 @@ npStochinUnpaired <- function(x1, x2, d = 0,
                       format(max.iterations, scientific = FALSE),
                       ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
-
-    names(d.given) <- "relation P(x1 > x2) - P(x1 < x2)"
 
     ## if rejection in a two.sided setting, we inform the user of the
     ## side of rejection
@@ -286,7 +314,7 @@ npStochinUnpaired <- function(x1, x2, d = 0,
                                 d.given, sep = "")
     }
 
-    structure(list(method = "Nonparametric Test for Stochastic Inequality",
+    structure(list(method = method,
                    data.name = DNAME,
                    alternative = alternative,
                    stochin.parameter = stochin.parameter,

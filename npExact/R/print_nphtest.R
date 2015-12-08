@@ -21,44 +21,54 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
             thus, " in favour of", "\n", sep = "")
         cat("alternative hypothesis H1: ", x$alt.hypothesis, "\n\n",
             sep = "")
-        cat("as threshold probability:", x$probrej, "is", alt.char,
-            "than theta:", x$theta, "\n")
+
+        ## continue only if a valid theta was found
+        if(!is.null(x$theta)) {
+            cat("as threshold probability:", x$probrej, "is", alt.char,
+                "than theta:", x$theta, "\n")
+        } else {
+            cat("\tNo rejection:\n")
+            cat("\tIt was not possible to find a valid theta\n")
+            cat("\t(i.e., one that minimizes the type II error).\n")
+        }
       }
 
-    if(!is.null(x$p.value))
-      {
-        fp <- format.pval(x$p.value, digits = digits)
-        fp <- paste("p-value",
-                         if(substr(fp, 1L, 1L) == "<") fp
-                         else paste("=",fp))
-        cat(fp, "\n")
-    }
+    if(!is.null(x$theta)) {
+        if(!is.null(x$p.value))
+        {
+            fp <- format.pval(x$p.value, digits = digits)
+            fp <- paste("p-value",
+                        if(substr(fp, 1L, 1L) == "<") fp
+                        else paste("=",fp))
+            cat(fp, "\n")
+        }
 
-    cat("\ngiven parameters:\n")
-    if(!is.null(x$bounds))
-      {
-        cat(paste("   ", x$data.name,
-                  " in ", x$bounds,
-                  "\n", sep = ""))
-      }
-    cat("   alpha:", x$alpha)
-    cat("\n   theta:", x$theta)
+        cat("\ngiven parameters:\n")
+        if(!is.null(x$bounds))
+        {
+            cat(paste("   ", x$data.name,
+                      " in ", x$bounds,
+                      "\n", sep = ""))
+        }
+        cat("   alpha:", x$alpha)
+        cat("\n   theta:", x$theta)
 
-    if(!is.null(x$d.alternative))
-      {
-        cat("\n   d.alt:", x$d.alternative)
-        cat("\n   typeII:", x$typeIIerror)
-      }
+        if(!is.null(x$d.alternative))
+        {
+            cat("\n   d.alt:", x$d.alternative)
+            cat("\n   typeII:", x$typeIIerror)
+        }
 
-    if(!is.null(x$iterations))
-      cat("\n   iterations:", x$iterations)
+        if(!is.null(x$iterations))
+            cat("\n   iterations:", x$iterations)
 
-    if(!is.null(x$mc.error))
-      cat("\n   max error prob of MC:", round(x$mc.error, digits = digits))
-    
-    if(!is.null(x$estimate)) {
-        cat("\n\nsample estimates:\n")
-        print(x$estimate, ...)
+        if(!is.null(x$mc.error))
+            cat("\n   max error prob of MC:", round(x$mc.error, digits = digits))
+        
+        if(!is.null(x$estimate)) {
+            cat("\n\nsample estimates:\n")
+            print(x$estimate, ...)
+        }
     }
     cat("\n")
     invisible(x)

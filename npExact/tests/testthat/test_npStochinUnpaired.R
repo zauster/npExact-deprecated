@@ -158,3 +158,23 @@ test_that("correct rejection 13",
 test_that("sample estimate 13",
           expect_true(res$stochin.estimate < -0.8))
 
+
+##
+## theta calculation error
+##
+
+set.seed(453)
+x1 <- rnorm(3)
+x2 <- rnorm(3)
+
+res <- npStochinUnpaired(x1, x2, alternative = "two.sided")
+test_that("npStochinUnpaired, no theta calculation, two.sided",
+          expect_true(is.null(res$theta)))
+
+res <- npStochinUnpaired(x1, x2, alternative = "greater")
+test_that("npStochinUnpaired, no theta calculation, greater",
+          expect_true(is.null(res$theta)))
+
+res <- npStochinUnpaired(x1, x2, alternative = "less")
+test_that("npStochinUnpaired, no theta calculation, less",
+          expect_true(is.null(res$theta)))

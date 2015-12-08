@@ -93,6 +93,11 @@ npMeanUnpaired <- function(x1, x2,
                            ignoreNA = FALSE,
                            max.iterations = 100000)
 {
+    method <- "Nonparametric Mean Test for unpaired variables"
+
+    null.value <- 0
+    names(null.value) <- "E[x2] - E[x1]" ## "mean difference"
+
     names.x1 <- deparse(substitute(x1))
     names.x2 <- deparse(substitute(x2))
 
@@ -146,6 +151,8 @@ npMeanUnpaired <- function(x1, x2,
 
 
     sample.est <- c(mean(x1), mean(x2))
+    names(sample.est) <- c(paste("mean(", names.x1, ")", sep = ""),
+                           paste("mean(", names.x2, ")", sep = ""))
 
     ## standardize variables
     ## d <- d/(upper - lower)
@@ -178,22 +185,33 @@ npMeanUnpaired <- function(x1, x2,
                                alpha = alpha / 2 - epsilon)
         if(round(theta$theta, digits = 4) >= 1L | round(theta$typeII >= 1L)) {
             ## pick up an error in the theta calculation
-            cat("No rejection:\n")
-            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
-
-            ## and exit the function
-            return(invisible(NULL))
+            return(structure(list(method = method,
+                                  data.name = DNAME,
+                                  alternative = alternative,
+                                  null.hypothesis = null.hypothesis,
+                                  alt.hypothesis = alt.hypothesis,
+                                  estimate = sample.est,
+                                  probrej = NULL,
+                                  rejection = FALSE,
+                                  alpha = NULL,
+                                  theta = NULL,
+                                  d.alternative = NULL,
+                                  typeIIerror = NULL,
+                                  iterations = NULL,
+                                  pseudoalpha = NULL,
+                                  bounds = NULL,
+                                  null.value = null.value),
+                             class = "nphtest"))
         }
         pseudoalpha <- alpha / 2 * theta$theta
 
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-    {
+        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
         rejMatrix <- c(rejMatrix,
                        replicate(iterations,
                                  randomTest(x1, x2, n1, n2, pseudoalpha)))
         rejUpper <- mean(rejMatrix)
         error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
-    }
+        }
         rejectionUpper <- ifelse(rejUpper >= theta$theta, TRUE, FALSE)
         iterations.taken <- length(rejMatrix)
 
@@ -205,14 +223,13 @@ npMeanUnpaired <- function(x1, x2,
         x2 <- 1 - x2
         error <- 1
         rejMatrix <- vector(mode = "numeric", length = 0)
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-    {
+        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
         rejMatrix <- c(rejMatrix,
                        replicate(iterations,
                                  randomTest(x1, x2, n1, n2, pseudoalpha)))
         rejLess <- mean(rejMatrix)
         error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
-    }
+        }
         rejectionLess <- ifelse(rejLess >= theta$theta, TRUE, FALSE)
 
 
@@ -239,16 +256,27 @@ npMeanUnpaired <- function(x1, x2,
         ## if theta is greater equal than 1 or typeII, exit the function
         if(round(theta$theta, digits = 4) >= 1L | round(theta$typeII >= 1L)) {
             ## pick up an error in the theta calculation
-            cat("No rejection:\n")
-            cat("It was not possible to find a valid theta (i.e., one that minimizes the type II error).\n")
-
-            ## and exit the function
-            return(invisible(NULL))
+            return(structure(list(method = method,
+                                  data.name = DNAME,
+                                  alternative = alternative,
+                                  null.hypothesis = null.hypothesis,
+                                  alt.hypothesis = alt.hypothesis,
+                                  estimate = sample.est,
+                                  probrej = NULL,
+                                  rejection = FALSE,
+                                  alpha = NULL,
+                                  theta = NULL,
+                                  d.alternative = NULL,
+                                  typeIIerror = NULL,
+                                  iterations = NULL,
+                                  pseudoalpha = NULL,
+                                  bounds = NULL,
+                                  null.value = null.value),
+                             class = "nphtest"))
         }
         pseudoalpha <- alpha * theta$theta
 
-        while(error > epsilon & length(rejMatrix) <= max.iterations)
-        {
+        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
             rejMatrix <- c(rejMatrix,
                            replicate(iterations,
                                      randomTest(x1, x2,
@@ -261,6 +289,8 @@ npMeanUnpaired <- function(x1, x2,
         iterations.taken <- length(rejMatrix)
     }
 
+    
+    ## warnings on low number of iterations
     if(!is.null(iterations) & iterations.taken < 1000)
         warning("Low number of iterations. Results may be inaccurate.")
 
@@ -269,11 +299,7 @@ npMeanUnpaired <- function(x1, x2,
                       format(max.iterations, scientific = FALSE),
                       ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
-    method <- "Nonparametric Mean Test for unpaired variables"
-    names(sample.est) <- c(paste("mean(", names.x1, ")", sep = ""),
-                           paste("mean(", names.x2, ")", sep = ""))
-    null.value <- 0
-    names(null.value) <- "E[x2] - E[x1]" ## "mean difference"
+    
     ## if rejection in a two.sided setting, we inform the user of the
     ## side of rejection
     if(rejection == TRUE & alternative == "two.sided")

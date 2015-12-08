@@ -51,15 +51,32 @@ test_that("transBinomtest, no rejection",
 x <- 1 - c(rep(0, 4), rep(.5, 13), rep(1, 20))
 x <- (x - lower)/(upper - lower)
 n <- length(x)
+
 test_that("transBinomtest, mixed rejection",
           expect_equal({
               set.seed(1); p <- .175; transBinomTest(x, p, x - p, n, 0.03)
             }, 0.26506823))
+
 test_that("transBinomtest, full rejection",
           expect_equal({
               set.seed(1); p <- .1; transBinomTest(x, p, x - p, n, 0.03)
             }, 1))
+
 test_that("transBinomtest, no rejection",
           expect_equal({
               set.seed(1); p <- .2; transBinomTest(x, p, x - p, n, 0.03)
-            }, 0))
+          }, 0))
+
+set.seed(123)
+x <- runif(2)
+res <- npMeanSingle(x, mu = .3)
+test_that("npMeanSingle, no theta calculation. two-sided",
+          expect_true(is.null(res$theta)))
+
+res <- npMeanSingle(x, mu = .3, alternative = "greater")
+test_that("npMeanSingle, no theta calculation. greater",
+          expect_true(is.null(res$theta)))
+
+res <- npMeanSingle(x, mu = .3, alternative = "less")
+test_that("npMeanSingle, no theta calculation. less",
+          expect_true(is.null(res$theta)))
