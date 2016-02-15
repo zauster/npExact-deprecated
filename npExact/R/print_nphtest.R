@@ -27,9 +27,22 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
             cat("as threshold probability:", x$probrej, "is", alt.char,
                 "than theta:", x$theta, "\n")
         } else {
-            cat("\tNo rejection:\n")
-            cat("\tIt was not possible to find a valid theta\n")
-            cat("\t(i.e., one that minimizes the type II error).\n")
+            cat("given parameters:\n")
+            if(!is.null(x$bounds))
+            {
+                cat(paste("   ", x$data.name,
+                          " in ", x$bounds,
+                          "\n", sep = ""))
+            }
+            cat("   alpha:", x$alpha, "\n")
+
+            cat("\nNote:\n")
+            cat("The sample is so small that the null hypothesis will not be rejected for any values in the sample (and theta cannot be calculated).\n")
+            
+            if(!is.null(x$estimate)) {
+                cat("\nsample estimates:\n")
+                print(x$estimate, ...)
+            }
         }
       }
 
@@ -51,7 +64,7 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
                       "\n", sep = ""))
         }
         cat("   alpha:", x$alpha)
-        cat("\n   theta:", x$theta)
+        cat("\n   theta:", x$thetaValue)
 
         if(!is.null(x$d.alternative))
         {
