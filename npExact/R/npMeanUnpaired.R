@@ -221,6 +221,7 @@ npMeanUnpaired <- function(x1, x2,
         ##
         x1 <- 1 - x1
         x2 <- 1 - x2
+
         error <- 1
         rejMatrix <- vector(mode = "numeric", length = 0)
         while(error > epsilon & length(rejMatrix) <= max.iterations)  {

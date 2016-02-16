@@ -165,13 +165,14 @@ npMeanSingle <- function(x, mu,
         ##
         ## first the upper side, alternative = "greater"
         ##
-        resultsGreater <- doMeanSingleTest(x = x, p = p,
-                                           xp = xp, n = n,
-                                           alpha = alpha / 2,
+        resultsGreater <- doSingleTest(alpha = alpha / 2,
                                            epsilon = epsilon,
                                            iterations = iterations,
-                                           max.iterations = max.iterations)
-
+                                           max.iterations = max.iterations,
+                                           testFunction = transBinomTest,
+                                           p = p, n = n,
+                                           x = x, xp = xp)
+        
         ##
         ## secondly the lower side, alternative = "less"
         ##
@@ -179,12 +180,13 @@ npMeanSingle <- function(x, mu,
         p <- 1 - p
         xp <- x - p
         
-        resultsLess <- doMeanSingleTest(x = x, p = p,
-                                        xp = xp, n = n,
-                                        alpha = alpha / 2,
+        resultsLess <- doSingleTest(alpha = alpha / 2,
                                         epsilon = epsilon,
                                         iterations = iterations,
-                                        max.iterations = max.iterations)
+                                        max.iterations = max.iterations,
+                                        testFunction = transBinomTest,
+                                        p = p, n = n,
+                                        x = x, xp = xp)
 
         ## "greater" rejects 
         if(resultsGreater[["rejection"]] == TRUE) {
@@ -194,13 +196,16 @@ npMeanSingle <- function(x, mu,
         else if(resultsLess[["rejection"]] == TRUE) {
             results <- resultsLess
         }
-        ## none rejects
+        ## none rejects:
+        ## we take the one that is more likely to reject
         else {
-            if(!is.null(resultsGreater[["theta"]])) {
+            if((sample.est < null.value) & !is.null(resultsGreater[["theta"]])) {
                 results <- resultsGreater
             }
-            else {
+            else if((sample.est > null.value) & !is.null(resultsLess[["theta"]])) {
                 results <- resultsLess
+            } else {
+                results <- resultsGreater                
             }
         }
 
@@ -226,13 +231,14 @@ npMeanSingle <- function(x, mu,
             xp <- x - p
         }
 
-        results <- doMeanSingleTest(x = x, p = p,
-                                    xp = xp, n = n,
-                                    alpha = alpha,
+        results <- doSingleTest(alpha = alpha,
                                     epsilon = epsilon,
                                     iterations = iterations,
-                                    max.iterations = max.iterations)
-        print(results)
+                                    max.iterations = max.iterations,
+                                    testFunction = transBinomTest,
+                                    p = p, n = n,
+                                    x = x, xp = xp)
+                                    
         theta <- results[["theta"]]
     }
 
@@ -259,8 +265,12 @@ npMeanSingle <- function(x, mu,
             theta <- resultsGreater[["theta"]]
         } else if(resultsLess[["rejection"]] == TRUE) {
             theta <- resultsLess[["theta"]]
-        } else {
-            theta <- max(results[["theta"]])
+        } else {                        # none rejects
+            if(all(!is.null(results[["theta"]]))) {
+                theta <- max(results[["theta"]])
+            } else {                    # none rejects and none has a valid theta
+                theta <- NULL
+            }
         }
     }
 
@@ -294,8 +304,14 @@ npMeanSingle <- function(x, mu,
 ## n ... length of x
 ## pseudoalpha ... theta times alpha, the (new) level of the test
 
-transBinomTest <- function(x, p, xp, n, pseudoalpha)
+transBinomTest <- function(p, n, pseudoalpha, dots)
 {
+    x <- dots[["x"]]
+    xp <- dots[["xp"]]
+
+    ## str(x)
+    ## str(xp)
+    
     q <- runif(n)
     zeros <- sum(x < (q * p))  ## counts how often values of x < q*p
     ones <- sum(xp > (q * (1 - p))) ## counts how often xp > q*(1-p)
@@ -317,62 +333,4 @@ transBinomTest <- function(x, p, xp, n, pseudoalpha)
         }
     }
     res
-}
-
-doMeanSingleTest <- function(x, p, xp, n, alpha, epsilon,
-                             iterations, max.iterations)
-{
-    error <- 1
-    rejMatrix <- vector(mode = "numeric", length = 0)
-
-    tryRes <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                           c(0, 1), p = p, N = n,
-                                           alpha = alpha - epsilon),
-                  silent = TRUE)
-    if(inherits(tryRes, "try-error")) {
-        
-        ## pick up an error in the theta calculation
-        ## and return a non-rejection
-
-        results <- list(probrej = 0,
-                        rejection = FALSE,
-                        alpha = alpha,
-                        theta = NULL,
-                        d.alternative = NULL,
-                        typeIIerror = NULL,
-                        iterations.taken = 1000,
-                        pseudoalpha = NULL)
-        
-    } else {
-
-        theta <- minTypeIIError(optimaltypeII[[1]],
-                                p = p, N = n,
-                                alpha = alpha - epsilon)
-        pseudoalpha <- alpha * theta$theta
-
-        while(error > epsilon & length(rejMatrix) <= max.iterations) {
-            rejMatrix <- c(rejMatrix,
-                           replicate(iterations,
-                                     transBinomTest(x, p, xp, n,
-                                                    pseudoalpha)))
-            rej <- mean(rejMatrix)
-            error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
-        }
-        
-        rejection <- ifelse(rej >= theta$theta,
-                            TRUE, FALSE)
-        iterations.taken <- length(rejMatrix)
-
-        results <- list(probrej = rej,
-                        rejection = rejection,
-                        alpha = alpha,
-                        theta = theta$theta,
-                        d.alternative = optimaltypeII$root,
-                        typeIIerror = theta$typeII,
-                        iterations.taken = iterations.taken,
-                        pseudoalpha = pseudoalpha)
-
-    }
-
-    return(results)
 }

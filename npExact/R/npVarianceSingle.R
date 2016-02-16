@@ -141,149 +141,77 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
         ##
         ## alternative "greater"
         ##
-        res <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                            c(0, 1), p = p, N = m,
-                                            alpha = alpha / 2 - epsilon),
-                   silent = TRUE)
-        if(inherits(res, "try-error")) {
-            ## pick up an error in the theta calculation
-            return(structure(list(method = method,
-                                  data.name = DNAME,
-                                  alternative = alternative,
-                                  null.hypothesis = null.hypothesis,
-                                  alt.hypothesis = alt.hypothesis,
-                                  estimate = sample.est,
-                                  probrej = NULL,
-                                  rejection = FALSE,
-                                  alpha = NULL,
-                                  theta = NULL,
-                                  d.alternative = NULL,
-                                  typeIIerror = NULL,
-                                  iterations = NULL,
-                                  pseudoalpha = NULL,
-                                  bounds = NULL,
-                                  null.value = null.value),
-                             class = "nphtest"))
-        }
-        
-        thetaUpper <- minTypeIIError(optimaltypeII[[1]],
-                                     p = p, N = m, alpha = alpha / 2 - epsilon)
-        pseudoalpha <- alpha * thetaUpper$theta / 2
-        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
-        rejMatrix <- c(rejMatrix,
-                       replicate(iterations,
-                                 sampleBinomTestnpVar(x, m, p,
-                                                      alternative = "greater",
-                                                      alpha = pseudoalpha)))
-        rejUpper <- mean(rejMatrix)
-        error <- exp(-2 * length(rejMatrix) * (rejUpper - thetaUpper$theta)^2)
-        }
-        rejectionUpper <- ifelse(rejUpper >= thetaUpper$theta, TRUE, FALSE)
-        iterations.taken <- length(rejMatrix)
+        resultsGreater <- doSingleTest(alpha = alpha / 2,
+                                epsilon = epsilon,
+                                iterations = iterations,
+                                max.iterations = max.iterations,
+                                testFunction = sampleBinomTestnpVar,
+                                p = p, n = m,
+                                x = x, alternative = "greater")
 
         ##
         ## alternative "less"
         ##
-        res <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                            c(0, 1), p = 1 - p, N = m,
-                                            alpha = alpha / 2 - epsilon),
-                   silent = TRUE)
-        if(inherits(res, "try-error")) {
-            ## pick up an error in the theta calculation
-            return(structure(list(method = method,
-                                  data.name = DNAME,
-                                  alternative = alternative,
-                                  null.hypothesis = null.hypothesis,
-                                  alt.hypothesis = alt.hypothesis,
-                                  estimate = sample.est,
-                                  probrej = NULL,
-                                  rejection = FALSE,
-                                  alpha = NULL,
-                                  theta = NULL,
-                                  d.alternative = NULL,
-                                  typeIIerror = NULL,
-                                  iterations = NULL,
-                                  pseudoalpha = NULL,
-                                  bounds = NULL,
-                                  null.value = null.value),
-                             class = "nphtest"))
-        }
-        
-        thetaLess <- minTypeIIError(optimaltypeII[[1]],
-                                    p = 1 - p, N = m,
-                                    alpha = alpha / 2 - epsilon)
-        pseudoalpha <- alpha * thetaLess$theta / 2
-        error <- 1
-        rejMatrix <- vector(mode = "numeric", length = 0)
+        p <- 1 - p
+        resultsLess <- doSingleTest(alpha = alpha / 2,
+                                epsilon = epsilon,
+                                iterations = iterations,
+                                max.iterations = max.iterations,
+                                testFunction = sampleBinomTestnpVar,
+                                p = p, n = m,
+                                x = x, alternative = "less")
 
-        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
-        rejMatrix <- c(rejMatrix,
-                       replicate(iterations,
-                                 sampleBinomTestnpVar(x, m, p,
-                                                      alternative = "less",
-                                                      alpha = pseudoalpha)))
-        rejLess <- mean(rejMatrix)
-        error <- exp(-2 * length(rejMatrix) * (rejLess - thetaLess$theta)^2)
+        ## if "greater" rejects 
+        if(resultsGreater[["rejection"]] == TRUE) {
+            results <- resultsGreater
         }
+        ## if "less" rejects
+        else if(resultsLess[["rejection"]] == TRUE) {
+            results <- resultsLess
+        }
+        ## if none rejects:
+        ## we take the one that is more likely to reject
+        else {
+            if(sample.est < null.value) {
+                results <- resultsGreater
+            }
+            else {
+                results <- resultsLess
+            }
+        }
+
+        results[["probrej"]] <- resultsGreater[["probrej"]] + resultsLess[["probrej"]]
+
+        ## collect values of both runs
+        results[["d.alternative"]] <- c(resultsGreater[["d.alternative"]],
+                                1 - resultsLess[["d.alternative"]])
+        results[["typeIIerror"]] <- c(resultsGreater[["typeIIerror"]],
+                                      resultsLess[["typeIIerror"]])
+        results[["theta"]] <- c(resultsGreater[["theta"]],
+                                     resultsLess[["theta"]])
+        results[["iterations.taken"]] <- max(resultsGreater[["iterations.taken"]],
+                                             resultsLess[["iterations.taken"]])
         
-        rejectionLess <- ifelse(rejLess >= thetaLess$theta, TRUE, FALSE)
-        rej <- rejUpper + rejLess
-        rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
-        iterations.taken <- max(length(rejMatrix), iterations.taken)
     }
     else
     {
-        res <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                            c(0, 1),
-                                            p = ifelse(alternative == "greater",
-                                                       p, 1 - p),
-                                            N = m,
-                                            alpha = alpha - epsilon),
-                   silent = TRUE)
-        if(inherits(res, "try-error")) {
-            ## pick up an error in the theta calculation
-            return(structure(list(method = method,
-                                  data.name = DNAME,
-                                  alternative = alternative,
-                                  null.hypothesis = null.hypothesis,
-                                  alt.hypothesis = alt.hypothesis,
-                                  estimate = sample.est,
-                                  probrej = NULL,
-                                  rejection = FALSE,
-                                  alpha = NULL,
-                                  theta = NULL,
-                                  d.alternative = NULL,
-                                  typeIIerror = NULL,
-                                  iterations = NULL,
-                                  pseudoalpha = NULL,
-                                  bounds = NULL,
-                                  null.value = null.value),
-                             class = "nphtest"))
+        if(alternative == "less") {
+            p <- 1 - p
         }
-        
-        theta <- minTypeIIError(optimaltypeII[[1]],
-                                p = ifelse(alternative == "greater",
-                                           p, 1 - p),
-                                N = m, alpha = alpha - epsilon)
-        pseudoalpha <- alpha * theta$theta
-
-        while(error > epsilon & length(rejMatrix) <= max.iterations) {
-            rejMatrix <- c(rejMatrix,
-                           replicate(iterations,
-                                     sampleBinomTestnpVar(x, m, p,
-                                                          alternative = alternative,
-                                                          alpha = pseudoalpha)))
-            rej <- mean(rejMatrix)
-            error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
-        }
-        rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
-        iterations.taken <- length(rejMatrix)
+        results <- doSingleTest(alpha = alpha,
+                                epsilon = epsilon,
+                                iterations = iterations,
+                                max.iterations = max.iterations,
+                                testFunction = sampleBinomTestnpVar,
+                                p = p, n = m,
+                                x = x, alternative = alternative)
+        theta <- results[["theta"]]
     }
 
-    if(!is.null(iterations) & iterations.taken < 1000)
+    if(!is.null(iterations) & results[["iterations.taken"]] < 1000)
         warning("Low number of iterations. Results may be inaccurate.")
 
-    if(iterations.taken >= max.iterations)
+    if(results[["iterations.taken"]] >= max.iterations)
         warning(paste("The maximum number of iterations (",
                       format(max.iterations, scientific = FALSE),
                       ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
@@ -293,17 +221,19 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
     ## side of rejection
     if(alternative == "two.sided")
     {
-        if(rejection == TRUE)
+        if(results[["rejection"]] == TRUE)
         {
             alt.hypothesis <- paste("Var(", DNAME, ")",
-                                    ifelse(rejectionUpper == TRUE,
+                                    ifelse(resultsGreater[["rejection"]] == TRUE,
                                            " > ", " < "),
                                     v, sep = "")
         }
-        if(rejectionUpper == TRUE) {
-            theta <- thetaUpper
+        if(resultsGreater[["rejection"]] == TRUE) {
+            theta <- resultsGreater[["theta"]]
+        } else if(resultsLess[["rejection"]] == TRUE) {
+            theta <- resultsLess[["theta"]]
         } else {
-            theta <- thetaLess
+            theta <- max(results[["theta"]])
         }
     }
 
@@ -313,32 +243,33 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                    null.hypothesis = null.hypothesis,
                    alt.hypothesis = alt.hypothesis,
                    estimate = sample.est,
-                   probrej = rej,
-                   rejection = rejection,
+                   probrej = results[["probrej"]],
+                   rejection = results[["rejection"]],
                    alpha = alpha,
-                   theta = theta$theta,
-                   d.alternative = 0.5 * optimaltypeII$root * (upper - lower)^2,
-                   typeIIerror = theta$typeII,
-                   iterations = iterations.taken,
-                   pseudoalpha = pseudoalpha,
+                   theta = theta,
+                   thetaValue = results[["theta"]],
+                   d.alternative = 0.5 * results[["d.alternative"]] * (upper - lower)^2,
+                   typeIIerror = results[["typeIIerror"]],
+                   iterations = results[["iterations.taken"]],
+                   pseudoalpha = results[["pseudoalpha"]],
                    bounds = bounds,
                    null.value = null.value),
               class = "nphtest")
 }
 
 
-sampleBinomTestnpVar <- function(x, m, p, alternative, alpha)
+sampleBinomTestnpVar <- function(p, n, pseudoalpha, dots)
 {
-    x <- sample(x)
+    x <- sample(dots[["x"]])
 
     ## transformation into sample in [0,1] that has mean equal to 1/2 +
     ## Var(X)
     ## subtract the odd from the even indexed values, to the power 2
-    x.folded <- (x[c(1:m)*2] - x[(c(1:m)*2 - 1)])^2
+    x.folded <- (x[c(1:n)*2] - x[(c(1:n)*2 - 1)])^2
 
     ## Random transformation of [0,1] data into {0,p,1} data,
     ## later only use {0,1}
-    q <- runif(m)
+    q <- runif(n)
 
     ## number of 0 values in transformed data
     zeros <- sum(x.folded - p > (q*(1 - p)))
@@ -348,7 +279,7 @@ sampleBinomTestnpVar <- function(x, m, p, alternative, alpha)
     ## Evaluation of randomized binomial test, see if the number of zeros
     ## relative to (ones+zeros) is significantly below p
 
-    k <- switch(alternative,
+    k <- switch(dots[["alternative"]],
                 less = 0:zeros,
                 greater = zeros:(ones+zeros))
 
@@ -359,16 +290,16 @@ sampleBinomTestnpVar <- function(x, m, p, alternative, alpha)
     ##                lower.tail = ifelse(alternative == "greater",
     ##                  TRUE, FALSE)) ## not exact
 
-    if(prob <= alpha) ## reject with probability 1
+    if(prob <= pseudoalpha) ## reject with probability 1
     {
         res <- 1
     }
     else
     {
         h <- dbinom(zeros, zeros + ones, p) ## more efficient
-        if (prob <= alpha + h) ##(reject with positive probability)
+        if (prob <= pseudoalpha + h) ##(reject with positive probability)
         {
-            res <- ((alpha - prob + h) / h)
+            res <- ((pseudoalpha - prob + h) / h)
         }
         else
         {

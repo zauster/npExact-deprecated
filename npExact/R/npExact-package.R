@@ -73,19 +73,19 @@ NULL
 ##' 
 ##' \code{npExact} provides distribution-free hypothesis tests.
 ##' 
-##' \tabular{ll}{ Package: \tab npExact\cr Type: \tab Package\cr Version: \tab
-##' 0.2 \cr Date: \tab 2013-09-26 \cr License: \tab GPL-2\cr } This package
-##' contains several new hypothesis tests, which do not require that the user
-##' makes assumptions on the underlying distributions.
+##' This package contains several new hypothesis tests, which do not
+##' require that the user makes assumptions on the underlying
+##' distributions.
 ##' 
-##' However, all tests except \code{npStochin} can only be applied if there are
-##' exogenously given bounds known to the user before gathering the data such
-##' that it is known by definition of the underlying process that all
-##' observations lie within these bounds.
+##' However, all tests except \code{npStochin} can only be applied if
+##' there are exogenously given bounds known to the user before
+##' gathering the data such that it is known by definition of the
+##' underlying process that all observations lie within these bounds.
 ##' 
-##' So for instance, if the data involves percentages then the lower bound is 0
-##' and the upper bound is 100, by definition of the data and not something
-##' (like normality) that cannot be deduced from the properties of the data.
+##' So for instance, if the data involves percentages then the lower
+##' bound is 0 and the upper bound is 100, by definition of the data
+##' and not something (like normality) that cannot be deduced from the
+##' properties of the data.
 ##' 
 ##' @name npExact-package
 ##' @aliases npExact-package npExact
