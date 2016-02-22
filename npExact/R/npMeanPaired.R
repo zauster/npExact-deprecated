@@ -171,82 +171,73 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
     x1 <- (x1 - lower)/(upper - lower)
     x2 <- (x2 - lower)/(upper - lower)
 
-    error <- 1
-
-    ## rejMatrix will store the results of the McNemarTest Monte
-    ## Carlo replications
-    rejMatrix <- vector(mode = "numeric", length = 0)
-
     if(alternative == "two.sided")
     {
         ##
         ## alternative "greater" at alpha / 2
         ##
-
-        ## compute the theta that optimizes the type II error
-        res <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                            c(0, 1), p = 0.5, N = n,
-                                            alpha = alpha / 2 - epsilon),
-                   silent = TRUE)
-        if(inherits(res, "try-error")) {
-            ## pick up an error in the theta calculation
-            return(structure(list(method = method,
-                                  data.name = DNAME,
-                                  alternative = alternative,
-                                  null.hypothesis = null.hypothesis,
-                                  alt.hypothesis = alt.hypothesis,
-                                  estimate = sample.est,
-                                  probrej = NULL,
-                                  rejection = FALSE,
-                                  alpha = NULL,
-                                  theta = NULL,
-                                  d.alternative = NULL,
-                                  typeIIerror = NULL,
-                                  iterations = NULL,
-                                  pseudoalpha = NULL,
-                                  bounds = NULL,
-                                  null.value = null.value),
-                             class = "nphtest"))
-        }
-        
-        theta <- minTypeIIError(optimaltypeII[[1]],
-                                p = 0.5, N = n, alpha = alpha / 2 - epsilon)
-        pseudoalpha <- (alpha/2) * theta$theta
-        
-        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
-        rejMatrix <- c(rejMatrix,
-                       replicate(iterations,
-                                 McNemarTestRandom(runif(n) < x1,
-                                                   runif(n) < x2,
-                                                   pseudoalpha)))
-        rejUpper <- mean(rejMatrix)
-        error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
-        }
-        rejectionUpper <- ifelse(rejUpper >= theta$theta, TRUE, FALSE)
-        iterations.taken <- length(rejMatrix)
+        resultsGreater <- doTwoVariablesTest(alpha = alpha / 2,
+                                             epsilon = epsilon,
+                                             iterations = iterations,
+                                             max.iterations = max.iterations,
+                                             testFunction = McNemarTestRandom,
+                                             x1 = x1, x2 = x2,
+                                             p = 0.5, n = n)
 
         ##
         ## alternative "less" at alpha / 2
         ##
-        error <- 1
-        rejMatrix <- vector(mode = "numeric", length = 0)
         x1 <- 1 - x1
         x2 <- 1 - x2
-        
-        while(error > epsilon & length(rejMatrix) <= max.iterations) {
-        rejMatrix <- c(rejMatrix,
-                       replicate(iterations,
-                                 McNemarTestRandom(runif(n) < x1,
-                                                   runif(n) < x2,
-                                                   pseudoalpha)))
-        rejLess <- mean(rejMatrix)
-        error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
-        }
-        rejectionLess <- ifelse(rejLess >= theta$theta, TRUE, FALSE)
 
-        rej <- rejUpper + rejLess
-        rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
-        iterations.taken <- max(length(rejMatrix), iterations.taken)
+        resultsLess <- doTwoVariablesTest(alpha = alpha / 2,
+                                          epsilon = epsilon,
+                                          theta = resultsGreater[["theta"]],
+                                          typeII = resultsGreater[["typeIIerror"]],
+                                          d.alternative = resultsGreater[["d.alternative"]],
+                                          iterations = iterations,
+                                          max.iterations = max.iterations,
+                                          testFunction = McNemarTestRandom,
+                                          x1 = x1, x2 = x2,
+                                          p = 0.5, n = n)
+
+
+        ## "greater" rejects 
+        if(resultsGreater[["rejection"]] == TRUE) {
+            results <- resultsGreater
+            theta <- resultsGreater[["theta"]]
+        }
+        ## "less" rejects
+        else if(resultsLess[["rejection"]] == TRUE) {
+            results <- resultsLess
+            theta <- resultsLess[["theta"]]
+        }
+        ## none rejects:
+        ## we take the one that is more likely to reject
+        else {
+            if((sample.est[1] - sample.est[2] > 0) & !is.null(resultsGreater[["theta"]])) {
+                results <- resultsGreater
+                theta <- resultsGreater[["theta"]]
+            }
+            else if((sample.est[1] - sample.est[2] < 0) & !is.null(resultsLess[["theta"]])) {
+                results <- resultsLess
+                theta <- resultsLess[["theta"]]
+            } else {
+                results <- resultsGreater                
+                theta <- resultsGreater[["theta"]]
+            }
+        }
+
+        results <- mergeTwoResultSets(results, resultsGreater, resultsLess)
+         
+        ## if rejection in a two.sided setting, we inform the user of the
+        ## side of rejection
+        if(results[["rejection"]] == TRUE)
+        {
+            alt.hypothesis <- paste("E(", names.x1, ")",
+                                    ifelse(resultsGreater[["rejection"]] == TRUE, " < ", " > "),
+                                    "E(", names.x2, ")", sep = "")
+        }
     }
     else
     {
@@ -256,67 +247,27 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
             x2 <- 1 - x2
         }
 
-        ## compute the theta that optimizes the type II error
-        res <- try(optimaltypeII <- uniroot(minTypeIIErrorWrapper,
-                                            c(0, 1), p = 0.5, N = n,
-                                            alpha = alpha - epsilon),
-                   silent = TRUE)
-        if(inherits(res, "try-error")) {
-            ## pick up an error in the theta calculation
-            return(structure(list(method = method,
-                                  data.name = DNAME,
-                                  alternative = alternative,
-                                  null.hypothesis = null.hypothesis,
-                                  alt.hypothesis = alt.hypothesis,
-                                  estimate = sample.est,
-                                  probrej = NULL,
-                                  rejection = FALSE,
-                                  alpha = NULL,
-                                  theta = NULL,
-                                  d.alternative = NULL,
-                                  typeIIerror = NULL,
-                                  iterations = NULL,
-                                  pseudoalpha = NULL,
-                                  bounds = NULL,
-                                  null.value = null.value),
-                             class = "nphtest"))
-        }
-        
-        theta <- minTypeIIError(optimaltypeII[[1]],
-                                p = 0.5, N = n, alpha = alpha - epsilon)
-        pseudoalpha <- alpha * theta$theta
+        results <- doTwoVariablesTest(alpha = alpha,
+                                      epsilon = epsilon,
+                                      iterations = iterations,
+                                      max.iterations = max.iterations,
+                                      testFunction = McNemarTestRandom,
+                                      x1 = x1, x2 = x2,
+                                      p = 0.5, n = n)
 
-        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
-            rejMatrix <- c(rejMatrix,
-                           replicate(iterations,
-                                     McNemarTestRandom(runif(n) < x1,
-                                                       runif(n) < x2,
-                                                       pseudoalpha)))
-            rej <- mean(rejMatrix)
-            error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
+        theta <- results[["theta"]]
+        if(alternative == "less" & !is.null(results[["d.alternative"]])) {
+            results[["d.alternative"]] <- 1 - results[["d.alternative"]]
         }
-        rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
-        iterations.taken <- length(rejMatrix)
-        
     }
 
-    if(!is.null(iterations) & iterations.taken < 1000)
+    if(!is.null(iterations) & results[["iterations.taken"]] < 1000)
         warning("Low number of iterations. Results may be inaccurate.")
 
-    if(iterations.taken >= max.iterations)
+    if(results[["iterations.taken"]] >= max.iterations)
         warning(paste("The maximum number of iterations (",
                       format(max.iterations, scientific = FALSE),
                       ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
-
-
-    ## if rejection in a two.sided setting, we inform the user of the
-    ## side of rejection
-    if(rejection == TRUE & alternative == "two.sided")
-    {
-        alt.hypothesis <- paste("E(", names.x1, ")",
-                                ifelse(rejectionUpper == TRUE, " < ", " > "),
-                                "E(", names.x2, ")", sep = "")
-    }
 
     bounds <- paste("[", lower, ", ", upper, "]", sep = "")
 
@@ -326,47 +277,55 @@ npMeanPaired <- function(x1, x2, lower = 0, upper = 1, ## d = 0,
                    null.hypothesis = null.hypothesis,
                    alt.hypothesis = alt.hypothesis,
                    estimate = sample.est,
-                   probrej = rej,
-                   rejection = rejection,
+                   probrej = results[["probrej"]],
+                   rejection = results[["rejection"]],
+                   mc.error = results[["mc.error"]],
                    alpha = alpha,
-                   theta = theta$theta,
-                   d.alternative = (optimaltypeII$root - 0.5) * 2 * (upper - lower),
-                   typeIIerror = theta$typeII,
-                   iterations = iterations.taken,
-                   pseudoalpha = pseudoalpha,
+                   theta = theta,
+                   thetaValue = results[["theta"]],
+                   d.alternative = (results[["d.alternative"]] - 0.5) * 2 * (upper - lower),
+                   typeIIerror = results[["typeIIerror"]],
+                   iterations = results[["iterations.taken"]],
+                   pseudoalpha = results[["pseudoalpha"]],
                    bounds = bounds,
                    null.value = null.value),
               class = "nphtest")
 } ## end of npMeanPaired
 
 
-McNemarTestRandom <- function(x1, x2, alpha)
+## performs the randomized McNemar test
+## x1, x2 are bounden real-valued vectors 
+McNemarTestRandom <- function(x1, x2, pseudoalpha, dots)
 {
-    ## performs the randomized McNemar test
-    ## x1, x2 are binary-valued vectors of equal length
+    ## b1, b2 are binary-valued vectors of equal length
     ## n10, n01 ... counts of (1,0) and (0,1) respectively.
     ##              (1, 1) and (0, 0) are dropped
 
+    n <- dots[["n"]]
+    
     ## returns either 1 (rejection), p (prob of rejection) or 0 (no
     ## rejection)
 
-    n10 <- sum(x1 > x2)
-    n01 <- sum(x1 < x2)
+    b1 <- runif(n) < x1
+    b2 <- runif(n) < x2
+
+    n10 <- sum(b1 > b2)
+    n01 <- sum(b1 < b2)
 
     k <- n01:(n10 + n01)
     prob <- sum(choose(n10 + n01, k)/(2^(n10 + n01)))
 
     res <- 0
-    if(prob <= alpha)
+    if(prob <= pseudoalpha)
     {
         res <- 1
     }
     else
     {
         h <- choose(n10 + n01, n01)/(2^(n10 + n01))
-        if(prob <= (alpha + h))
+        if(prob <= (pseudoalpha + h))
         {
-            res <- (alpha - prob + h)/h
+            res <- (pseudoalpha - prob + h)/h
         }
     }
     return(res)

@@ -3,6 +3,7 @@
 ### Functions to derive the optimal theta
 ###--------------------------------------------------
 
+noValidTheta <- simpleError("It was not possible to find a valid theta (i.e., one that minimizes the type II error). Please adjust the test value under the null hypothesis to a less (extreme) value.")
 
 ## w
 ## helper function, to ease the reading of the code
@@ -95,12 +96,11 @@ minTypeIIError <- function(p.alt, p, N, alpha, alternative)
     ## uses possibleTheta, g2
     theta <- possibleTheta(N, p, alpha)
 
-    f <- function(x)
-    {
-        (1 - g2(p.alt, N, p, alpha*x))/(1 - x)
-    }
-
     if(length(theta[2, ]) > 0) {
+
+        f <- function(x) {
+            (1 - g2(p.alt, N, p, alpha*x))/(1 - x)
+        }
         
         ## calculate the type II errors for the thetas
         typeIIerrors <- sapply(theta[2,], f)
@@ -116,7 +116,7 @@ minTypeIIError <- function(p.alt, p, N, alpha, alternative)
         righttheta <- theta[2, which(typeIIerrors == mintypeII)]
         righttheta <- ifelse(length(righttheta) == 0, NA, righttheta)
     } else {
-        stop("It was not possible to find a valid theta (i.e., one that minimizes the type II error). Please adjust the test value under the null hypothesis to a less (extreme) value.")        
+        stop(noValidTheta)        
     }
 
     list(theta = righttheta,

@@ -175,46 +175,13 @@ npMeanUnpaired <- function(x1, x2,
         ##
         ## alternative "greater" at alpha / 2
         ##
-
-        ## find optimal theta
-        optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
-                                  c(0, 1), n1 = n1, n2 = n2,
-                                  alpha = alpha / 2 - epsilon,
-                                  tol = .Machine$double.eps^0.25)
-        theta <- optimizeTheta(n1, n2, optimaltypeII$minimum,
-                               alpha = alpha / 2 - epsilon)
-        if(round(theta$theta, digits = 4) >= 1L | round(theta$typeII >= 1L)) {
-            ## pick up an error in the theta calculation
-            return(structure(list(method = method,
-                                  data.name = DNAME,
-                                  alternative = alternative,
-                                  null.hypothesis = null.hypothesis,
-                                  alt.hypothesis = alt.hypothesis,
-                                  estimate = sample.est,
-                                  probrej = NULL,
-                                  rejection = FALSE,
-                                  alpha = NULL,
-                                  theta = NULL,
-                                  d.alternative = NULL,
-                                  typeIIerror = NULL,
-                                  iterations = NULL,
-                                  pseudoalpha = NULL,
-                                  bounds = NULL,
-                                  null.value = null.value),
-                             class = "nphtest"))
-        }
-        pseudoalpha <- alpha / 2 * theta$theta
-
-        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
-        rejMatrix <- c(rejMatrix,
-                       replicate(iterations,
-                                 randomTest(x1, x2, n1, n2, pseudoalpha)))
-        rejUpper <- mean(rejMatrix)
-        error <- exp(-2 * length(rejMatrix) * (rejUpper - theta$theta)^2)
-        }
-        rejectionUpper <- ifelse(rejUpper >= theta$theta, TRUE, FALSE)
-        iterations.taken <- length(rejMatrix)
-
+        resultsGreater <- doTwoVariablesTest(alpha = alpha / 2,
+                                             epsilon = epsilon,
+                                             iterations = iterations,
+                                             max.iterations = max.iterations,
+                                             testFunction = randomTest,
+                                             x1 = x1, x2 = x2,
+                                             n1 = n1, n2 = n2)
 
         ##
         ## alternative "less"
@@ -222,21 +189,54 @@ npMeanUnpaired <- function(x1, x2,
         x1 <- 1 - x1
         x2 <- 1 - x2
 
-        error <- 1
-        rejMatrix <- vector(mode = "numeric", length = 0)
-        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
-        rejMatrix <- c(rejMatrix,
-                       replicate(iterations,
-                                 randomTest(x1, x2, n1, n2, pseudoalpha)))
-        rejLess <- mean(rejMatrix)
-        error <- exp(-2 * length(rejMatrix) * (rejLess - theta$theta)^2)
+        resultsLess <- doTwoVariablesTest(alpha = alpha / 2,
+                                          epsilon = epsilon,
+                                          theta = resultsGreater[["theta"]],
+                                          typeII = resultsGreater[["typeIIerror"]],
+                                          d.alternative = resultsGreater[["d.alternative"]],
+                                          iterations = iterations,
+                                          max.iterations = max.iterations,
+                                          testFunction = randomTest,
+                                          x1 = x1, x2 = x2,
+                                          n1 = n1, n2 = n2)
+
+
+        ## "greater" rejects 
+        if(resultsGreater[["rejection"]] == TRUE) {
+            results <- resultsGreater
+            theta <- resultsGreater[["theta"]]
         }
-        rejectionLess <- ifelse(rejLess >= theta$theta, TRUE, FALSE)
+        ## "less" rejects
+        else if(resultsLess[["rejection"]] == TRUE) {
+            results <- resultsLess
+            theta <- resultsLess[["theta"]]
+        }
+        ## none rejects:
+        ## we take the one that is more likely to reject
+        else {
+            if((sample.est[1] - sample.est[2] > 0) & !is.null(resultsGreater[["theta"]])) {
+                results <- resultsGreater
+                theta <- resultsGreater[["theta"]]
+            }
+            else if((sample.est[1] - sample.est[2] < 0) & !is.null(resultsLess[["theta"]])) {
+                results <- resultsLess
+                theta <- resultsLess[["theta"]]
+            } else {
+                results <- resultsGreater                
+                theta <- resultsGreater[["theta"]]
+            }
+        }
 
-
-        rej <- rejUpper + rejLess
-        rejection <- ifelse(rejectionUpper + rejectionLess >= 1, TRUE, FALSE)
-        iterations.taken <- max(length(rejMatrix), iterations.taken)
+        results <- mergeTwoResultSets(results, resultsGreater, resultsLess)
+        
+        ## if rejection in a two.sided setting, we inform the user of the
+        ## side of rejection
+        if(results[["rejection"]] == TRUE)
+        {
+            alt.hypothesis <- paste("E(", names.x1, ")",
+                                    ifelse(resultsGreater[["rejection"]] == TRUE, " < ", " > "),
+                                    "E(", names.x2, ")", sep = "")
+        }
     }
     else
     {
@@ -246,69 +246,29 @@ npMeanUnpaired <- function(x1, x2,
             x2 <- 1 - x2
         }
 
-        ## find optimal theta
-        optimaltypeII <- optimize(npMeanUnpairedminTypeIIErrorWrapper,
-                                  c(0, 1), n1 = n1, n2 = n2,
-                                  alpha = alpha - epsilon,
-                                  tol = .Machine$double.eps^0.25)
-        theta <- optimizeTheta(n1, n2, optimaltypeII$minimum,
-                               alpha - epsilon)
+        results <- doTwoVariablesTest(alpha = alpha,
+                                      epsilon = epsilon,
+                                      iterations = iterations,
+                                      max.iterations = max.iterations,
+                                      testFunction = randomTest,
+                                      x1 = x1, x2 = x2,
+                                      n1 = n1, n2 = n2)
 
-        ## if theta is greater equal than 1 or typeII, exit the function
-        if(round(theta$theta, digits = 4) >= 1L | round(theta$typeII >= 1L)) {
-            ## pick up an error in the theta calculation
-            return(structure(list(method = method,
-                                  data.name = DNAME,
-                                  alternative = alternative,
-                                  null.hypothesis = null.hypothesis,
-                                  alt.hypothesis = alt.hypothesis,
-                                  estimate = sample.est,
-                                  probrej = NULL,
-                                  rejection = FALSE,
-                                  alpha = NULL,
-                                  theta = NULL,
-                                  d.alternative = NULL,
-                                  typeIIerror = NULL,
-                                  iterations = NULL,
-                                  pseudoalpha = NULL,
-                                  bounds = NULL,
-                                  null.value = null.value),
-                             class = "nphtest"))
+        theta <- results[["theta"]]
+        if(alternative == "less" & !is.null(results[["d.alternative"]])) {
+            results[["d.alternative"]] <- 1 - results[["d.alternative"]]
         }
-        pseudoalpha <- alpha * theta$theta
-
-        while(error > epsilon & length(rejMatrix) <= max.iterations)  {
-            rejMatrix <- c(rejMatrix,
-                           replicate(iterations,
-                                     randomTest(x1, x2,
-                                                n1, n2,
-                                                pseudoalpha)))
-            rej <- mean(rejMatrix)
-            error <- exp(-2 * length(rejMatrix) * (rej - theta$theta)^2)
-        }
-        rejection <- ifelse(rej >= theta$theta, TRUE, FALSE)
-        iterations.taken <- length(rejMatrix)
+        
     }
 
-    
-    ## warnings on low number of iterations
-    if(!is.null(iterations) & iterations.taken < 1000)
+    if(!is.null(iterations) & results[["iterations.taken"]] < 1000)
         warning("Low number of iterations. Results may be inaccurate.")
 
-    if(iterations.taken >= max.iterations)
+    if(results[["iterations.taken"]] >= max.iterations)
         warning(paste("The maximum number of iterations (",
                       format(max.iterations, scientific = FALSE),
                       ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
-    
-    ## if rejection in a two.sided setting, we inform the user of the
-    ## side of rejection
-    if(rejection == TRUE & alternative == "two.sided")
-    {
-        alt.hypothesis <- paste("E(", names.x1, ")",
-                                ifelse(rejectionUpper == TRUE, " < ", " > "),
-                                "E(", names.x2, ")", sep = "")
-    }
 
     bounds <- paste("[", lower, ", ", upper, "]", sep = "")
 
@@ -318,24 +278,27 @@ npMeanUnpaired <- function(x1, x2,
                    null.hypothesis = null.hypothesis,
                    alt.hypothesis = alt.hypothesis,
                    estimate = sample.est,
-                   probrej = rej,
-                   rejection = rejection,
+                   probrej = results[["probrej"]],
+                   rejection = results[["rejection"]],
+                   mc.error = results[["mc.error"]],
                    alpha = alpha,
-                   theta = theta$theta,
-                   d.alternative = optimaltypeII$minimum,
-                   typeIIerror = theta$typeII,
-                   iterations = iterations.taken,
-                   pseudoalpha = pseudoalpha,
+                   theta = theta,
+                   thetaValue = results[["theta"]],
+                   d.alternative = results[["d.alternative"]],
+                   typeIIerror = results[["typeIIerror"]],
+                   iterations = results[["iterations.taken"]],
+                   pseudoalpha = results[["pseudoalpha"]],
                    bounds = bounds,
                    null.value = null.value),
               class = "nphtest")
 } ## end of npMeanUnpaired
 
-## example
-## npMeanUnpaired(runif(20), runif(20))
 
-randomTest <- function(x1, x2, n1, n2, alpha)
+randomTest <- function(x1, x2, pseudoalpha, dots)
 {
+    n1 <- dots[["n1"]]
+    n2 <- dots[["n2"]]
+    
     s1 <- sum(x1 >= runif(n1))
     s2 <- sum(x2 >= runif(n2))
     s3 <- s2 + s1
@@ -351,18 +314,18 @@ randomTest <- function(x1, x2, n1, n2, alpha)
     }
 
     res <- 0
-    if (prob <= alpha)
+    if (prob <= pseudoalpha)
     {
         ## h2 <- prob + choose(n1, s1) * choose(n2, s3 - s1)/choose(n1 +
         ## n2, s3)
         h2 <- prob + dhyper(s1, n1, n2, s3)
-        if (h2 <= alpha)
+        if (h2 <= pseudoalpha)
         {
             res <- 1
         }
         else
         {
-            res <- ((alpha - prob)/(h2 - prob))
+            res <- ((pseudoalpha - prob)/(h2 - prob))
         }
     }
     return(res)
@@ -473,14 +436,18 @@ minTypeII <- function(theta, y1, y2, n1, n2, alpha)
 optimizeTheta <- function(n1, n2, diff, alpha = alpha)
 {
     ## STEP 1)  maximize typeII error over y1, y2
+    ## cat("\nmax ")
     maxexpect <- optimize(maxTypeII, c(0, 1 - diff),
                           ## tol = .Machine$double.eps^0.5,
                           d = diff, n1 = n1, n2 = n2,
                           alpha = alpha, maximum = T)
     e1opt <- maxexpect$maximum
     e2opt <- e1opt + diff
+    ## cat(e1opt, " ")
+    ## cat(e2opt, " ")
 
     ## STEP 2)  minimize typeII error over theta
+    ## cat("min ")
     thetaval <- optimize(minTypeII, c(0,1),
                          ## tol = .Machine$double.eps^0.5,
                          n1 = n1, n2 = n2,
@@ -489,8 +456,10 @@ optimizeTheta <- function(n1, n2, diff, alpha = alpha)
     ## if(thetaval$objective == 1)
     ##   stop("TypeII error = 1. Increase difference d")
 
+    ## cat(thetaval$minimum, " ", thetaval$objective)
+
     return(list(typeII = thetaval$objective,
-                theta = thetaval$minimum ))
+                theta = thetaval$minimum))
 }
 
 npMeanUnpairedminTypeIIErrorWrapper <- function(d, n1, n2, alpha,

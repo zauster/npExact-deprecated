@@ -132,6 +132,8 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
     x <- (x - lower)/(upper - lower)  ## Normalization so that x in [0,1]
     p <- 2 * v / (upper - lower)^2  ## normalized threshold
 
+    ## cat("\np:", p, "\n")
+
     error <- 1
     rejMatrix <- vector(mode = "numeric", length = 0)
 
@@ -141,7 +143,7 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
         ##
         ## alternative "greater"
         ##
-        resultsGreater <- doSingleTest(alpha = alpha / 2,
+        resultsGreater <- doOneVariableTest(alpha = alpha / 2,
                                 epsilon = epsilon,
                                 iterations = iterations,
                                 max.iterations = max.iterations,
@@ -153,7 +155,7 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
         ## alternative "less"
         ##
         p <- 1 - p
-        resultsLess <- doSingleTest(alpha = alpha / 2,
+        resultsLess <- doOneVariableTest(alpha = alpha / 2,
                                 epsilon = epsilon,
                                 iterations = iterations,
                                 max.iterations = max.iterations,
@@ -180,17 +182,8 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
             }
         }
 
-        results[["probrej"]] <- resultsGreater[["probrej"]] + resultsLess[["probrej"]]
-
-        ## collect values of both runs
-        results[["d.alternative"]] <- c(resultsGreater[["d.alternative"]],
-                                1 - resultsLess[["d.alternative"]])
-        results[["typeIIerror"]] <- c(resultsGreater[["typeIIerror"]],
-                                      resultsLess[["typeIIerror"]])
-        results[["theta"]] <- c(resultsGreater[["theta"]],
-                                     resultsLess[["theta"]])
-        results[["iterations.taken"]] <- max(resultsGreater[["iterations.taken"]],
-                                             resultsLess[["iterations.taken"]])
+        results <- mergeTwoResultSets(results, resultsGreater, resultsLess,
+                                      merge.d.alt = TRUE)
         
     }
     else
@@ -198,13 +191,19 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
         if(alternative == "less") {
             p <- 1 - p
         }
-        results <- doSingleTest(alpha = alpha,
+
+        ## cat("\np:", p, "\n")
+        
+        results <- doOneVariableTest(alpha = alpha,
                                 epsilon = epsilon,
                                 iterations = iterations,
                                 max.iterations = max.iterations,
                                 testFunction = sampleBinomTestnpVar,
                                 p = p, n = m,
                                 x = x, alternative = alternative)
+        
+        ## print(results[["d.alternative"]])
+        results[["d.alternative"]] <- 1 - results[["d.alternative"]]
         theta <- results[["theta"]]
     }
 
@@ -250,6 +249,7 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
                    thetaValue = results[["theta"]],
                    d.alternative = 0.5 * results[["d.alternative"]] * (upper - lower)^2,
                    typeIIerror = results[["typeIIerror"]],
+                   mc.error = results[["mc.error"]],
                    iterations = results[["iterations.taken"]],
                    pseudoalpha = results[["pseudoalpha"]],
                    bounds = bounds,
@@ -261,6 +261,14 @@ npVarianceSingle <- function(x, v, lower = 0, upper = 1,
 sampleBinomTestnpVar <- function(p, n, pseudoalpha, dots)
 {
     x <- sample(dots[["x"]])
+
+    if(dots[["alternative"]] == "less") {
+        ## in npVarianceSingle, p has to be p in the one-sided
+        ## test. In the "less" alternative, too. But I had to turn it
+        ## around (p = 1 - p) for the calculation of theta. So this
+        ## piece of code is to turn it around again.
+        p <- 1 - p
+    }
 
     ## transformation into sample in [0,1] that has mean equal to 1/2 +
     ## Var(X)

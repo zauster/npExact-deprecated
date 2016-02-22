@@ -165,7 +165,7 @@ npMeanSingle <- function(x, mu,
         ##
         ## first the upper side, alternative = "greater"
         ##
-        resultsGreater <- doSingleTest(alpha = alpha / 2,
+        resultsGreater <- doOneVariableTest(alpha = alpha / 2,
                                            epsilon = epsilon,
                                            iterations = iterations,
                                            max.iterations = max.iterations,
@@ -180,7 +180,7 @@ npMeanSingle <- function(x, mu,
         p <- 1 - p
         xp <- x - p
         
-        resultsLess <- doSingleTest(alpha = alpha / 2,
+        resultsLess <- doOneVariableTest(alpha = alpha / 2,
                                         epsilon = epsilon,
                                         iterations = iterations,
                                         max.iterations = max.iterations,
@@ -191,36 +191,42 @@ npMeanSingle <- function(x, mu,
         ## "greater" rejects 
         if(resultsGreater[["rejection"]] == TRUE) {
             results <- resultsGreater
+            theta <- resultsGreater[["theta"]]
         }
         ## "less" rejects
         else if(resultsLess[["rejection"]] == TRUE) {
             results <- resultsLess
+            theta <- resultsLess[["theta"]]
         }
         ## none rejects:
         ## we take the one that is more likely to reject
         else {
             if((sample.est < null.value) & !is.null(resultsGreater[["theta"]])) {
                 results <- resultsGreater
+                theta <- resultsGreater[["theta"]]
             }
             else if((sample.est > null.value) & !is.null(resultsLess[["theta"]])) {
                 results <- resultsLess
+                theta <- resultsLess[["theta"]]
             } else {
                 results <- resultsGreater                
+                theta <- resultsGreater[["theta"]]
             }
         }
 
-        results[["probrej"]] <- resultsGreater[["probrej"]] + resultsLess[["probrej"]]
+        results <- mergeTwoResultSets(results, resultsGreater, resultsLess,
+                                      merge.d.alt = TRUE)
 
-        ## collect values of both runs
-        results[["d.alternative"]] <- c(resultsGreater[["d.alternative"]],
-                                1 - resultsLess[["d.alternative"]])
-        results[["typeIIerror"]] <- c(resultsGreater[["typeIIerror"]],
-                                      resultsLess[["typeIIerror"]])
-        results[["theta"]] <- c(resultsGreater[["theta"]],
-                                     resultsLess[["theta"]])
-        results[["iterations.taken"]] <- max(resultsGreater[["iterations.taken"]],
-                                             resultsLess[["iterations.taken"]])
-        
+        ## if rejection in a two.sided setting, we inform the user of the
+        ## side of rejection
+        if(results[["rejection"]] == TRUE)
+        {
+            alt.hypothesis <- paste("E(", DNAME, ")",
+                                    ifelse(resultsGreater[["rejection"]] == TRUE,
+                                           " > ", " < "),
+                                    mu, sep = "")
+        }
+
     }
     else ## alternative == "greater" => default
     {
@@ -231,7 +237,7 @@ npMeanSingle <- function(x, mu,
             xp <- x - p
         }
 
-        results <- doSingleTest(alpha = alpha,
+        results <- doOneVariableTest(alpha = alpha,
                                     epsilon = epsilon,
                                     iterations = iterations,
                                     max.iterations = max.iterations,
@@ -250,29 +256,6 @@ npMeanSingle <- function(x, mu,
                       format(max.iterations, scientific = FALSE),
                       ") was reached. Rejection may be very sensible to the choice of the parameters.", sep = ""))
 
-    ## if rejection in a two.sided setting, we inform the user of the
-    ## side of rejection
-    if(alternative == "two.sided")
-    {
-        if(results[["rejection"]] == TRUE)
-        {
-            alt.hypothesis <- paste("E(", DNAME, ")",
-                                    ifelse(resultsGreater[["rejection"]] == TRUE,
-                                           " > ", " < "),
-                                    mu, sep = "")
-        }
-        if(resultsGreater[["rejection"]] == TRUE) {
-            theta <- resultsGreater[["theta"]]
-        } else if(resultsLess[["rejection"]] == TRUE) {
-            theta <- resultsLess[["theta"]]
-        } else {                        # none rejects
-            if(all(!is.null(results[["theta"]]))) {
-                theta <- max(results[["theta"]])
-            } else {                    # none rejects and none has a valid theta
-                theta <- NULL
-            }
-        }
-    }
 
     structure(list(method = method,
                    data.name = DNAME,
@@ -287,6 +270,7 @@ npMeanSingle <- function(x, mu,
                    thetaValue = results[["theta"]],
                    d.alternative = results[["d.alternative"]],
                    typeIIerror = results[["typeIIerror"]],
+                   mc.error = results[["mc.error"]],
                    iterations = results[["iterations.taken"]],
                    pseudoalpha = results[["pseudoalpha"]],
                    bounds = bounds,

@@ -2,9 +2,9 @@
 ## does a one-sided test for a single variable
 ## i.e. for the npMeanSingle or the npVarianceSingle test
 
-doSingleTest <- function(alpha, epsilon,
-                         iterations, max.iterations,
-                         testFunction, p, n, ...)
+doOneVariableTest <- function(alpha, epsilon,
+                              iterations, max.iterations,
+                              testFunction, p, n, ...)
 {
     testFunction <- match.fun(testFunction)
     dots <- list(...)
@@ -55,6 +55,7 @@ doSingleTest <- function(alpha, epsilon,
                         theta = theta$theta,
                         d.alternative = optimaltypeII$root,
                         typeIIerror = theta$typeII,
+                        mc.error = error,
                         iterations.taken = length(rejMatrix), 
                         pseudoalpha = pseudoalpha)
 

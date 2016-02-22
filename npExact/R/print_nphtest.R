@@ -3,7 +3,7 @@ print.nphtest <- function(x, digits = 4, prefix = "", ...)
     cat("\n")
     cat(strwrap(x$method, prefix = "\t"), sep="\n")
     cat("\n")
-    cat("data: ", x$data.name, "\n")
+    cat("data:", x$data.name, "\n")
 
     if(!is.null(x$alternative) && !is.null(x$null.hypothesis) && !is.null(x$alt.hypothesis))
     {
